@@ -1,10 +1,14 @@
 import express from 'express'
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import rateLimit from 'express-rate-limit'
 import { PORT, DASHBOARD_COMMANDS_DIR } from './constants.js'
 import { router } from './routes/index.js'
 import { attachSSE } from './watchers/sse.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // Ensure dashboard commands directory exists before watchers start
 fs.mkdirSync(DASHBOARD_COMMANDS_DIR, { recursive: true })
@@ -51,7 +55,7 @@ app.use('/api', router)
 attachSSE(app)
 
 // SPA fallback — must be after all /api route mounts
-app.get('*', (_req, res) => {
+app.get(/.*/, (_req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'))
 })
 
