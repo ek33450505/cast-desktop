@@ -1,0 +1,10 @@
+{
+  "name": "cast-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Use npm run dev:server and cargo tauri dev separately'",
+    "build:server": "cd server && npm install && npm run build",
+    "build:app": "npm run build:server && cargo tauri build"
+  }
+}
