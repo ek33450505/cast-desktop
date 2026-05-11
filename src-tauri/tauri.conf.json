@@ -1,4 +1,7 @@
 {
+  "productName": "Cast",
+  "version": "0.1.0",
+  "identifier": "com.cast-desktop.app",
   "build": {
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
@@ -18,9 +21,5 @@
     "security": {
       "csp": null
     }
-  },
-  "package": {
-    "productName": "Cast",
-    "version": "0.1.0"
   }
 }
