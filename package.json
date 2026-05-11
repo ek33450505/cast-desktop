@@ -8,7 +8,8 @@
     "server:dev": "cd server && tsx watch index.ts",
     "build": "tsc -b && vite build",
     "build:server": "cd server && npm install && npm run build",
-    "build:app": "npm run build && npm run build:server && cargo tauri build",
+    "build:sidecar": "mkdir -p src-tauri/binaries && cd server && bun build --compile --minify --target=bun index.ts --outfile ../src-tauri/binaries/cast-server-aarch64-apple-darwin",
+    "build:app": "npm run build && npm run build:server && npm run build:sidecar && cargo tauri build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

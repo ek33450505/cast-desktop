@@ -5,4 +5,5 @@ src-tauri/binaries/
 .env.local
 *.env
 *.log
+*.bun-build
 tsconfig.tsbuildinfo
