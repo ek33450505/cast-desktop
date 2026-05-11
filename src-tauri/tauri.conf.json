@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "identifier": "com.cast-desktop.app",
   "build": {
-    "beforeBuildCommand": "",
-    "beforeDevCommand": "",
-    "devUrl": "http://localhost:4000",
+    "beforeBuildCommand": "npm run build && npm run build:sidecar",
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:3001",
     "frontendDist": "../dist"
   },
   "app": {
@@ -15,11 +15,15 @@
         "width": 1200,
         "height": 800,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "url": "http://localhost:3001/"
       }
     ],
     "security": {
       "csp": null
     }
+  },
+  "bundle": {
+    "externalBin": ["binaries/cast-server"]
   }
 }
