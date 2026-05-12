@@ -1,5 +1,6 @@
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ClipboardList, Bot, BarChart2 } from 'lucide-react'
+import PlanProgressPanel from './right-rail/PlanProgressPanel'
 
 interface RightPanel {
   id: string
@@ -65,7 +66,11 @@ export default function RightRail({ open, onExpand }: RightRailProps) {
                 >
                   {label}
                 </h2>
-                <EmptyCard label={label} Icon={Icon} />
+                {id === 'plan-progress' ? (
+                  <PlanProgressPanel />
+                ) : (
+                  <EmptyCard label={label} Icon={Icon} />
+                )}
               </section>
             ))}
           </motion.div>
