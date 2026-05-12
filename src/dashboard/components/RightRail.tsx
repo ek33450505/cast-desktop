@@ -45,10 +45,7 @@ export default function RightRail({ open, onExpand }: RightRailProps) {
     <aside
       aria-label="Right rail panels"
       className="h-full flex flex-col overflow-hidden"
-      style={{
-        background: 'var(--cast-rail-bg)',
-        borderLeft: '1px solid var(--cast-rail-border)',
-      }}
+      style={{ background: 'var(--cast-rail-bg)' }}
     >
       <AnimatePresence initial={false} mode="wait">
         {open ? (

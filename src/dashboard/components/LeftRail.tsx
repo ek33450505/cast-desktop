@@ -36,9 +36,12 @@ interface LeftRailProps {
 function SectionSkeleton({ label }: { label: string }) {
   return (
     <div className="px-3 py-2">
-      <p className="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)] mb-2 select-none">
+      <h3
+        id={`left-rail-${label.toLowerCase()}`}
+        className="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)] mb-2 select-none"
+      >
         {label}
-      </p>
+      </h3>
       <div className="space-y-1.5">
         {[1, 2, 3].map((i) => (
           <div
@@ -80,10 +83,7 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
     <nav
       aria-label="Left rail navigation"
       className="h-full flex flex-col overflow-hidden"
-      style={{
-        background: 'var(--cast-rail-bg)',
-        borderRight: '1px solid var(--cast-rail-border)',
-      }}
+      style={{ background: 'var(--cast-rail-bg)' }}
     >
       <AnimatePresence initial={false} mode="wait">
         {open ? (

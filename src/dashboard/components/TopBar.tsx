@@ -36,7 +36,7 @@ export default function TopBar({
           onClick={onToggleLeft}
           aria-label={leftRailOpen ? 'Collapse left rail (⌘B)' : 'Expand left rail (⌘B)'}
           className="flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--cast-rail-bg)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-2"
-          style={{ width: '36px', height: '36px', minWidth: '44px', minHeight: '44px' }}
+          style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
         >
           {leftRailOpen
             ? <PanelLeftClose className="w-4 h-4" aria-hidden="true" />
@@ -48,7 +48,7 @@ export default function TopBar({
           onClick={onToggleRight}
           aria-label={rightRailOpen ? 'Collapse right rail (⌘⌥B)' : 'Expand right rail (⌘⌥B)'}
           className="flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--cast-rail-bg)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-2"
-          style={{ width: '36px', height: '36px', minWidth: '44px', minHeight: '44px' }}
+          style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
         >
           {rightRailOpen
             ? <PanelRightClose className="w-4 h-4" aria-hidden="true" />
@@ -59,7 +59,7 @@ export default function TopBar({
           type="button"
           aria-label="Settings (stub)"
           className="flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--cast-rail-bg)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-2"
-          style={{ width: '36px', height: '36px', minWidth: '44px', minHeight: '44px' }}
+          style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
         >
           <Settings className="w-4 h-4" aria-hidden="true" />
         </button>
