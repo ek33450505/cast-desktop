@@ -69,10 +69,13 @@ describe('PreviewModal', () => {
       expect(dialog.getAttribute('aria-modal')).toBe('true')
     })
 
-    it('dialog has aria-label containing the file basename', () => {
+    it('dialog references a labelling element via aria-labelledby with the file basename', () => {
       renderModal()
       const dialog = screen.getByRole('dialog')
-      expect(dialog.getAttribute('aria-label')).toMatch(/code-writer\.md/i)
+      const labelId = dialog.getAttribute('aria-labelledby')
+      expect(labelId).toBeTruthy()
+      const labelEl = document.getElementById(labelId!)
+      expect(labelEl?.textContent).toMatch(/code-writer\.md/i)
     })
 
     it('shows file basename in header', () => {

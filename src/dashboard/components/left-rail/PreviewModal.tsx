@@ -113,7 +113,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label={`Preview: ${fileName}`}
+      aria-labelledby="preview-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
         background: 'var(--cast-overlay-backdrop, rgba(0,0,0,0.6))',
@@ -140,7 +140,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--cast-rail-border)] flex-shrink-0">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-[var(--text-primary)] truncate" title={fileName}>
+            <p id="preview-modal-title" className="text-sm font-medium text-[var(--text-primary)] truncate" title={fileName}>
               {fileName}
             </p>
             <p className="text-[11px] text-[var(--text-muted)] truncate" title={filePath}>
