@@ -43,6 +43,7 @@ import { stopFailureEventsRouter, agentProtocolViolationsRouter } from './teleme
 import { castFsRouter } from './castFs.js'
 import { projectFsRouter } from './projectFs.js'
 import { paneBindingsRouter } from './paneBindings.js'
+import { sessionCostRouter } from './sessionCost.js'
 
 export const router = Router()
 
@@ -118,6 +119,8 @@ router.use('/cast-fs', castFsRouter)
 router.use('/project-fs', projectFsRouter)
 // Wave 2.4 — PTY pane session bindings
 router.use('/pane-bindings', paneBindingsRouter)
+// Wave 2.7 — Session cost panel (SSE + polling)
+router.use('/session-cost', sessionCostRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {
