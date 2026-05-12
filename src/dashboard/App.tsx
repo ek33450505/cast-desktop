@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback } from 'react'
+import { lazy, Suspense, useCallback, useEffect } from 'react'
 import { Routes, Route, Navigate, Link, Outlet } from 'react-router-dom'
 import { MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -9,6 +9,8 @@ import TopBar from './components/TopBar'
 import LeftRail from './components/LeftRail'
 import RightRail from './components/RightRail'
 import { useRailState, LEFT_RAIL_DEFAULT_PX, RIGHT_RAIL_DEFAULT_PX } from './hooks/useRailState'
+import { TerminalPane } from '../components/terminal/TerminalPane'
+import { useTerminalStore } from '../stores/terminalStore'
 
 // ── Lazy-loaded route views ───────────────────────────────────────────────────
 
@@ -22,6 +24,30 @@ const DocsView = lazy(() => import('./views/DocsView'))
 const AgentsView = lazy(() => import('./views/AgentsView'))
 const SwarmView = lazy(() => import('./views/SwarmView'))
 const WorkLogView = lazy(() => import('./views/WorkLogView'))
+
+// ── Terminal landing pane ─────────────────────────────────────────────────────
+
+function TerminalLandingPane() {
+  const tabs = useTerminalStore((s) => s.tabs)
+  const activeTabId = useTerminalStore((s) => s.activeTabId)
+  const addTab = useTerminalStore((s) => s.addTab)
+
+  useEffect(() => {
+    if (tabs.length === 0) {
+      addTab('~')
+    }
+  }, [tabs.length, addTab])
+
+  if (!activeTabId) {
+    return (
+      <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">
+        Initializing terminal…
+      </div>
+    )
+  }
+
+  return <TerminalPane tabId={activeTabId} />
+}
 
 // Collapsed icon strip is always 48px (spec §Q1 + §Q3).
 const COLLAPSED_PX = 48
@@ -70,6 +96,7 @@ function ShellLayout() {
       <div className="flex-1 min-h-0 flex">
         {/* ── Left Rail ─────────────────────────────────────────────── */}
         <motion.div
+          initial={false}
           animate={{ width: leftTargetPx }}
           transition={transition}
           className="shrink-0 overflow-hidden"
@@ -92,6 +119,7 @@ function ShellLayout() {
 
         {/* ── Right Rail ────────────────────────────────────────────── */}
         <motion.div
+          initial={false}
           animate={{ width: rightTargetPx }}
           transition={transition}
           className="shrink-0 overflow-hidden"
@@ -114,7 +142,7 @@ export default function App() {
       <Routes>
         {/* ── Shell wraps all routes ── */}
         <Route element={<ShellLayout />}>
-          <Route path="/" element={<ErrorBoundary><HomeView /></ErrorBoundary>} />
+          <Route path="/" element={<ErrorBoundary><TerminalLandingPane /></ErrorBoundary>} />
           <Route path="/sessions" element={<ErrorBoundary><SessionsView /></ErrorBoundary>} />
           <Route path="/sessions/:project/:sessionId" element={<ErrorBoundary><SessionDetailView /></ErrorBoundary>} />
           <Route path="/analytics" element={<ErrorBoundary><AnalyticsView /></ErrorBoundary>} />

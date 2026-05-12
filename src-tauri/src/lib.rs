@@ -34,6 +34,7 @@ pub fn run() {
             pty::pty_resize,
             pty::pty_kill,
             process::get_foreground_process,
+            process::get_default_shell,
             cwd::get_cwd,
             git::get_git_status,
         ])

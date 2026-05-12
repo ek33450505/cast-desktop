@@ -2,6 +2,11 @@ use std::process::Command;
 use tauri::State;
 use crate::session::SessionStore;
 
+#[tauri::command]
+pub fn get_default_shell() -> String {
+    std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".to_string())
+}
+
 /// Returns the name of the foreground process for a PTY session.
 /// Strategy: get the child PID (the shell), find its children via
 /// `pgrep -P <pid>`, then get the process name of the deepest child.
