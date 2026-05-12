@@ -21,6 +21,18 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            // Drop the default macOS application menu to reclaim Cmd+W for the
+            // tab-close hotkey. The default menu binds Cmd+W to CloseWindow at
+            // the OS level, preventing the keydown event from reaching the
+            // WKWebView. An empty menu means macOS never intercepts it.
+            // Wave 2.4 can restore Edit/Copy/Paste if needed for non-terminal fields.
+            #[cfg(target_os = "macos")]
+            {
+                let empty_menu = tauri::menu::MenuBuilder::new(app).build()?;
+                app.set_menu(empty_menu)?;
+            }
+
             // Spawn the Express sidecar server
             // TODO(phase-3): dynamic port selection — currently hardcoded to 3001 in server/constants.ts
             let sidecar = app.shell().sidecar("cast-server").expect("failed to create sidecar");
