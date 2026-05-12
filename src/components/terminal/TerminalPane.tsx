@@ -28,7 +28,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     if (!terminal.supported || !containerRef.current || !tab) return
 
     const xterm = new Terminal({
-      fontFamily: "'Geist Mono', monospace",
+      fontFamily: '"SF Mono", Menlo, Monaco, "Courier New", monospace',
       fontSize: 13,
       theme: {
         background: '#070A0F',
