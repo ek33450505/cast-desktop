@@ -63,13 +63,18 @@ function renderTree(onPreview: (t: PreviewTarget) => void = vi.fn(), qc?: QueryC
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('CastFsTree', () => {
+  const mockProjectRoot = { name: 'cast-desktop', path: '/some/path', type: 'dir' }
+
   beforeEach(() => {
     MockEventSource.instances = []
-    // Default: all sections return empty array
+    // Default: agents section returns mockAgents; project-fs root returns mockProjectRoot; rest return []
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = input.toString()
       if (url.includes('/api/cast-fs/agents')) {
         return new Response(JSON.stringify(mockAgents), { headers: { 'Content-Type': 'application/json' } })
+      }
+      if (url.includes('/api/project-fs/tree')) {
+        return new Response(JSON.stringify(mockProjectRoot), { headers: { 'Content-Type': 'application/json' } })
       }
       return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } })
     })
@@ -171,5 +176,26 @@ describe('CastFsTree', () => {
     const hookItemBtn = screen.getByRole('button', { name: /preview hooks item/i })
     expect(hookItemBtn.getAttribute('aria-disabled')).toBe('true')
     expect(hookItemBtn.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('Project header renders fetched project basename', async () => {
+    renderTree()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /cast-desktop section/i })).toBeTruthy()
+    })
+    expect(screen.getByText('cast-desktop')).toBeTruthy()
+  })
+
+  it('Project header falls back to "Project" when query is loading', () => {
+    // Override fetch to delay forever so query stays in loading state
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = input.toString()
+      if (url.includes('/api/project-fs/tree')) {
+        return new Promise(() => { /* never resolves */ })
+      }
+      return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } })
+    })
+    renderTree()
+    expect(screen.getByRole('button', { name: /project section/i })).toBeTruthy()
   })
 })
