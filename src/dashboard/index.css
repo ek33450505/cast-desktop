@@ -56,6 +56,14 @@
   --sidebar-accent-foreground: #00FFC2;
   --sidebar-border: rgba(255, 255, 255, 0.06);
   --sidebar-ring: #00FFC2;
+
+  /* ─── Three-pane shell tokens (Wave 2.1) ─── */
+  /* Derived from forge-dark palette — no new hex values */
+  --cast-rail-bg: var(--bg-secondary);
+  --cast-rail-border: var(--border);
+  --cast-center-bg: var(--bg-primary);
+  --cast-top-bar-bg: var(--bg-secondary);
+  --cast-accent: var(--accent);
 }
 
 body {
