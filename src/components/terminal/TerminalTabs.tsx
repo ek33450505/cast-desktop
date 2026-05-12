@@ -3,6 +3,33 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion } from 'framer-motion'
 import { useTerminalStore } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
+import { usePaneBinding } from '../../hooks/usePaneBinding'
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function basename(path: string): string {
+  const parts = path.split('/').filter(Boolean)
+  return parts[parts.length - 1] ?? path
+}
+
+// ── TabLabel ──────────────────────────────────────────────────────────────────
+// Extracted as a subcomponent so usePaneBinding (a hook) can be called
+// unconditionally for each tab without violating Rules of Hooks.
+
+interface TabLabelProps {
+  paneId: string
+  fallback: string
+}
+
+function TabLabel({ paneId, fallback }: TabLabelProps) {
+  const { bound, sessionId, projectPath } = usePaneBinding(paneId)
+
+  if (bound && sessionId && projectPath) {
+    return <>{basename(projectPath)} · {sessionId.slice(0, 6)}</>
+  }
+
+  return <>{fallback}</>
+}
 
 // TerminalTabs — Wave 2.2b
 // Provides a horizontal tab strip above a single active TerminalPane.
@@ -231,7 +258,7 @@ export function TerminalTabs() {
                   textOverflow: 'ellipsis',
                 }}
               >
-                {tab.title}
+                <TabLabel paneId={tab.paneId} fallback={tab.title} />
               </span>
 
               {/* Close button */}

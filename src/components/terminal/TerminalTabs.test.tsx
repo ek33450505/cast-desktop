@@ -16,10 +16,24 @@ vi.mock('framer-motion', () => ({
   useReducedMotion: vi.fn(() => false),
 }))
 
+// Default mock: unbound (no session)
+const mockUsePaneBinding = vi.fn(() => ({
+  bound: false,
+  sessionId: null,
+  projectPath: null,
+  endedAt: null,
+}))
+
+vi.mock('../../hooks/usePaneBinding', () => ({
+  usePaneBinding: (paneId: string) => mockUsePaneBinding(paneId),
+}))
+
 beforeEach(() => {
   // Reset store to clean state before each test
   useTerminalStore.setState({ tabs: [], activeTabId: null })
   vi.clearAllMocks()
+  // Restore default unbound behavior after clearAllMocks resets the implementation
+  mockUsePaneBinding.mockReturnValue({ bound: false, sessionId: null, projectPath: null, endedAt: null })
 })
 
 describe('TerminalTabs', () => {
@@ -150,6 +164,51 @@ describe('TerminalTabs', () => {
     await waitFor(() => {
       const tab1El = document.querySelector<HTMLElement>(`[data-tab-id="${tab1.id}"]`)
       expect(document.activeElement).toBe(tab1El)
+    })
+  })
+
+  describe('TabLabel — bound state', () => {
+    it('shows fallback title when unbound', () => {
+      useTerminalStore.getState().addTab('~')
+      mockUsePaneBinding.mockReturnValue({ bound: false, sessionId: null, projectPath: null, endedAt: null })
+      render(<TerminalTabs />)
+      expect(screen.getByText('~')).toBeTruthy()
+    })
+
+    it('shows projectPath basename and short sessionId when bound', () => {
+      useTerminalStore.getState().addTab('~')
+      mockUsePaneBinding.mockReturnValue({
+        bound: true,
+        sessionId: 'abcdef123456',
+        projectPath: '/Users/ed/Projects/my-app',
+        endedAt: null,
+      })
+      render(<TerminalTabs />)
+      expect(screen.getByText('my-app · abcdef')).toBeTruthy()
+    })
+
+    it('falls back to tab title when bound but sessionId is null', () => {
+      useTerminalStore.getState().addTab('~')
+      mockUsePaneBinding.mockReturnValue({
+        bound: true,
+        sessionId: null,
+        projectPath: '/Users/ed/Projects/my-app',
+        endedAt: null,
+      })
+      render(<TerminalTabs />)
+      expect(screen.getByText('~')).toBeTruthy()
+    })
+
+    it('falls back to tab title when bound but projectPath is null', () => {
+      useTerminalStore.getState().addTab('~')
+      mockUsePaneBinding.mockReturnValue({
+        bound: true,
+        sessionId: 'abcdef123456',
+        projectPath: null,
+        endedAt: null,
+      })
+      render(<TerminalTabs />)
+      expect(screen.getByText('~')).toBeTruthy()
     })
   })
 

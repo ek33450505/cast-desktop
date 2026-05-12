@@ -16,6 +16,19 @@ describe('terminalStore', () => {
       expect(tab.ptyId).toBeNull()
     })
 
+    it('creates a tab with a UUID paneId when none is provided', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      expect(tab.paneId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      )
+    })
+
+    it('uses the provided paneId when given', () => {
+      const paneId = 'test-pane-id-1234-5678-9012-abcdef012345'
+      const tab = useTerminalStore.getState().addTab('~', paneId)
+      expect(tab.paneId).toBe(paneId)
+    })
+
     it('sets the new tab as activeTabId', () => {
       const tab = useTerminalStore.getState().addTab('~')
       expect(useTerminalStore.getState().activeTabId).toBe(tab.id)
