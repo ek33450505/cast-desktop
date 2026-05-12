@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { Routes, Route, Navigate, Link, Outlet } from 'react-router-dom'
 import { MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -10,6 +10,17 @@ import LeftRail from './components/LeftRail'
 import RightRail from './components/RightRail'
 import { useRailState, LEFT_RAIL_DEFAULT_PX, RIGHT_RAIL_DEFAULT_PX } from './hooks/useRailState'
 import { TerminalTabs } from '../components/terminal/TerminalTabs'
+import CommandPalette from '../components/CommandPalette'
+import {
+  HooksPage,
+  PlansPage,
+  MemoryPage,
+  DbPage,
+  SettingsPage,
+  ThemesPage,
+  SkillsPage,
+  AboutPage,
+} from './pages/StubPages'
 
 // ── Lazy-loaded route views ───────────────────────────────────────────────────
 
@@ -40,6 +51,7 @@ function ShellLayout() {
   } = useRailState()
 
   const shouldReduceMotion = useReducedMotion()
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   // Toggle handlers — pure state flips, the DOM follows via width animation
   const handleToggleLeft = useCallback(() => setLeftRailOpen(!leftRailOpen),
@@ -51,6 +63,8 @@ function ShellLayout() {
   useHotkeys('mod+b', (e) => { e.preventDefault(); handleToggleLeft() }, { enableOnFormTags: false })
   // ⌘⌥B toggles right rail (spec Ed's call #5)
   useHotkeys('mod+alt+b', (e) => { e.preventDefault(); handleToggleRight() }, { enableOnFormTags: false })
+  // ⌘K opens command palette
+  useHotkeys('mod+k', (e) => { e.preventDefault(); setPaletteOpen(true) }, { enableOnFormTags: true, enableOnContentEditable: true })
 
   const leftTargetPx = leftRailOpen ? (leftWidthPx || LEFT_RAIL_DEFAULT_PX) : COLLAPSED_PX
   const rightTargetPx = rightRailOpen ? (rightWidthPx || RIGHT_RAIL_DEFAULT_PX) : COLLAPSED_PX
@@ -67,7 +81,9 @@ function ShellLayout() {
         rightRailOpen={rightRailOpen}
         onToggleLeft={handleToggleLeft}
         onToggleRight={handleToggleRight}
+        onOpenPalette={() => setPaletteOpen(true)}
       />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <div className="flex-1 min-h-0 flex">
         {/* ── Left Rail ─────────────────────────────────────────────── */}
         <motion.div
@@ -128,6 +144,16 @@ export default function App() {
           <Route path="/swarm" element={<ErrorBoundary><SwarmView /></ErrorBoundary>} />
           <Route path="/work-log" element={<ErrorBoundary><WorkLogView /></ErrorBoundary>} />
 
+          {/* ── Wave 2.11 stub routes ── */}
+          <Route path="/hooks" element={<ErrorBoundary><HooksPage /></ErrorBoundary>} />
+          <Route path="/plans" element={<ErrorBoundary><PlansPage /></ErrorBoundary>} />
+          <Route path="/memory" element={<ErrorBoundary><MemoryPage /></ErrorBoundary>} />
+          <Route path="/db" element={<ErrorBoundary><DbPage /></ErrorBoundary>} />
+          <Route path="/settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
+          <Route path="/themes" element={<ErrorBoundary><ThemesPage /></ErrorBoundary>} />
+          <Route path="/skills" element={<ErrorBoundary><SkillsPage /></ErrorBoundary>} />
+          <Route path="/about" element={<ErrorBoundary><AboutPage /></ErrorBoundary>} />
+
           {/* ── Consolidation redirects ── */}
           <Route path="/commands" element={<Navigate to="/docs" replace />} />
           <Route path="/activity" element={<Navigate to="/sessions" replace />} />
@@ -137,16 +163,12 @@ export default function App() {
           <Route path="/task-queue" element={<Navigate to="/sessions" replace />} />
           <Route path="/token-spend" element={<Navigate to="/analytics" replace />} />
           <Route path="/quality-gates" element={<Navigate to="/analytics" replace />} />
-          <Route path="/hooks" element={<Navigate to="/system" replace />} />
           <Route path="/privacy" element={<Navigate to="/system" replace />} />
-          <Route path="/db" element={<Navigate to="/system" replace />} />
           <Route path="/castd" element={<Navigate to="/system" replace />} />
           <Route path="/rules" element={<Navigate to="/system" replace />} />
           <Route path="/knowledge" element={<Navigate to="/system" replace />} />
           <Route path="/knowledge/*" element={<Navigate to="/system" replace />} />
           <Route path="/agents/*" element={<Navigate to="/agents" replace />} />
-          <Route path="/memory" element={<Navigate to="/system" replace />} />
-          <Route path="/plans" element={<Navigate to="/system" replace />} />
 
           {/* ── Backwards compatibility ── */}
           <Route path="/local-os/token-spend" element={<Navigate to="/analytics" replace />} />

@@ -5,6 +5,7 @@ interface TopBarProps {
   rightRailOpen: boolean
   onToggleLeft: () => void
   onToggleRight: () => void
+  onOpenPalette: () => void
 }
 
 export default function TopBar({
@@ -12,6 +13,7 @@ export default function TopBar({
   rightRailOpen,
   onToggleLeft,
   onToggleRight,
+  onOpenPalette,
 }: TopBarProps) {
   return (
     <header
@@ -29,8 +31,18 @@ export default function TopBar({
         </span>
       </div>
 
-      {/* Right side: rail toggles + settings */}
+      {/* Right side: ⌘K trigger + rail toggles + settings */}
       <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          aria-label="Open command palette (⌘K)"
+          className="flex items-center justify-center gap-1.5 px-2.5 rounded-md text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--cast-rail-bg)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-2"
+          style={{ height: '44px', minHeight: '44px' }}
+        >
+          <span className="font-mono">⌘K</span>
+        </button>
+
         <button
           type="button"
           onClick={onToggleLeft}
