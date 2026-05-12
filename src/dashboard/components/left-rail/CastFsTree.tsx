@@ -278,6 +278,13 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
   const [expandedSections, setExpandedSections] = useState<SectionId[]>(readPersistedSections)
   const [rootExpanded, setRootExpanded] = useState(readPersistedRoots)
 
+  const { data: projectRoot } = useQuery({
+    queryKey: ['projectFs', '__root__'],
+    queryFn: () => fetch('/api/project-fs/tree').then(r => r.json()) as Promise<{ name: string; path: string; type: string }>,
+    staleTime: 60_000,
+  })
+  const projectName = projectRoot?.name ?? 'Project'
+
   useCastFsStream()
 
   function toggleSection(id: SectionId) {
@@ -335,7 +342,7 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
         type="button"
         onClick={() => toggleRoot('project')}
         aria-expanded={rootExpanded.project}
-        aria-label="Project section"
+        aria-label={`${projectName} section`}
         className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-left border-t border-[var(--cast-rail-border)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
         style={{ minHeight: '44px' }}
       >
@@ -344,8 +351,8 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
           : <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
         }
         <FolderOpen className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
-        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] flex-1 select-none">
-          Project
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] flex-1 select-none truncate">
+          {projectName}
         </span>
       </button>
 
