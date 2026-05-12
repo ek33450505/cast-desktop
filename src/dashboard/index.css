@@ -65,6 +65,11 @@
   --cast-top-bar-bg: var(--bg-secondary);
   --cast-accent: var(--accent);
   --cast-overlay-backdrop: rgba(0, 0, 0, 0.6);
+
+  /* ─── Model badge colors (Wave 2.6) — derived from forge-dark chart palette ─── */
+  --cast-badge-haiku: var(--chart-2);    /* #60A5FA — blue */
+  --cast-badge-sonnet: var(--chart-3);   /* #A78BFA — purple */
+  --cast-badge-opus: var(--chart-4);     /* #fbbf24 — gold */
 }
 
 @keyframes previewModalIn {
