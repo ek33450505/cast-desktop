@@ -209,40 +209,47 @@ function Section({ config, onPreview, expanded, onToggle }: SectionProps) {
               No items
             </p>
           )}
-          {!isLoading && items.map((item, idx) => {
-            const label = itemLabel(id, item)
-            const path = itemPath(id, item)
-            const isPreviewable = path.length > 0
-            return (
-              <div key={idx} role="listitem">
-                <button
-                  type="button"
-                  aria-disabled={!isPreviewable ? 'true' : undefined}
-                  tabIndex={!isPreviewable ? -1 : undefined}
-                  onClick={(e) => {
-                    if (isPreviewable) {
-                      onPreview({ section: id, name: label, path }, e.currentTarget)
-                    }
-                  }}
-                  aria-label={`Preview ${config.label} item: ${label}`}
-                  title={label}
-                  className="w-full text-left px-5 py-1 text-xs transition-colors truncate focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
-                  style={{
-                    minHeight: '32px', /* 32px = sidebar tree density compromise; revisit in Phase 2 a11y sweep */
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: isPreviewable ? 'var(--text-secondary)' : 'var(--text-muted)',
-                    cursor: isPreviewable ? undefined : 'default',
-                  }}
-                >
-                  <span className={`truncate${isPreviewable ? ' hover:text-[var(--text-primary)]' : ''}`}>{label}</span>
-                  {id === 'hooks' && !(item as HookItem).enabled && (
-                    <span className="ml-1 text-[var(--text-muted)] flex-shrink-0">(off)</span>
-                  )}
-                </button>
-              </div>
-            )
-          })}
+          {!isLoading && items.length > 0 && (
+            <div className="max-h-[40vh] overflow-y-auto">
+              {items.map((item, idx) => {
+                const label = itemLabel(id, item)
+                const path = itemPath(id, item)
+                const isPreviewable = path.length > 0
+                return (
+                  <div key={idx} role="listitem">
+                    <button
+                      type="button"
+                      aria-disabled={!isPreviewable ? 'true' : undefined}
+                      tabIndex={!isPreviewable ? -1 : undefined}
+                      onClick={(e) => {
+                        if (isPreviewable) {
+                          onPreview({ section: id, name: label, path }, e.currentTarget)
+                        }
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.scrollIntoView({ block: 'nearest' })
+                      }}
+                      aria-label={`Preview ${config.label} item: ${label}`}
+                      title={label}
+                      className="w-full text-left px-5 py-1 text-xs transition-colors truncate focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+                      style={{
+                        minHeight: '32px', /* 32px = sidebar tree density compromise; revisit in Phase 2 a11y sweep */
+                        display: 'flex',
+                        alignItems: 'center',
+                        color: isPreviewable ? 'var(--text-secondary)' : 'var(--text-muted)',
+                        cursor: isPreviewable ? undefined : 'default',
+                      }}
+                    >
+                      <span className={`truncate${isPreviewable ? ' hover:text-[var(--text-primary)]' : ''}`}>{label}</span>
+                      {id === 'hooks' && !(item as HookItem).enabled && (
+                        <span className="ml-1 text-[var(--text-muted)] flex-shrink-0">(off)</span>
+                      )}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
