@@ -153,6 +153,35 @@ describe('CastFsTree', () => {
     })
   })
 
+  it('expanded section items list has max-h and overflow-y-auto classes', async () => {
+    renderTree()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /preview agents item: code-writer/i })).toBeTruthy()
+    })
+    // The scrollable wrapper is the parent of the listitem divs
+    const firstItem = screen.getByRole('button', { name: /preview agents item: code-writer/i })
+    const scrollableWrapper = firstItem.closest('div.max-h-\\[40vh\\]') ?? firstItem.parentElement?.parentElement
+    expect(scrollableWrapper?.classList.contains('overflow-y-auto')).toBe(true)
+    expect(scrollableWrapper?.classList.contains('max-h-[40vh]')).toBe(true)
+  })
+
+  it('item button calls scrollIntoView on focus', async () => {
+    // Mock scrollIntoView before render so the instance picks it up
+    const spy = vi.fn()
+    HTMLElement.prototype.scrollIntoView = spy
+
+    renderTree()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /preview agents item: code-writer/i })).toBeTruthy()
+    })
+    const btn = screen.getByRole('button', { name: /preview agents item: code-writer/i })
+    fireEvent.focus(btn)
+    expect(spy).toHaveBeenCalledWith({ block: 'nearest' })
+
+    // Restore
+    HTMLElement.prototype.scrollIntoView = vi.fn()
+  })
+
   it('hooks items have aria-disabled="true" and tabIndex=-1 (non-previewable)', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = input.toString()
