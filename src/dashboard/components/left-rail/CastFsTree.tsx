@@ -11,7 +11,9 @@ import {
   ChevronDown,
   ChevronRight,
   Webhook,
+  FolderOpen,
 } from 'lucide-react'
+import ProjectFsTree from './ProjectFsTree'
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -43,6 +45,7 @@ export interface PreviewTarget {
   section: SectionId
   name: string
   path: string
+  source?: 'cast' | 'project'
 }
 
 interface CastFsTreeProps {
@@ -127,6 +130,9 @@ function itemLabel(section: SectionId, item: FsItem | MemoryItem | HookItem | Mc
   if (section === 'memory') {
     const m = item as MemoryItem
     return `${m.projectId}/${m.name}`
+  }
+  if (section === 'commands') {
+    return `/${(item as FsItem).name}`
   }
   return (item as FsItem).name
 }
@@ -253,8 +259,17 @@ function readPersistedSections(): SectionId[] {
   return ['agents']
 }
 
+function readPersistedRoots(): { cast: boolean; project: boolean } {
+  try {
+    const raw = localStorage.getItem('cast-fs-root-expanded')
+    if (raw) return JSON.parse(raw) as { cast: boolean; project: boolean }
+  } catch { /* ignore */ }
+  return { cast: true, project: true }
+}
+
 export default function CastFsTree({ onPreview }: CastFsTreeProps) {
   const [expandedSections, setExpandedSections] = useState<SectionId[]>(readPersistedSections)
+  const [rootExpanded, setRootExpanded] = useState(readPersistedRoots)
 
   useCastFsStream()
 
@@ -266,17 +281,72 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
     })
   }
 
+  function toggleRoot(root: 'cast' | 'project') {
+    setRootExpanded(prev => {
+      const next = { ...prev, [root]: !prev[root] }
+      try { localStorage.setItem('cast-fs-root-expanded', JSON.stringify(next)) } catch { /* ignore */ }
+      return next
+    })
+  }
+
   return (
     <div className="flex flex-col">
-      {SECTIONS.map(config => (
-        <Section
-          key={config.id}
-          config={config}
-          onPreview={onPreview}
-          expanded={expandedSections.includes(config.id)}
-          onToggle={() => toggleSection(config.id)}
-        />
-      ))}
+      {/* ── Cast root header ── */}
+      <button
+        type="button"
+        onClick={() => toggleRoot('cast')}
+        aria-expanded={rootExpanded.cast}
+        aria-label="Cast section"
+        className="w-full flex items-center gap-2 px-3 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+        style={{ minHeight: '44px' }}
+      >
+        {rootExpanded.cast
+          ? <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+          : <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+        }
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] flex-1 select-none">
+          Cast
+        </span>
+      </button>
+
+      {rootExpanded.cast && (
+        <div>
+          {SECTIONS.map(config => (
+            <Section
+              key={config.id}
+              config={config}
+              onPreview={onPreview}
+              expanded={expandedSections.includes(config.id)}
+              onToggle={() => toggleSection(config.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Project root header ── */}
+      <button
+        type="button"
+        onClick={() => toggleRoot('project')}
+        aria-expanded={rootExpanded.project}
+        aria-label="Project section"
+        className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-left border-t border-[var(--cast-rail-border)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+        style={{ minHeight: '44px' }}
+      >
+        {rootExpanded.project
+          ? <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+          : <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+        }
+        <FolderOpen className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] flex-1 select-none">
+          Project
+        </span>
+      </button>
+
+      {rootExpanded.project && (
+        <div>
+          <ProjectFsTree onPreview={onPreview} />
+        </div>
+      )}
     </div>
   )
 }

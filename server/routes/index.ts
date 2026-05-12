@@ -41,6 +41,7 @@ import { swarmRouter } from './swarm.js'
 import { workLogStreamRouter } from './workLogStream.js'
 import { stopFailureEventsRouter, agentProtocolViolationsRouter } from './telemetryRoutes.js'
 import { castFsRouter } from './castFs.js'
+import { projectFsRouter } from './projectFs.js'
 
 export const router = Router()
 
@@ -109,6 +110,8 @@ router.use('/stop-failure-events', stopFailureEventsRouter)
 router.use('/agent-protocol-violations', agentProtocolViolationsRouter)
 // Wave 2.3a — Cast filesystem tree (read-only access to ~/.claude/)
 router.use('/cast-fs', castFsRouter)
+// Wave 2.3b — Project filesystem tree (read-only access to process.cwd())
+router.use('/project-fs', projectFsRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {

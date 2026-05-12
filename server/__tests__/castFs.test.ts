@@ -23,10 +23,17 @@ describe('GET /api/cast-fs/agents', () => {
 })
 
 describe('GET /api/cast-fs/skills', () => {
-  it('returns an array', async () => {
+  it('returns an array of skill items with path ending in SKILL.md', async () => {
     const res = await request(app).get('/api/cast-fs/skills')
     expect(res.status).toBe(200)
     expect(Array.isArray(res.body)).toBe(true)
+    if (res.body.length > 0) {
+      // Skills are directories — path must point to the SKILL.md inside each
+      expect(res.body[0]).toHaveProperty('name')
+      expect(res.body[0]).toHaveProperty('path')
+      expect(res.body[0]).toHaveProperty('mtime')
+      expect((res.body[0] as { path: string }).path).toMatch(/SKILL\.md$/)
+    }
   })
 })
 

@@ -88,6 +88,28 @@ function readDirItems(dir: string): FsItem[] {
   }
 }
 
+/**
+ * Reads skills as directories — each skill is a subdirectory with a SKILL.md inside.
+ * Returns items with name = subdirName and path = <subdir>/SKILL.md.
+ */
+function readSkillItems(dir: string): FsItem[] {
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    const results: FsItem[] = []
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      const skillMd = path.join(dir, entry.name, 'SKILL.md')
+      try {
+        const stat = fs.statSync(skillMd)
+        results.push({ name: entry.name, path: skillMd, mtime: stat.mtimeMs })
+      } catch { /* SKILL.md missing — skip */ }
+    }
+    return results.sort((a, b) => a.name.localeCompare(b.name))
+  } catch {
+    return []
+  }
+}
+
 function readMemoryItems(): MemoryItem[] {
   const results: MemoryItem[] = []
   try {
@@ -172,7 +194,7 @@ router.get('/agents', (_req, res) => {
 })
 
 router.get('/skills', (_req, res) => {
-  res.json(readDirItems(SKILLS_DIR))
+  res.json(readSkillItems(SKILLS_DIR))
 })
 
 router.get('/rules', (_req, res) => {
