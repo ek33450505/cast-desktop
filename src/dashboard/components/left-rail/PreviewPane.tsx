@@ -1,9 +1,8 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useReducedMotion } from 'framer-motion'
-import { ChevronLeft } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import matter from 'gray-matter'
+import { ChevronLeft, Maximize2 } from 'lucide-react'
+import PreviewBody from './PreviewBody'
 
 function basename(filePath: string): string {
   return filePath.split('/').at(-1) ?? filePath
@@ -17,17 +16,22 @@ interface PreviewResponse {
   mtime: number
 }
 
-interface FrontmatterData {
-  name?: string
-  type?: string
-  description?: string
-  [key: string]: unknown
+// ── threshold ─────────────────────────────────────────────────────────────────
+
+const LARGE_FILE_BYTES = 5 * 1024  // 5 KB
+const LARGE_FILE_LINES = 100
+
+export function isLargeContent(content: string): boolean {
+  if (new Blob([content]).size > LARGE_FILE_BYTES) return true
+  if (content.split('\n').length > LARGE_FILE_LINES) return true
+  return false
 }
 
 // ── fetcher ───────────────────────────────────────────────────────────────────
 
-async function fetchPreview(filePath: string): Promise<PreviewResponse> {
-  const res = await fetch(`/api/cast-fs/preview?path=${encodeURIComponent(filePath)}`)
+async function fetchPreview(filePath: string, source: 'cast' | 'project' = 'cast'): Promise<PreviewResponse> {
+  const endpoint = source === 'project' ? '/api/project-fs/preview' : '/api/cast-fs/preview'
+  const res = await fetch(`${endpoint}?path=${encodeURIComponent(filePath)}`)
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(body.error ?? `HTTP ${res.status}`)
@@ -39,18 +43,27 @@ async function fetchPreview(filePath: string): Promise<PreviewResponse> {
 
 interface PreviewPaneProps {
   path: string
+  source?: 'cast' | 'project'
   onClose: () => void
+  onExpand?: () => void
 }
 
-export default function PreviewPane({ path: filePath, onClose }: PreviewPaneProps) {
+export default function PreviewPane({ path: filePath, source = 'cast', onClose, onExpand }: PreviewPaneProps) {
   const shouldReduceMotion = useReducedMotion()
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['preview', filePath],
-    queryFn: () => fetchPreview(filePath),
+    queryKey: ['preview', filePath, source],
+    queryFn: () => fetchPreview(filePath, source),
     staleTime: 60_000,
     retry: false,
   })
+
+  // Auto-promote large files to modal after fetch
+  useEffect(() => {
+    if (data && onExpand && isLargeContent(data.content)) {
+      onExpand()
+    }
+  }, [data, onExpand])
 
   // Escape key closes
   useEffect(() => {
@@ -62,33 +75,11 @@ export default function PreviewPane({ path: filePath, onClose }: PreviewPaneProp
   }, [onClose])
 
   const fileName = basename(filePath)
-  const isMarkdown = fileName.endsWith('.md')
-
-  // Parse frontmatter for markdown files — memoized to avoid re-running on every render
-  const { frontmatter, bodyContent, parseError } = useMemo(() => {
-    if (!isMarkdown || !data?.content) {
-      return { frontmatter: {} as FrontmatterData, bodyContent: data?.content ?? '', parseError: false }
-    }
-    try {
-      const parsed = matter(data.content)
-      return {
-        frontmatter: parsed.data as FrontmatterData,
-        bodyContent: parsed.content,
-        parseError: false,
-      }
-    } catch {
-      // gray-matter threw — render raw content as <pre> with an alert banner
-      return { frontmatter: {} as FrontmatterData, bodyContent: data.content, parseError: true }
-    }
-  }, [data?.content, isMarkdown])
-
-  const hasFrontmatter = Object.keys(frontmatter).length > 0
 
   return (
     <div
       className="flex flex-col h-full overflow-hidden"
       style={{
-        // Slide-in from left if reduced motion off — handled by parent AnimatePresence
         willChange: shouldReduceMotion ? 'auto' : 'transform, opacity',
       }}
     >
@@ -111,6 +102,17 @@ export default function PreviewPane({ path: filePath, onClose }: PreviewPaneProp
             {filePath}
           </p>
         </div>
+        {onExpand && (
+          <button
+            type="button"
+            onClick={onExpand}
+            aria-label="Open in full view"
+            className="flex items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-1 flex-shrink-0"
+            style={{ width: '28px', height: '28px', minWidth: '28px', minHeight: '28px' }}
+          >
+            <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Body */}
@@ -135,90 +137,7 @@ export default function PreviewPane({ path: filePath, onClose }: PreviewPaneProp
         )}
 
         {data && (
-          <>
-            {/* Frontmatter metadata bar */}
-            {hasFrontmatter && (
-              <dl
-                className="px-3 py-2 border-b border-[var(--cast-rail-border)] space-y-1"
-                aria-label="File metadata"
-                style={{ display: 'block', margin: 0, padding: undefined }}
-              >
-                {frontmatter.name && (
-                  <div className="flex gap-2">
-                    <dt className="text-[10px] text-[var(--text-muted)] flex-shrink-0 w-16">name</dt>
-                    <dd className="text-[10px] text-[var(--text-secondary)] truncate" style={{ margin: 0 }}>{String(frontmatter.name)}</dd>
-                  </div>
-                )}
-                {frontmatter.type && (
-                  <div className="flex gap-2">
-                    <dt className="text-[10px] text-[var(--text-muted)] flex-shrink-0 w-16">type</dt>
-                    <dd className="text-[10px] text-[var(--accent)] truncate" style={{ margin: 0 }}>{String(frontmatter.type)}</dd>
-                  </div>
-                )}
-                {frontmatter.description && (
-                  <div className="flex gap-2">
-                    <dt className="text-[10px] text-[var(--text-muted)] flex-shrink-0 w-16">desc</dt>
-                    <dd className="text-[10px] text-[var(--text-secondary)] line-clamp-2" style={{ margin: 0 }}>{String(frontmatter.description)}</dd>
-                  </div>
-                )}
-              </dl>
-            )}
-
-            {/* Content */}
-            <div className="p-3">
-              {parseError && (
-                <div
-                  role="alert"
-                  className="mb-2 text-[10px] px-2 py-1 rounded"
-                  style={{ color: 'var(--cast-error, #999)', background: 'var(--bg-tertiary)' }}
-                >
-                  Frontmatter could not be parsed. Showing raw content.
-                </div>
-              )}
-              {isMarkdown && !parseError ? (
-                <div className="prose-cast text-xs text-[var(--text-secondary)] leading-relaxed">
-                  <ReactMarkdown
-                    components={{
-                      h1: ({ children }) => <h1 className="text-sm font-semibold text-[var(--text-primary)] mt-3 mb-1">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-xs font-semibold text-[var(--text-primary)] mt-3 mb-1">{children}</h2>,
-                      h3: ({ children }) => <h3 className="text-xs font-medium text-[var(--text-primary)] mt-2 mb-1">{children}</h3>,
-                      p: ({ children }) => <p className="text-xs text-[var(--text-secondary)] mb-2">{children}</p>,
-                      code: ({ children, className }) => {
-                        const isBlock = className?.includes('language-')
-                        if (isBlock) {
-                          return (
-                            <pre className="text-[10px] bg-[var(--bg-tertiary)] rounded p-2 overflow-x-auto mb-2 whitespace-pre-wrap break-words">
-                              <code>{children}</code>
-                            </pre>
-                          )
-                        }
-                        return (
-                          <code className="text-[10px] bg-[var(--bg-tertiary)] rounded px-1 text-[var(--accent)]">
-                            {children}
-                          </code>
-                        )
-                      },
-                      ul: ({ children }) => <ul className="text-xs text-[var(--text-secondary)] list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
-                      ol: ({ children }) => <ol className="text-xs text-[var(--text-secondary)] list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
-                      li: ({ children }) => <li className="text-xs">{children}</li>,
-                      a: ({ href, children }) => <a href={href} className="text-[var(--accent)] hover:underline" target="_blank" rel="noreferrer">{children}</a>,
-                      blockquote: ({ children }) => <blockquote className="border-l-2 border-[var(--cast-rail-border)] pl-2 text-[var(--text-muted)] italic mb-2">{children}</blockquote>,
-                      hr: () => <hr className="border-[var(--cast-rail-border)] my-2" />,
-                    }}
-                  >
-                    {bodyContent}
-                  </ReactMarkdown>
-                </div>
-              ) : (
-                <pre
-                  className="text-[10px] font-mono text-[var(--text-secondary)] whitespace-pre-wrap break-words leading-relaxed"
-                  aria-label="File content"
-                >
-                  {data.content}
-                </pre>
-              )}
-            </div>
-          </>
+          <PreviewBody filePath={filePath} content={data.content} />
         )}
       </div>
     </div>

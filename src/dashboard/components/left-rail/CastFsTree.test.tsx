@@ -137,10 +137,11 @@ describe('CastFsTree', () => {
     )
   })
 
-  it('subscribes to SSE on mount', () => {
+  it('subscribes to cast-fs SSE on mount', () => {
     renderTree()
     expect(MockEventSource.instances.length).toBeGreaterThan(0)
-    expect(MockEventSource.instances[0]?.url).toContain('/api/cast-fs/stream')
+    const castFsInstance = MockEventSource.instances.find(i => i.url.includes('/api/cast-fs/stream'))
+    expect(castFsInstance).toBeTruthy()
   })
 
   it('shows "No items" empty state when section is expanded and has no data', async () => {
