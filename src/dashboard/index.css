@@ -161,6 +161,11 @@ code, pre, .font-mono {
     animation: none !important;
     transition: none !important;
   }
+  /* Defensive CSS guard — JS path already gates this animation via useReducedMotion(),
+     but the keyframe is still defined globally and a future caller could trigger it. */
+  *[style*="previewModalIn"] {
+    animation: none !important;
+  }
 }
 
 @theme inline {
