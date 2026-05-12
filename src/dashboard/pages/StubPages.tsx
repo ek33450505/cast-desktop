@@ -43,7 +43,7 @@ export function SettingsPage() {
 }
 
 export function ThemesPage() {
-  return <StubPage title="Themes" />
+  return <StubPage title="Themes" subtitle="Themes are coming in v1.1 — forest-at-dusk (dark) and sunrise (light) palettes are in design. We're polishing functional UX first." />
 }
 
 export function SkillsPage() {

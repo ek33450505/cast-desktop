@@ -92,31 +92,31 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
           </div>
         )}
         {isMarkdown && !parseError ? (
-          <div className="prose-cast text-xs text-[var(--text-secondary)] leading-relaxed">
+          <div className="prose-cast text-sm text-[var(--text-secondary)] leading-relaxed">
             <ReactMarkdown
               components={{
-                h1: ({ children }) => <h1 className="text-sm font-semibold text-[var(--text-primary)] mt-3 mb-1">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-xs font-semibold text-[var(--text-primary)] mt-3 mb-1">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-xs font-medium text-[var(--text-primary)] mt-2 mb-1">{children}</h3>,
-                p: ({ children }) => <p className="text-xs text-[var(--text-secondary)] mb-2">{children}</p>,
+                h1: ({ children }) => <h1 className="text-base font-semibold text-[var(--text-primary)] mt-3 mb-1">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-sm font-semibold text-[var(--text-primary)] mt-3 mb-1">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-sm font-medium text-[var(--text-primary)] mt-2 mb-1">{children}</h3>,
+                p: ({ children }) => <p className="text-sm text-[var(--text-secondary)] mb-2">{children}</p>,
                 code: ({ children, className }) => {
                   const isBlock = className?.includes('language-')
                   if (isBlock) {
                     return (
-                      <pre className="text-[10px] bg-[var(--bg-tertiary)] rounded p-2 overflow-x-auto mb-2 whitespace-pre-wrap break-words">
+                      <pre className="text-xs bg-[var(--bg-tertiary)] rounded p-2 overflow-x-auto mb-2 whitespace-pre-wrap break-words">
                         <code>{children}</code>
                       </pre>
                     )
                   }
                   return (
-                    <code className="text-[10px] bg-[var(--bg-tertiary)] rounded px-1 text-[var(--accent)]">
+                    <code className="text-xs bg-[var(--bg-tertiary)] rounded px-1 text-[var(--accent)]">
                       {children}
                     </code>
                   )
                 },
-                ul: ({ children }) => <ul className="text-xs text-[var(--text-secondary)] list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
-                ol: ({ children }) => <ol className="text-xs text-[var(--text-secondary)] list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
-                li: ({ children }) => <li className="text-xs">{children}</li>,
+                ul: ({ children }) => <ul className="text-sm text-[var(--text-secondary)] list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
+                ol: ({ children }) => <ol className="text-sm text-[var(--text-secondary)] list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
+                li: ({ children }) => <li className="text-sm">{children}</li>,
                 a: ({ href, children }) => <a href={href} className="text-[var(--accent)] hover:underline" target="_blank" rel="noreferrer">{children}</a>,
                 blockquote: ({ children }) => <blockquote className="border-l-2 border-[var(--cast-rail-border)] pl-2 text-[var(--text-muted)] italic mb-2">{children}</blockquote>,
                 hr: () => <hr className="border-[var(--cast-rail-border)] my-2" />,
@@ -127,7 +127,7 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
           </div>
         ) : (
           <pre
-            className="text-[10px] font-mono text-[var(--text-secondary)] whitespace-pre-wrap break-words leading-relaxed"
+            className="text-xs font-mono text-[var(--text-secondary)] whitespace-pre-wrap break-words leading-relaxed"
             aria-label="File content"
           >
             {content}
