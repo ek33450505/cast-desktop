@@ -3,6 +3,8 @@ name: Question
 about: Ask a usage or design question about Cast Desktop
 title: "[Question] "
 labels: question
+assignees: ''
+
 ---
 
 ## Your Question

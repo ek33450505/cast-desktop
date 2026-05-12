@@ -1,43 +1,38 @@
 ---
-name: Bug Report
-about: Report a bug or unexpected behavior in Cast Desktop
-title: "[Bug] "
-labels: bug
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
-Cast Desktop is in early development (Phase 1). Your bug reports help shape the foundation.
+**Describe the bug**
+A clear and concise description of what the bug is.
 
-## Describe the Bug
-
-A clear description of what went wrong and what you expected to happen.
-
-## Steps to Reproduce
-
-1. Start the app with `npm run dev` (or `cargo tauri dev` if applicable)
-2. Navigate to...
-3. Perform action...
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
 4. See error
 
-## Expected Behavior
+**Expected behavior**
+A clear and concise description of what you expected to happen.
 
-What should have happened?
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
 
-## Actual Behavior
+**Desktop (please complete the following information):**
+ - OS: [e.g. iOS]
+ - Browser [e.g. chrome, safari]
+ - Version [e.g. 22]
 
-What actually happened?
+**Smartphone (please complete the following information):**
+ - Device: [e.g. iPhone6]
+ - OS: [e.g. iOS8.1]
+ - Browser [e.g. stock browser, safari]
+ - Version [e.g. 22]
 
-## Environment
-
-- **OS:** macOS / Ubuntu / Other
-- **Node.js version:** (run `node --version`)
-- **Rust version:** (run `rustc --version`, if building Tauri)
-- **Cast Desktop version/commit:** (git commit hash if from repo)
-- **CAST installed:** Yes / No (run `cast status` to verify)
-
-## Logs & Screenshots
-
-Paste any relevant logs from the browser console (F12), terminal output, or `~/.claude/logs/` if applicable. Screenshots or screen recordings help.
-
-## Additional Context
-
-Any other details about your setup that might be relevant?
+**Additional context**
+Add any other context about the problem here.
