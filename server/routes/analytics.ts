@@ -95,6 +95,90 @@ analyticsRouter.get('/profile/:agent', (req, res) => {
   }
 })
 
+// ── GET /session?sessionId=<id> — session-scoped analytics (Wave 2.7) ────────
+
+interface TokenBucket {
+  minute: string
+  tokens: number
+}
+
+analyticsRouter.get('/session', (req, res) => {
+  const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : null
+  if (!sessionId) {
+    res.json({
+      tokenRateBuckets: [] as TokenBucket[],
+      agentFanOut: 0,
+      qualityPass: 0,
+      qualityFail: 0,
+    })
+    return
+  }
+
+  try {
+    const db = getCastDb()
+    if (!db) {
+      return res.status(503).json({ error: 'cast.db not available' })
+    }
+
+    // Token rate buckets — last 60 minutes, one bucket per minute
+    const bucketRows = db.prepare(`
+      SELECT
+        strftime('%Y-%m-%dT%H:%M:00Z', started_at) AS minute,
+        SUM(COALESCE(input_tokens, 0) + COALESCE(output_tokens, 0)) AS tokens
+      FROM agent_runs
+      WHERE session_id = ?
+        AND started_at >= datetime('now', '-60 minutes')
+      GROUP BY strftime('%Y-%m-%dT%H:%M:00Z', started_at)
+      ORDER BY minute ASC
+    `).all(sessionId) as { minute: string; tokens: number }[]
+
+    // Zero-fill all 60 minutes
+    const bucketMap = new Map<string, number>()
+    for (const row of bucketRows) {
+      bucketMap.set(row.minute, row.tokens)
+    }
+    const now = new Date()
+    const tokenRateBuckets: TokenBucket[] = []
+    for (let i = 59; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 60_000)
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}T${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}:00Z`
+      tokenRateBuckets.push({ minute: key, tokens: bucketMap.get(key) ?? 0 })
+    }
+
+    // Agent fan-out
+    const fanOutRow = db.prepare(`
+      SELECT COUNT(DISTINCT agent) AS count
+      FROM agent_runs
+      WHERE session_id = ?
+        AND started_at >= datetime('now', '-1 day')
+    `).get(sessionId) as { count: number }
+    const agentFanOut = fanOutRow?.count ?? 0
+
+    // Quality gates — uses contract_passed column
+    let qualityPass = 0
+    let qualityFail = 0
+    try {
+      const passRow = db.prepare(`
+        SELECT COUNT(*) AS cnt FROM quality_gates
+        WHERE session_id = ? AND contract_passed = 1
+      `).get(sessionId) as { cnt: number }
+      const failRow = db.prepare(`
+        SELECT COUNT(*) AS cnt FROM quality_gates
+        WHERE session_id = ? AND contract_passed = 0
+      `).get(sessionId) as { cnt: number }
+      qualityPass = passRow?.cnt ?? 0
+      qualityFail = failRow?.cnt ?? 0
+    } catch {
+      // quality_gates table may not exist in all environments
+    }
+
+    res.json({ tokenRateBuckets, agentFanOut, qualityPass, qualityFail })
+  } catch (err) {
+    console.error('Analytics /session error:', err)
+    res.status(500).json({ error: 'Failed to compute session analytics' })
+  }
+})
+
 analyticsRouter.get('/', (req, res) => {
   try {
     const sessions = listSessions()
