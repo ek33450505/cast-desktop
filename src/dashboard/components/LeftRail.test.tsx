@@ -63,7 +63,7 @@ function renderRail() {
 
 // ── tests ─────────────────────────────────────────────────────────────────────
 
-describe('LeftRail — focus return on preview close (Fix 5)', () => {
+describe('LeftRail — modal-opens-directly behavior', () => {
   beforeEach(() => {
     MockEventSource.instances = []
     localStorageMock.clear()
@@ -87,34 +87,67 @@ describe('LeftRail — focus return on preview close (Fix 5)', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns focus to the trigger button after preview closes via back button', async () => {
+  it('clicking a file opens the modal (not an inline pane)', async () => {
     renderRail()
 
-    // Wait for agents to render
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /preview agents item: code-writer/i })).toBeTruthy()
     })
 
     const triggerBtn = screen.getByRole('button', { name: /preview agents item: code-writer/i })
-
-    // Click the item to open preview
     fireEvent.click(triggerBtn)
 
-    // Wait for preview header to appear
+    // Modal renders with role="dialog" — not an inline back-button pane
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /back to file tree/i })).toBeTruthy()
+      expect(screen.getByRole('dialog')).toBeTruthy()
     })
 
-    // Close via back button
+    // No inline "back to file tree" button — that was PreviewPane
+    expect(screen.queryByRole('button', { name: /back to file tree/i })).toBeNull()
+  })
+
+  it('tree remains visible while modal is open (modal is an overlay, not a replacement)', async () => {
+    renderRail()
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /preview agents item: code-writer/i })).toBeTruthy()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /preview agents item: code-writer/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeTruthy()
+    })
+
+    // The tree item is still in the DOM (tree not replaced by preview)
+    expect(screen.getByRole('button', { name: /preview agents item: code-writer/i })).toBeTruthy()
+  })
+
+  it('closing the modal via close button dismisses it and returns focus', async () => {
+    renderRail()
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /preview agents item: code-writer/i })).toBeTruthy()
+    })
+
+    const triggerBtn = screen.getByRole('button', { name: /preview agents item: code-writer/i })
+    fireEvent.click(triggerBtn)
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeTruthy()
+    })
+
+    const closeBtn = screen.getByRole('button', { name: /close preview/i })
+
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /back to file tree/i }))
-      // Allow requestAnimationFrame to fire
+      fireEvent.click(closeBtn)
       await new Promise(resolve => setTimeout(resolve, 50))
     })
 
-    // Tree should re-render; focus should have been restored to the trigger element
-    // We verify the trigger ref's focus() was targeted by checking the stored ref
-    // In jsdom, requestAnimationFrame runs synchronously after act() + setTimeout
+    // Modal is gone
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    // Tree item is still present
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /preview agents item: code-writer/i })).toBeTruthy()
     })

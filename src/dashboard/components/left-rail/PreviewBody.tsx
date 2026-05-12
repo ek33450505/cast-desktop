@@ -25,9 +25,8 @@ function basename(p: string): string {
 // ── component ─────────────────────────────────────────────────────────────────
 
 /**
- * Shared rendering layer used by both PreviewPane (inline sidebar) and
- * PreviewModal (large-viewport overlay). Handles frontmatter parsing,
- * react-markdown rendering, and the raw <pre> fallback.
+ * Shared rendering layer used by PreviewModal (large-viewport overlay).
+ * Handles frontmatter parsing, react-markdown rendering, and the raw <pre> fallback.
  */
 export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
   const fileName = basename(filePath)

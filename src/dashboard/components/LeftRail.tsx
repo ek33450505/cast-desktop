@@ -12,7 +12,6 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import CastFsTree from './left-rail/CastFsTree'
-import PreviewPane, { isLargeContent } from './left-rail/PreviewPane'
 import PreviewModal from './left-rail/PreviewModal'
 import type { PreviewTarget, SectionId } from './left-rail/CastFsTree'
 
@@ -34,12 +33,9 @@ const SECTIONS: Section[] = [
   { id: 'project',  label: 'Project',  Icon: FolderOpen },
 ]
 
-type PreviewMode = 'inline' | 'modal' | null
-
 interface SelectedPreview {
   path: string
   source: 'cast' | 'project'
-  content?: string
 }
 
 interface LeftRailProps {
@@ -49,35 +45,15 @@ interface LeftRailProps {
 
 export default function LeftRail({ open, onExpand }: LeftRailProps) {
   const shouldReduceMotion = useReducedMotion()
-  const [previewMode, setPreviewMode] = useState<PreviewMode>(null)
   const [selected, setSelected] = useState<SelectedPreview | null>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
 
   function handlePreview(target: PreviewTarget, triggerEl?: HTMLElement) {
     triggerRef.current = triggerEl ?? null
     setSelected({ path: target.path, source: target.source ?? 'cast' })
-    // Start in inline mode; after fetch in PreviewPane large-file detection
-    // will call onExpand to promote to modal if needed
-    setPreviewMode('inline')
   }
 
-  function handleAutoPromote() {
-    setPreviewMode('modal')
-  }
-
-  function handleCloseInline() {
-    setPreviewMode(null)
-    setSelected(null)
-    const el = triggerRef.current
-    if (el) {
-      requestAnimationFrame(() => { el.focus() })
-    }
-    triggerRef.current = null
-  }
-
-  function handleCloseModal() {
-    // Return to inline if we promoted from inline; otherwise close entirely
-    setPreviewMode(null)
+  function handleClosePreview() {
     setSelected(null)
     const el = triggerRef.current
     if (el) {
@@ -97,10 +73,6 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
     ? { duration: 0 }
     : { duration: 0.22, ease: 'easeInOut' as const }
 
-  const slideTransition = shouldReduceMotion
-    ? { duration: 0 }
-    : { duration: 0.18, ease: 'easeInOut' as const }
-
   return (
     <>
       <nav
@@ -116,40 +88,11 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               transition={transition}
-              className="flex-1 overflow-hidden flex flex-col"
+              className="flex-1 overflow-y-auto overflow-x-hidden"
             >
-              <AnimatePresence initial={false} mode="wait">
-                {previewMode === 'inline' && selected ? (
-                  <motion.div
-                    key="preview"
-                    initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 20 }}
-                    transition={slideTransition}
-                    className="flex-1 overflow-hidden flex flex-col"
-                  >
-                    <PreviewPane
-                      path={selected.path}
-                      source={selected.source}
-                      onClose={handleCloseInline}
-                      onExpand={handleAutoPromote}
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="tree"
-                    initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
-                    transition={slideTransition}
-                    className="flex-1 overflow-y-auto overflow-x-hidden"
-                  >
-                    <div className="py-1">
-                      <CastFsTree onPreview={handlePreview} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div className="py-1">
+                <CastFsTree onPreview={handlePreview} />
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -178,17 +121,14 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
       </nav>
 
       {/* Modal overlay — rendered outside nav so it's not clipped */}
-      {previewMode === 'modal' && selected && (
+      {selected && (
         <PreviewModal
           path={selected.path}
           source={selected.source}
-          onClose={handleCloseModal}
+          onClose={handleClosePreview}
           triggerRef={triggerRef}
         />
       )}
     </>
   )
 }
-
-// Re-export for downstream consumers that import from LeftRail
-export { isLargeContent }
