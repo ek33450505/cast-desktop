@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server:dev\" \"vite\"",
-    "server:dev": "cd server && tsx watch index.ts",
+    "server:dev": "cd server && npm run dev",
     "build": "tsc -b && vite build",
     "build:server": "cd server && npm install && npm run build",
     "build:sidecar": "mkdir -p src-tauri/binaries && cd server && bun build --compile --minify --target=bun index.ts --outfile ../src-tauri/binaries/cast-server-aarch64-apple-darwin",
