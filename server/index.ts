@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename)
 fs.mkdirSync(DASHBOARD_COMMANDS_DIR, { recursive: true })
 
 const app = express()
-app.use(express.json())
+app.use(express.json({ limit: '5mb' }))
 
 const allowedOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173'
 app.use((_req, res, next) => {
