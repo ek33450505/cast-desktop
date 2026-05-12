@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Bot,
@@ -8,11 +8,14 @@ import {
   ClipboardList,
   Terminal,
   Plug,
-  FolderOpen,
+  Webhook,
 } from 'lucide-react'
+import CastFsTree from './left-rail/CastFsTree'
+import PreviewPane from './left-rail/PreviewPane'
+import type { PreviewTarget, SectionId } from './left-rail/CastFsTree'
 
 interface Section {
-  id: string
+  id: SectionId | 'projects'
   label: string
   Icon: React.ElementType
 }
@@ -25,7 +28,7 @@ const SECTIONS: Section[] = [
   { id: 'plans',    label: 'Plans',    Icon: ClipboardList },
   { id: 'commands', label: 'Commands', Icon: Terminal },
   { id: 'mcp',      label: 'MCP',      Icon: Plug },
-  { id: 'projects', label: 'Projects', Icon: FolderOpen },
+  { id: 'hooks',    label: 'Hooks',    Icon: Webhook },
 ]
 
 interface LeftRailProps {
@@ -33,51 +36,45 @@ interface LeftRailProps {
   onExpand: () => void
 }
 
-function SectionSkeleton({ label }: { label: string }) {
-  return (
-    <div className="px-3 py-2">
-      <h3
-        id={`left-rail-${label.toLowerCase()}`}
-        className="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)] mb-2 select-none"
-      >
-        {label}
-      </h3>
-      <div className="space-y-1.5">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-6 rounded-md bg-[var(--bg-tertiary)] animate-pulse"
-            style={{ width: `${60 + i * 10}%` }}
-            aria-hidden="true"
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export default function LeftRail({ open, onExpand }: LeftRailProps) {
   const shouldReduceMotion = useReducedMotion()
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
+
+  function handlePreview(target: PreviewTarget, triggerEl?: HTMLElement) {
+    triggerRef.current = triggerEl ?? null
+    setSelectedPath(target.path)
+  }
+
+  function handleClosePreview() {
+    setSelectedPath(null)
+    // Return focus to the item that triggered the preview.
+    // requestAnimationFrame defers until after AnimatePresence re-mounts the tree.
+    const el = triggerRef.current
+    if (el) {
+      requestAnimationFrame(() => {
+        el.focus()
+      })
+    }
+    triggerRef.current = null
+  }
 
   function handleIconClick(id: string) {
     if (!open) {
       onExpand()
-      // Scroll after expand animation
-      setTimeout(
-        () => {
-          sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        },
-        shouldReduceMotion ? 0 : 250,
-      )
-    } else {
-      sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
+    // When rail is collapsed and user clicks icon, just expand
+    // The CastFsTree handles section expansion internally
+    void id
   }
 
   const transition = shouldReduceMotion
     ? { duration: 0 }
     : { duration: 0.22, ease: 'easeInOut' as const }
+
+  const slideTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { duration: 0.18, ease: 'easeInOut' as const }
 
   return (
     <nav
@@ -93,18 +90,35 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -8 }}
             transition={transition}
-            className="flex-1 overflow-y-auto overflow-x-hidden"
+            className="flex-1 overflow-hidden flex flex-col"
           >
-            <div className="py-2 space-y-4">
-              {SECTIONS.map(({ id, label }) => (
-                <div
-                  key={id}
-                  ref={(el) => { sectionRefs.current[id] = el }}
+            <AnimatePresence initial={false} mode="wait">
+              {selectedPath ? (
+                <motion.div
+                  key="preview"
+                  initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: 20 }}
+                  transition={slideTransition}
+                  className="flex-1 overflow-hidden flex flex-col"
                 >
-                  <SectionSkeleton label={label} />
-                </div>
-              ))}
-            </div>
+                  <PreviewPane path={selectedPath} onClose={handleClosePreview} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="tree"
+                  initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
+                  transition={slideTransition}
+                  className="flex-1 overflow-y-auto overflow-x-hidden"
+                >
+                  <div className="py-1">
+                    <CastFsTree onPreview={handlePreview} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ) : (
           <motion.div

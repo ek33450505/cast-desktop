@@ -40,6 +40,7 @@ import { hookEventsRouter } from './hookEvents.js'
 import { swarmRouter } from './swarm.js'
 import { workLogStreamRouter } from './workLogStream.js'
 import { stopFailureEventsRouter, agentProtocolViolationsRouter } from './telemetryRoutes.js'
+import { castFsRouter } from './castFs.js'
 
 export const router = Router()
 
@@ -106,6 +107,8 @@ router.use('/work-log-stream', workLogStreamRouter)
 // Phase 3 prep — governance annotation data sources
 router.use('/stop-failure-events', stopFailureEventsRouter)
 router.use('/agent-protocol-violations', agentProtocolViolationsRouter)
+// Wave 2.3a — Cast filesystem tree (read-only access to ~/.claude/)
+router.use('/cast-fs', castFsRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {
