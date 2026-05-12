@@ -22,6 +22,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
   const terminal = useTerminal()
   const tab = useTerminalStore((s) => s.tabs.find((t) => t.id === tabId))
   const setTabPtyId = useTerminalStore((s) => s.setTabPtyId)
+  const setTabPaneId = useTerminalStore((s) => s.setTabPaneId)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -86,12 +87,17 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
         ;(async () => {
           try {
             const shell = await terminal.getDefaultShell()
-            const ptyId = await terminal.create({ shell, cols, rows })
+            const { ptyId, paneId } = await terminal.create({ shell, cols, rows })
 
             if (!isMounted) {
-              await terminal.kill(ptyId).catch(() => {})
+              if (ptyId) await terminal.kill(ptyId).catch(() => {})
               return
             }
+
+            // Update store with paneId immediately so TabLabel can start binding
+            setTabPaneId(tabId, paneId)
+
+            if (!ptyId) return
 
             // Wire input
             xterm.onData((data) => {

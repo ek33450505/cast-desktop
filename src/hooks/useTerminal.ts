@@ -8,9 +8,14 @@
 
 import { invoke } from '@tauri-apps/api/core'
 
+export interface CreateResult {
+  ptyId: string | null
+  paneId: string
+}
+
 export interface UseTerminalApi {
   supported: boolean
-  create: (opts: { shell: string; cols: number; rows: number }) => Promise<string>
+  create: (opts: { shell: string; cols: number; rows: number }) => Promise<CreateResult>
   write: (ptyId: string, data: string) => Promise<void>
   resize: (ptyId: string, cols: number, rows: number) => Promise<void>
   kill: (ptyId: string) => Promise<void>
@@ -29,7 +34,10 @@ export function useTerminal(): UseTerminalApi {
   if (!supported) {
     return {
       supported: false,
-      create: () => Promise.reject(new Error(NOT_DESKTOP_ERR)),
+      create: () => {
+        const paneId = crypto.randomUUID()
+        return Promise.resolve({ ptyId: null, paneId })
+      },
       write: () => Promise.reject(new Error(NOT_DESKTOP_ERR)),
       resize: () => Promise.reject(new Error(NOT_DESKTOP_ERR)),
       kill: () => Promise.reject(new Error(NOT_DESKTOP_ERR)),
@@ -39,8 +47,16 @@ export function useTerminal(): UseTerminalApi {
 
   return {
     supported: true,
-    create: ({ shell, cols, rows }) =>
-      invoke<string>('pty_create', { shell, cols, rows }),
+    create: async ({ shell, cols, rows }) => {
+      const paneId = crypto.randomUUID()
+      const ptyId = await invoke<string>('pty_create', {
+        shell,
+        cols,
+        rows,
+        env: { CAST_DESKTOP_PANE_ID: paneId },
+      })
+      return { ptyId, paneId }
+    },
     write: (ptyId, data) =>
       invoke<void>('pty_write', { sessionId: ptyId, data }),
     resize: (ptyId, cols, rows) =>

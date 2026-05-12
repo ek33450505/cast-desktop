@@ -42,6 +42,7 @@ import { workLogStreamRouter } from './workLogStream.js'
 import { stopFailureEventsRouter, agentProtocolViolationsRouter } from './telemetryRoutes.js'
 import { castFsRouter } from './castFs.js'
 import { projectFsRouter } from './projectFs.js'
+import { paneBindingsRouter } from './paneBindings.js'
 
 export const router = Router()
 
@@ -112,6 +113,8 @@ router.use('/agent-protocol-violations', agentProtocolViolationsRouter)
 router.use('/cast-fs', castFsRouter)
 // Wave 2.3b — Project filesystem tree (read-only access to process.cwd())
 router.use('/project-fs', projectFsRouter)
+// Wave 2.4 — PTY pane session bindings
+router.use('/pane-bindings', paneBindingsRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {

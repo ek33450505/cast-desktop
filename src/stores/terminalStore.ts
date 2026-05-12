@@ -3,6 +3,7 @@ import { create } from 'zustand'
 export interface Tab {
   id: string
   ptyId: string | null
+  paneId: string
   cwd: string
   title: string
 }
@@ -10,10 +11,11 @@ export interface Tab {
 interface TerminalState {
   tabs: Tab[]
   activeTabId: string | null
-  addTab: (cwd: string) => Tab
+  addTab: (cwd: string, paneId?: string) => Tab
   closeTab: (id: string) => void
   setActiveTab: (id: string) => void
   setTabPtyId: (id: string, ptyId: string) => void
+  setTabPaneId: (id: string, paneId: string) => void
   updateTabTitle: (id: string, title: string) => void
 }
 
@@ -21,11 +23,11 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   tabs: [],
   activeTabId: null,
 
-  addTab: (cwd: string) => {
+  addTab: (cwd: string, paneId?: string) => {
     const id = crypto.randomUUID()
     const tabCount = get().tabs.length + 1
     const title = cwd ? cwd.split('/').filter(Boolean).pop() ?? 'Terminal' : `Terminal ${tabCount}`
-    const tab: Tab = { id, ptyId: null, cwd, title }
+    const tab: Tab = { id, ptyId: null, paneId: paneId ?? crypto.randomUUID(), cwd, title }
     set((state) => ({
       tabs: [...state.tabs, tab],
       activeTabId: id,
@@ -51,6 +53,12 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   setTabPtyId: (id: string, ptyId: string) => {
     set((state) => ({
       tabs: state.tabs.map((t) => (t.id === id ? { ...t, ptyId } : t)),
+    }))
+  },
+
+  setTabPaneId: (id: string, paneId: string) => {
+    set((state) => ({
+      tabs: state.tabs.map((t) => (t.id === id ? { ...t, paneId } : t)),
     }))
   },
 
