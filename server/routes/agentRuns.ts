@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { Request, Response } from 'express'
 import { execSync } from 'child_process'
 import { getCastDb } from './castDb.js'
 import { getSessionCostMap } from '../utils/jsonlTokenTotals.js'
@@ -12,6 +13,156 @@ export const activeAgentsRouter = Router()
 // Router for session-specific agent history and worktree status
 export const sessionAgentsRouter = Router()
 export const worktreesRouter = Router()
+
+// ── liveAgentsRouter — mounted at /api/agents ─────────────────────────────────
+// Powers the Wave 2.6 LiveAgentsPanel right-rail widget.
+export const liveAgentsRouter = Router()
+
+// Shared row type returned from agent_runs queries
+interface AgentRunRow {
+  id: string
+  session_id: string
+  agent: string
+  model: string | null
+  started_at: string
+  ended_at: string | null
+  status: string
+  input_tokens: number | null
+  output_tokens: number | null
+  cost_usd: number | null
+  task_summary: string | null
+}
+
+function toRunningAgent(row: AgentRunRow) {
+  return {
+    agentRunId: row.id,
+    name: row.agent,
+    model: row.model ?? 'unknown',
+    prompt: row.task_summary?.slice(0, 60) ?? '',
+    startedAt: row.started_at,
+    tokenCount: (row.input_tokens ?? 0) + (row.output_tokens ?? 0),
+  }
+}
+
+function queryRunningAgents(sessionId: string): ReturnType<typeof toRunningAgent>[] {
+  const db = getCastDb()
+  if (!db) return []
+  const rows = db.prepare(`
+    SELECT id, session_id, agent, model, started_at, ended_at,
+           status, input_tokens, output_tokens, cost_usd, task_summary
+    FROM agent_runs
+    WHERE session_id = ?
+      AND status = 'running'
+      AND started_at >= datetime('now', '-15 minutes')
+    ORDER BY started_at DESC
+  `).all(sessionId) as AgentRunRow[]
+  return rows.map(toRunningAgent)
+}
+
+// ── GET /running?sessionId=<id> ───────────────────────────────────────────────
+// IMPORTANT: declared before /runs/:agentRunId to avoid param route capture
+
+liveAgentsRouter.get('/running', (req: Request, res: Response) => {
+  const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : null
+  if (!sessionId) {
+    res.json({ agents: [] })
+    return
+  }
+  try {
+    const agents = queryRunningAgents(sessionId)
+    res.json({ agents })
+  } catch (err) {
+    console.error('Live agents /running error:', err)
+    res.status(500).json({ error: 'Failed to fetch running agents' })
+  }
+})
+
+// ── GET /stream?sessionId=<id> — SSE ─────────────────────────────────────────
+// IMPORTANT: declared before /runs/:agentRunId to avoid param route capture
+
+liveAgentsRouter.get('/stream', (req: Request, res: Response) => {
+  const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : null
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+
+  // Snapshot key: agentRunId+status pairs joined so we detect new rows + transitions
+  let lastSnapshot = ''
+
+  function poll() {
+    if (!sessionId) return
+    try {
+      const agents = queryRunningAgents(sessionId)
+      const snapshot = agents.map(a => `${a.agentRunId}:${a.status}`).join(',')
+      if (snapshot !== lastSnapshot) {
+        lastSnapshot = snapshot
+        res.write(`data: ${JSON.stringify({ event: 'agents-update', agents })}\n\n`)
+      }
+    } catch {
+      // DB unavailable — skip this tick
+    }
+  }
+
+  // Emit initial snapshot immediately
+  poll()
+
+  const pollInterval = setInterval(poll, 3_000)
+
+  const keepAlive = setInterval(() => {
+    res.write(':keepalive\n\n')
+  }, 30_000)
+
+  const cleanup = () => {
+    clearInterval(pollInterval)
+    clearInterval(keepAlive)
+  }
+
+  req.on('close', cleanup)
+  req.on('error', cleanup)
+})
+
+// ── GET /runs/:agentRunId ─────────────────────────────────────────────────────
+
+liveAgentsRouter.get('/runs/:agentRunId', (req: Request, res: Response) => {
+  const { agentRunId } = req.params
+  try {
+    const db = getCastDb()
+    if (!db) {
+      res.status(404).json({ error: 'Agent run not found' })
+      return
+    }
+    const row = db.prepare(`
+      SELECT id, session_id, agent, model, started_at, ended_at,
+             status, input_tokens, output_tokens, cost_usd, task_summary
+      FROM agent_runs
+      WHERE id = ?
+      LIMIT 1
+    `).get(agentRunId) as AgentRunRow | undefined
+
+    if (!row) {
+      res.status(404).json({ error: 'Agent run not found' })
+      return
+    }
+
+    res.json({
+      agentRunId: row.id,
+      name: row.agent,
+      model: row.model ?? 'unknown',
+      prompt: row.task_summary,
+      startedAt: row.started_at,
+      endedAt: row.ended_at,
+      status: row.status,
+      inputTokens: row.input_tokens ?? 0,
+      outputTokens: row.output_tokens ?? 0,
+      costUsd: row.cost_usd ?? 0,
+    })
+  } catch (err) {
+    console.error('Live agents /runs/:id error:', err)
+    res.status(500).json({ error: 'Failed to fetch agent run detail' })
+  }
+})
 
 // GET /api/cast/active-agents
 // Returns only agents currently running, after deduplicating SubagentStart/SubagentStop

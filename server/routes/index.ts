@@ -19,7 +19,7 @@ import { debugRouter } from './debug.js'
 import { agentsLiveRouter } from './agentsLive.js'
 import { controlRouter } from './control.js'
 import { tokenSpendRouter } from './tokenSpend.js'
-import { agentRunsRouter, activeAgentsRouter, sessionAgentsRouter, worktreesRouter } from './agentRuns.js'
+import { agentRunsRouter, activeAgentsRouter, sessionAgentsRouter, worktreesRouter, liveAgentsRouter } from './agentRuns.js'
 import { taskQueueRouter } from './taskQueue.js'
 import { agentMemoriesDbRouter } from './agentMemoriesDb.js'
 import { castdControlRouter } from './castdControl.js'
@@ -47,6 +47,9 @@ import { paneBindingsRouter } from './paneBindings.js'
 export const router = Router()
 
 router.use('/agents/live', agentsLiveRouter)
+// Wave 2.6 — Live agents panel (mounted BEFORE agentsRouter so /running, /stream, /runs/:id
+// match before agentsRouter's /:name parameterized route shadows them)
+router.use('/agents', liveAgentsRouter)
 router.use('/agents', agentsRouter)
 router.use('/sessions', sessionsRouter)
 router.use('/memory', memoryRouter)
