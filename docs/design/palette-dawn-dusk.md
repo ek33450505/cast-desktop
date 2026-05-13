@@ -47,11 +47,11 @@
 
 | Token | Dawn | Dusk | Notes |
 |---|---|---|---|
-| `--content-primary` | `#1A2333` | `#E6E8E2` | Body text — 16+:1 on canvas (dawn), 14+:1 (dusk) |
-| `--content-secondary` | `#475063` | `#A8ADA6` | Labels, secondary text |
-| `--content-muted` | `#737B8C` | `#737A75` | Meta, timestamps, placeholders |
-| `--content-disabled` | `#A4ADBA` | `#4D544F` | Non-interactive text + icons |
-| `--content-on-accent` | `#1A2333` | `#0E1614` | Dark text on amber fills |
+| `--content-primary` | `#1A211E` | `#E6E8E2` | Body text — ~13.8:1 on canvas (dawn), 14+:1 (dusk) |
+| `--content-secondary` | `#3A4239` | `#A8ADA6` | Labels, secondary text — ≥8:1 on dawn canvas |
+| `--content-muted` | `#4A5249` | `#737A75` | Meta, timestamps, placeholders — ≥5.5:1 on dawn canvas |
+| `--content-disabled` | `#A4ADA1` | `#4D544F` | Non-interactive text + icons (intentionally pale) |
+| `--content-on-accent` | `#1A211E` | `#0E1614` | Dark text on amber fills |
 | `--content-on-status-fill` | `#FFFFFF` | `#FFFFFF` | White text on saturated status fills |
 
 ### 1.4 Accent (brand amber)
@@ -120,12 +120,12 @@ components. Verified pairings (calculated for the values above):
 
 | Foreground | Background | Ratio | Use |
 |---|---|---|---|
-| `--content-primary` `#1A2333` | `--system-canvas` `#E8ECF1` | 14.8:1 ✓ | body text on canvas |
-| `--content-secondary` `#475063` | `--system-canvas` `#E8ECF1` | 6.9:1 ✓ | labels, secondary |
-| `--content-muted` `#737B8C` | `--system-canvas` `#E8ECF1` | 3.8:1 ⚠ | only for large text or meta — NOT body |
-| `--content-on-accent` `#1A2333` | `--accent` `#D48E1A` | 6.4:1 ✓ | dark text on amber button |
-| `--accent-text` `#9E6A0E` | `--system-canvas` `#E8ECF1` | 4.6:1 ✓ | accent-as-link |
-| `--stroke-focus` `#C48B1A` | `--system-canvas` `#E8ECF1` | 3.0:1 ✓ | focus ring (UI component min) |
+| `--content-primary` `#1A211E` | `--system-canvas` `#F0F2EE` | ~13.8:1 ✓ | body text on canvas |
+| `--content-secondary` `#3A4239` | `--system-canvas` `#F0F2EE` | ~8.5:1 ✓ | labels, secondary |
+| `--content-muted` `#4A5249` | `--system-canvas` `#F0F2EE` | ~5.8:1 ✓ | meta, timestamps (large text ok) |
+| `--content-on-accent` `#1A211E` | `--accent` `#D48E1A` | ~6.4:1 ✓ | dark text on amber button |
+| `--accent-text` `#8C5E0B` | `--system-canvas` `#F0F2EE` | ~5.2:1 ✓ | accent-as-link |
+| `--stroke-focus` `#C48B1A` | `--system-canvas` `#F0F2EE` | ~3.0:1 ✓ | focus ring (UI component min) |
 
 ### Dusk
 
