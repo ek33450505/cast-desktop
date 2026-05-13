@@ -159,24 +159,24 @@ function Section({ config, onPreview, expanded, onToggle }: SectionProps) {
         aria-expanded={expanded}
         aria-controls={`castfs-section-${id}`}
         aria-label={`${label} section`}
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-[var(--system-elevated)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
         style={{ minHeight: '36px' }}
       >
-        <Icon className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
-        <span className="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)] flex-1 truncate select-none">
+        <Icon className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
+        <span className="text-xs font-medium uppercase tracking-widest text-[var(--content-muted)] flex-1 truncate select-none">
           {label}
         </span>
         {count > 0 && (
           <span
-            className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] rounded px-1 py-0.5 flex-shrink-0"
+            className="text-[10px] font-mono text-[var(--content-muted)] bg-[var(--system-elevated)] rounded px-1 py-0.5 flex-shrink-0"
             aria-label={`${count} items`}
           >
             {count}
           </span>
         )}
         {expanded
-          ? <ChevronDown className="w-3 h-3 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
-          : <ChevronRight className="w-3 h-3 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+          ? <ChevronDown className="w-3 h-3 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
+          : <ChevronRight className="w-3 h-3 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
         }
       </button>
 
@@ -191,7 +191,7 @@ function Section({ config, onPreview, expanded, onToggle }: SectionProps) {
               {[1, 2, 3].map(i => (
                 <div
                   key={i}
-                  className="h-5 rounded bg-[var(--bg-tertiary)] animate-pulse"
+                  className="h-5 rounded bg-[var(--system-elevated)] animate-pulse"
                   style={{ width: `${50 + i * 12}%` }}
                   aria-hidden="true"
                 />
@@ -199,7 +199,7 @@ function Section({ config, onPreview, expanded, onToggle }: SectionProps) {
             </div>
           )}
           {!isLoading && items.length === 0 && (
-            <p className="px-3 py-1 text-xs text-[var(--text-muted)] select-none">
+            <p className="px-3 py-1 text-xs text-[var(--content-muted)] select-none">
               No items
             </p>
           )}
@@ -225,18 +225,18 @@ function Section({ config, onPreview, expanded, onToggle }: SectionProps) {
                       }}
                       aria-label={`Preview ${config.label} item: ${label}`}
                       title={label}
-                      className="w-full text-left px-5 py-1 text-xs transition-colors truncate focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+                      className="w-full text-left px-5 py-1 text-xs transition-colors truncate focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
                       style={{
                         minHeight: '32px', /* 32px = sidebar tree density compromise; revisit in Phase 2 a11y sweep */
                         display: 'flex',
                         alignItems: 'center',
-                        color: isPreviewable ? 'var(--text-secondary)' : 'var(--text-muted)',
+                        color: isPreviewable ? 'var(--content-secondary)' : 'var(--content-muted)',
                         cursor: isPreviewable ? undefined : 'default',
                       }}
                     >
-                      <span className={`truncate${isPreviewable ? ' hover:text-[var(--text-primary)]' : ''}`}>{label}</span>
+                      <span className={`truncate${isPreviewable ? ' hover:text-[var(--content-primary)]' : ''}`}>{label}</span>
                       {id === 'hooks' && !(item as HookItem).enabled && (
-                        <span className="ml-1 text-[var(--text-muted)] flex-shrink-0">(off)</span>
+                        <span className="ml-1 text-[var(--content-muted)] flex-shrink-0">(off)</span>
                       )}
                     </button>
                   </div>
@@ -305,14 +305,14 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
         onClick={() => toggleRoot('cast')}
         aria-expanded={rootExpanded.cast}
         aria-label="Cast section"
-        className="w-full flex items-center gap-2 px-3 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+        className="w-full flex items-center gap-2 px-3 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
         style={{ minHeight: '44px' }}
       >
         {rootExpanded.cast
-          ? <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
-          : <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+          ? <ChevronDown className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
+          : <ChevronRight className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
         }
-        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] flex-1 select-none">
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--content-primary)] flex-1 select-none">
           Cast
         </span>
       </button>
@@ -337,15 +337,15 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
         onClick={() => toggleRoot('project')}
         aria-expanded={rootExpanded.project}
         aria-label={`${projectName} section`}
-        className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-left border-t border-[var(--cast-rail-border)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+        className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-left border-t border-[var(--stroke-regular)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
         style={{ minHeight: '44px' }}
       >
         {rootExpanded.project
-          ? <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
-          : <ChevronRight className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+          ? <ChevronDown className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
+          : <ChevronRight className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
         }
-        <FolderOpen className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
-        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-primary)] flex-1 select-none truncate">
+        <FolderOpen className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
+        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--content-primary)] flex-1 select-none truncate">
           {projectName}
         </span>
       </button>
