@@ -7,12 +7,12 @@
 :root {
   /* ─── Dusk (default appearance) ─────────────────────────────────────── */
   /* System surfaces */
-  --system-canvas:           #0E1614;
-  --system-chrome:           #0A100F;
-  --system-panel:            #121B18;
-  --system-pane:             #0B1311;
-  --system-elevated:         #1A2421;
-  --system-vibrancy-base:    rgba(14, 22, 20, 0.70);
+  --system-canvas:           #19211D;
+  --system-chrome:           #13191A;
+  --system-panel:            #1E2823;
+  --system-pane:             #161E1C;
+  --system-elevated:         #26332E;
+  --system-vibrancy-base:    rgba(25, 33, 29, 0.72);
   --system-vibrancy-overlay: rgba(255, 255, 255, 0.02);
   --system-vibrancy-blur:    blur(12px) saturate(140%);
 

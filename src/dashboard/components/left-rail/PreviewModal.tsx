@@ -152,7 +152,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
             type="button"
             onClick={onClose}
             aria-label="Close preview"
-            className="flex items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-1 flex-shrink-0"
+            className="flex items-center justify-center rounded text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1 flex-shrink-0"
             style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px' }}
           >
             <X className="w-4 h-4" aria-hidden="true" />

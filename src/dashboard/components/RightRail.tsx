@@ -99,7 +99,7 @@ export default function RightRail({ open, onExpand }: RightRailProps) {
                 type="button"
                 onClick={onExpand}
                 aria-label={`Expand right rail to see ${label}`}
-                className="flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-1"
+                className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
                 style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
               >
                 <Icon className="w-4 h-4" aria-hidden="true" />

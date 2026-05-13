@@ -23,11 +23,13 @@
 
 | Token | Dawn | Dusk | Notes |
 |---|---|---|---|
-| `--system-canvas` | `#E8ECF1` | `#0E1614` | Root background, behind everything |
-| `--system-chrome` | `#DDE3EA` | `#0A100F` | Top bar, status strip — reads as "above" canvas |
-| `--system-panel` | `#E2E7ED` | `#121B18` | Left / right rails, docked surfaces |
-| `--system-pane` | `#EEF1F5` | `#0B1311` | Terminal pane content (dusk darkest for terminal legibility) |
-| `--system-elevated` | `#F2F5F9` | `#1A2421` | Opaque base for modals / sheets / popovers / palette |
+| `--system-canvas` | `#E8ECF1` | `#19211D` | Root background, behind everything |
+| `--system-chrome` | `#DDE3EA` | `#13191A` | Top bar, status strip — reads as "above" canvas |
+| `--system-panel` | `#E2E7ED` | `#1E2823` | Left / right rails, docked surfaces |
+| `--system-pane` | `#EEF1F5` | `#161E1C` | Terminal pane content (dusk deep enough for ANSI, warmer than near-black) |
+| `--system-elevated` | `#F2F5F9` | `#26332E` | Opaque base for modals / sheets / popovers / palette |
+
+> **Dusk revision 2026-05-13:** original dusk values were `#0E1614 / #0A100F / #121B18 / #0B1311 / #1A2421` — felt too near-black on first live QA. Lifted ~5 luminance steps and warmed the green undertone to read as "dusk in the forest" rather than "black." Contrast on `--content-primary` (`#E6E8E2`) still 12+:1.
 
 ### 1.2 Stroke
 

@@ -21,7 +21,7 @@ export default function AppearanceToggle() {
       onClick={toggle}
       aria-label={isDusk ? 'Switch to dawn appearance' : 'Switch to dusk appearance'}
       aria-pressed={!isDusk}
-      className="flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--cast-rail-bg)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
+      className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
       style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
     >
       {isDusk
