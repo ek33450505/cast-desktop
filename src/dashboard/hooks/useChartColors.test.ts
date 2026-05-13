@@ -6,9 +6,10 @@ import { useChartColors } from './useChartColors'
 const CSS_VAR_VALUES: Record<string, string> = {
   '--accent': '#E6A532',
   '--accent-muted': '#3F311A',
-  '--status-info': '#4E91D6',
+  '--chart-2': '#5B9BD6',
+  '--chart-3': '#44A882',
+  '--chart-4': '#8C72C8',
   '--status-success': '#3FA968',
-  '--content-secondary': '#A8ADA6',
   '--status-warning': '#F09543',
   '--status-error': '#E64837',
   '--stroke-subtle': '#25312C',
@@ -35,9 +36,10 @@ describe('useChartColors', () => {
 
     expect(colors.accent).toBe('#E6A532')
     expect(colors.accentMuted).toBe('#3F311A')
-    expect(colors.haiku).toBe('#4E91D6')
-    expect(colors.sonnet).toBe('#3FA968')
-    expect(colors.opus).toBe('#A8ADA6')
+    expect(colors.accentDim).toBe('#E6A53266')
+    expect(colors.haiku).toBe('#5B9BD6')
+    expect(colors.sonnet).toBe('#44A882')
+    expect(colors.opus).toBe('#8C72C8')
     expect(colors.success).toBe('#3FA968')
     expect(colors.warning).toBe('#F09543')
     expect(colors.error).toBe('#E64837')

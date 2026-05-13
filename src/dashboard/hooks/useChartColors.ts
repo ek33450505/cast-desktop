@@ -15,11 +15,13 @@ export interface ChartColors {
   accent: string
   /** --accent-muted — for non-hero secondary fill areas */
   accentMuted: string
-  /** Model-tier: haiku — falls back to --status-info (blue family) because --chart-2 does not exist */
+  /** accent at ~40% opacity — for dimmed bar fills in charts */
+  accentDim: string
+  /** Model-tier: haiku — --chart-2 (muted steel-blue) */
   haiku: string
-  /** Model-tier: sonnet — falls back to --status-success (green family) because --chart-3 does not exist */
+  /** Model-tier: sonnet — --chart-3 (muted teal) */
   sonnet: string
-  /** Model-tier: opus — falls back to --content-secondary (neutral) because --chart-4 does not exist */
+  /** Model-tier: opus — --chart-4 (muted violet) */
   opus: string
   /** --status-success — only for true positive deltas */
   success: string
@@ -40,14 +42,14 @@ export interface ChartColors {
 }
 
 function resolveChartColors(): ChartColors {
-  // NOTE: --chart-2, --chart-3, --chart-4 do not exist in tokens.css (as of Stage 5a).
-  // Model-tier colors fall back to semantic status tokens until a chart-N wave adds them.
+  const accent = getCSSVar('--accent', '#E6A532')
   return {
-    accent: getCSSVar('--accent', '#E6A532'),
+    accent,
     accentMuted: getCSSVar('--accent-muted', '#3F311A'),
-    haiku: getCSSVar('--status-info', '#4E91D6'),      // blue family — TODO: migrate to --chart-2
-    sonnet: getCSSVar('--status-success', '#3FA968'),  // green family — TODO: migrate to --chart-3
-    opus: getCSSVar('--content-secondary', '#A8ADA6'), // neutral — TODO: migrate to --chart-4
+    accentDim: `${accent}66`, // ~40% opacity via hex alpha
+    haiku: getCSSVar('--chart-2', '#5B9BD6'),
+    sonnet: getCSSVar('--chart-3', '#44A882'),
+    opus: getCSSVar('--chart-4', '#8C72C8'),
     success: getCSSVar('--status-success', '#3FA968'),
     warning: getCSSVar('--status-warning', '#F09543'),
     error: getCSSVar('--status-error', '#E64837'),
