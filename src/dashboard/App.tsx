@@ -183,7 +183,7 @@ export default function App() {
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
               <span className="text-5xl font-bold text-[var(--text-muted)]">404</span>
               <p className="text-[var(--text-secondary)]">Page not found</p>
-              <Link to="/" className="text-sm text-[var(--cast-accent-legacy)] hover:underline">Back to Home</Link>
+              <Link to="/" className="text-sm text-[var(--accent)] hover:underline">Back to Home</Link>
             </div>
           } />
         </Route>

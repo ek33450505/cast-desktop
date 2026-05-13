@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useSyncExternalStore, useEffect } from 'react'
 
 export type Appearance = 'dawn' | 'dusk'
 
@@ -18,7 +18,11 @@ export function getInitialAppearance(): Appearance {
     // localStorage unavailable (private mode, etc.) — continue to system pref
   }
 
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches) {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: light)').matches
+  ) {
     return 'dawn'
   }
 
@@ -42,37 +46,60 @@ export function applyAppearance(a: Appearance): void {
   }
 }
 
+// ── Shared module-level store ─────────────────────────────────────────────────
+// All useAppearance() consumers subscribe to the same state. When any consumer
+// calls setAppearance or toggle, all others re-render synchronously.
+
+let current: Appearance = getInitialAppearance()
+const subs = new Set<() => void>()
+
+function subscribe(cb: () => void): () => void {
+  subs.add(cb)
+  return () => subs.delete(cb)
+}
+
+function getSnapshot(): Appearance {
+  return current
+}
+
+function setShared(a: Appearance): void {
+  current = a
+  applyAppearance(a)
+  try {
+    localStorage.setItem(STORAGE_KEY, a)
+  } catch {
+    // Private mode — toggle still works in-memory for the session
+  }
+  subs.forEach((cb) => cb())
+}
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
 /**
  * useAppearance — manages dawn/dusk appearance state.
  *
- * - Reads from localStorage on mount (done eagerly before createRoot for FOUA prevention)
- * - Persists changes to localStorage
- * - Listens to prefers-color-scheme changes (only auto-applies when no manual override)
+ * Uses a shared module-level store via useSyncExternalStore so ALL consumers
+ * (AppearanceToggle, TerminalPane, etc.) observe the same state. Toggling in
+ * one component instantly re-renders all others — this is what makes the xterm
+ * theme effect in TerminalPane fire on every appearance change.
+ *
+ * The OS preference listener is registered in useEffect (rather than module-level)
+ * so it can be captured by test mocks and garbage-collected when all consumers
+ * unmount. Multiple consumers each register+unregister the same handler safely
+ * because the handler is idempotent (it calls setShared, which notifies all subs).
  */
 export function useAppearance(): {
   appearance: Appearance
   setAppearance: (a: Appearance) => void
   toggle: () => void
 } {
-  const [appearance, setAppearanceState] = useState<Appearance>(getInitialAppearance)
+  const appearance = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
-  const setAppearance = useCallback((a: Appearance) => {
-    applyAppearance(a)
-    setAppearanceState(a)
-    try {
-      localStorage.setItem(STORAGE_KEY, a)
-    } catch {
-      // Private mode — toggle still works in-memory for the session
-    }
-  }, [])
-
-  const toggle = useCallback(() => {
-    setAppearance(appearance === 'dawn' ? 'dusk' : 'dawn')
-  }, [appearance, setAppearance])
-
-  // Listen for OS preference changes — only auto-apply when no manual override
+  // Listen for OS preference changes — only auto-applies when no manual override.
+  // Registered per hook instance so tests can use vi.stubGlobal('matchMedia', …).
+  // Multiple registrations are safe: each fires setShared which notifies all subs.
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
 
     const mq = window.matchMedia('(prefers-color-scheme: light)')
     const handler = (e: MediaQueryListEvent) => {
@@ -83,9 +110,7 @@ export function useAppearance(): {
         // ignore
       }
       if (!hasOverride) {
-        const next: Appearance = e.matches ? 'dawn' : 'dusk'
-        applyAppearance(next)
-        setAppearanceState(next)
+        setShared(e.matches ? 'dawn' : 'dusk')
       }
     }
 
@@ -93,10 +118,13 @@ export function useAppearance(): {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // Sync DOM on initial mount (handles the case where StrictMode double-invokes)
-  useEffect(() => {
-    applyAppearance(appearance)
-  }, [appearance])
+  function setAppearance(a: Appearance): void {
+    setShared(a)
+  }
+
+  function toggle(): void {
+    setShared(appearance === 'dawn' ? 'dusk' : 'dawn')
+  }
 
   return { appearance, setAppearance, toggle }
 }

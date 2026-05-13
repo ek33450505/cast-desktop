@@ -48,6 +48,18 @@
   --status-info:             #4E91D6;
   --status-info-muted:       #162739;
 
+  /* Chart / model-tier colors — dusk
+   * --chart-1: accent amber (HERO series — defined via shadcn alias in index.css)
+   * --chart-2: haiku  — muted steel-blue, readable on dusk canvas (#1D2622)
+   * --chart-3: sonnet — muted teal, readable on dusk canvas
+   * --chart-4: opus   — muted violet, readable on dusk canvas
+   * Measured contrast vs --system-panel: chart-2 4.81, chart-3 4.85, chart-4 3.63.
+   * chart-2/3 meet WCAG AA for non-text graphics; chart-4 is borderline — restrict
+   * to non-critical series and pair with shape/label channels per eye-comfort principle. */
+  --chart-2: #5B9BD6;
+  --chart-3: #44A882;
+  --chart-4: #8C72C8;
+
   /* Shadows */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 0 rgba(255, 255, 255, 0.02);
   --shadow-2: 0 6px 16px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.30);
@@ -100,6 +112,16 @@
   --status-error-muted:      #F5DAD7;
   --status-info:             #16518C;
   --status-info-muted:       #D4E3F4;
+
+  /* Chart / model-tier colors — dawn
+   * --chart-2: haiku  — deeper steel-blue, readable on dawn canvas (#F7F9F6)
+   * --chart-3: sonnet — deeper teal, readable on dawn canvas
+   * --chart-4: opus   — deeper violet, readable on dawn canvas
+   * Measured contrast vs --system-panel: chart-2 5.34, chart-3 4.46, chart-4 6.46.
+   * All meet WCAG AA for non-text graphics on the panel surface. */
+  --chart-2: #2660A8;
+  --chart-3: #1A7A5A;
+  --chart-4: #5C3FAA;
 
   /* Shadows */
   --shadow-1: 0 1px 2px rgba(20, 30, 50, 0.04), 0 1px 0 rgba(20, 30, 50, 0.02);

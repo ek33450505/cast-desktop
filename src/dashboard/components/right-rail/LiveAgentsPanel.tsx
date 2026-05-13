@@ -46,9 +46,9 @@ function formatElapsed(startedAt: string, nowMs: number): string {
 
 function modelBadgeVar(model: string): string {
   const lower = model.toLowerCase()
-  if (lower.includes('haiku')) return 'var(--cast-badge-haiku)'
-  if (lower.includes('opus')) return 'var(--cast-badge-opus)'
-  return 'var(--cast-badge-sonnet)' // default to sonnet tier
+  if (lower.includes('haiku')) return 'var(--model-haiku)'
+  if (lower.includes('opus')) return 'var(--model-opus)'
+  return 'var(--model-sonnet)' // default to sonnet tier
 }
 
 function modelTierLabel(model: string): string {

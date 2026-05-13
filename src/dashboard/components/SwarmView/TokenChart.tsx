@@ -2,15 +2,15 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
 import type { TeammateRun } from '../../types'
+import { useChartColors } from '../../hooks/useChartColors'
 
 interface TokenChartProps {
   teammates: TeammateRun[]
 }
 
-const ACCENT = 'var(--accent)'
-const ACCENT_DIM = 'rgba(0,255,194,0.4)'
-
 export function TokenChart({ teammates }: TokenChartProps) {
+  const colors = useChartColors()
+
   const data = teammates
     .map(t => ({
       role:   t.agent_role,
@@ -36,7 +36,7 @@ export function TokenChart({ teammates }: TokenChartProps) {
       >
         <XAxis
           type="number"
-          tick={{ fill: 'var(--content-muted)', fontSize: 10 }}
+          tick={{ fill: colors.axisTick, fontSize: 10 }}
           tickLine={false}
           axisLine={false}
           tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)}
@@ -50,19 +50,19 @@ export function TokenChart({ teammates }: TokenChartProps) {
           axisLine={false}
         />
         <Tooltip
-          cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+          cursor={{ fill: 'rgba(255,255,255,0.04)' /* scrim — no token equivalent */ }}
           contentStyle={{
-            background: 'var(--system-panel)',
-            border: '1px solid var(--glass-border)',
+            background: colors.tooltipBg,
+            border: `1px solid ${colors.tooltipBorder}`,
             borderRadius: 8,
             fontSize: 12,
-            color: 'var(--content-primary)',
+            color: colors.tooltipText,
           }}
           formatter={(value: number) => [value.toLocaleString(), 'Tokens']}
         />
         <Bar dataKey="tokens" radius={[0, 4, 4, 0]}>
           {data.map((_, i) => (
-            <Cell key={i} fill={i === 0 ? ACCENT : ACCENT_DIM} />
+            <Cell key={i} fill={i === 0 ? colors.accent : colors.accentDim} />
           ))}
         </Bar>
       </BarChart>

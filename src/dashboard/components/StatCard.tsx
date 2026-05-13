@@ -30,7 +30,7 @@ export default function StatCard({ label, value, icon, to, layoutId }: StatCardP
       )}
       <span className="text-sm text-[var(--text-secondary)]">{label}</span>
       {to && (
-        <ArrowUpRight className="absolute bottom-4 right-4 w-3.5 h-3.5 text-[var(--cast-accent-legacy)] opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ArrowUpRight className="absolute bottom-4 right-4 w-3.5 h-3.5 text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity" />
       )}
     </>
   )
@@ -42,7 +42,7 @@ export default function StatCard({ label, value, icon, to, layoutId }: StatCardP
     return (
       <MotionLink
         to={to}
-        className={`${baseClasses} group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-[var(--cast-accent-legacy)]/30 no-underline`}
+        className={`${baseClasses} group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:border-[var(--accent)]/30 no-underline`}
         style={{ background: 'linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%)' }}
         layoutId={layoutId}
       >
