@@ -1,7 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { TerminalPane } from './TerminalPane'
+import { TerminalPane, buildTerminalTheme } from './TerminalPane'
 import { useTerminalStore } from '../../stores/terminalStore'
+
+// jsdom doesn't implement matchMedia — stub it so useAppearance doesn't throw
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+})
 
 const mockFit = vi.fn()
 
@@ -43,6 +58,31 @@ beforeEach(() => {
   }
   // Reset store
   useTerminalStore.setState({ tabs: [], activeTabId: null })
+})
+
+describe('buildTerminalTheme', () => {
+  it('returns different background values for dawn vs dusk', () => {
+    const dawn = buildTerminalTheme('dawn')
+    const dusk = buildTerminalTheme('dusk')
+    expect(dawn.background).not.toBe(dusk.background)
+  })
+
+  it('dawn background is the dawn pane color', () => {
+    const dawn = buildTerminalTheme('dawn')
+    expect(dawn.background).toBe('#F7F9F6')
+  })
+
+  it('dusk background is the dusk pane color', () => {
+    const dusk = buildTerminalTheme('dusk')
+    expect(dusk.background).toBe('#1D2622')
+  })
+
+  it('cursor color is the same amber in both appearances', () => {
+    const dawn = buildTerminalTheme('dawn')
+    const dusk = buildTerminalTheme('dusk')
+    expect(dawn.cursor).toBe('#E6A532')
+    expect(dusk.cursor).toBe('#E6A532')
+  })
 })
 
 describe('TerminalPane', () => {

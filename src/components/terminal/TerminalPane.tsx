@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
+import type { ITheme } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { SearchAddon } from '@xterm/addon-search'
 import { WebLinksAddon } from '@xterm/addon-web-links'
@@ -8,6 +9,34 @@ import '@xterm/xterm/css/xterm.css'
 
 import { useTerminal } from '../../hooks/useTerminal'
 import { useTerminalStore } from '../../stores/terminalStore'
+import { useAppearance, type Appearance } from '../../hooks/useAppearance'
+
+/** Pure function — safe to call any time appearance changes */
+export function buildTerminalTheme(appearance: Appearance): ITheme {
+  const isDawn = appearance === 'dawn'
+  return {
+    background: isDawn ? '#F7F9F6' : '#1D2622',
+    foreground: isDawn ? '#1A211E' : '#E6E8E2',
+    cursor:    '#E6A532',
+    cursorAccent: isDawn ? '#F7F9F6' : '#1D2622',
+    black:     isDawn ? '#1A211E' : '#1A1E26',
+    red:       isDawn ? '#C42F1E' : '#E64837',
+    green:     isDawn ? '#1F8B4C' : '#3FA968',
+    yellow:    isDawn ? '#D86B0F' : '#F09543',
+    blue:      isDawn ? '#2065BD' : '#4E91D6',
+    magenta:   '#C084FC',
+    cyan:      isDawn ? '#0E7C7B' : '#33EBDC',
+    white:     isDawn ? '#475048' : '#E6E8E2',
+    brightBlack:   isDawn ? '#737B72' : '#3D4455',
+    brightRed:     isDawn ? '#E64837' : '#FF7A84',
+    brightGreen:   isDawn ? '#3FA968' : '#5FCB85',
+    brightYellow:  isDawn ? '#E6A532' : '#F0B441',
+    brightBlue:    isDawn ? '#4E91D6' : '#7DCFFF',
+    brightMagenta: '#D4A8FF',
+    brightCyan:    isDawn ? '#33A9A8' : '#7DEBE8',
+    brightWhite:   isDawn ? '#1A211E' : '#FFFFFF',
+  }
+}
 
 interface PtyOutputPayload {
   session_id: string
@@ -24,45 +53,29 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
   const setTabPtyId = useTerminalStore((s) => s.setTabPtyId)
   const setTabPaneId = useTerminalStore((s) => s.setTabPaneId)
   const containerRef = useRef<HTMLDivElement>(null)
+  const xtermRef = useRef<Terminal | null>(null)
+  const { appearance } = useAppearance()
+
+  // Reactive theme update — runs whenever appearance changes WITHOUT recreating
+  // the terminal instance. xterm supports live options.theme assignment.
+  useEffect(() => {
+    if (xtermRef.current) {
+      xtermRef.current.options.theme = buildTerminalTheme(appearance)
+    }
+  }, [appearance])
 
   useEffect(() => {
     if (!terminal.supported || !containerRef.current || !tab) return
 
-    // Read appearance at terminal init time. xterm's theme is a frozen JS
-    // object — it does not react to CSS var changes. Appearance toggles
-    // mid-session won't update existing terminals; new tabs pick up the
-    // current appearance correctly. Stage 5+ will wire a proper reactive
-    // theme that updates on appearance change.
-    const isDawn = document.documentElement.getAttribute('data-appearance') === 'dawn'
-
     const xterm = new Terminal({
       fontFamily: '"SF Mono", Menlo, Monaco, "Courier New", monospace',
       fontSize: 13,
-      theme: {
-        background: isDawn ? '#F7F9F6' : '#1D2622',
-        foreground: isDawn ? '#1A211E' : '#E6E8E2',
-        cursor:    '#E6A532',
-        cursorAccent: isDawn ? '#F7F9F6' : '#1D2622',
-        black:     isDawn ? '#1A211E' : '#1A1E26',
-        red:       isDawn ? '#C42F1E' : '#E64837',
-        green:     isDawn ? '#1F8B4C' : '#3FA968',
-        yellow:    isDawn ? '#D86B0F' : '#F09543',
-        blue:      isDawn ? '#2065BD' : '#4E91D6',
-        magenta:   '#C084FC',
-        cyan:      isDawn ? '#0E7C7B' : '#33EBDC',
-        white:     isDawn ? '#475048' : '#E6E8E2',
-        brightBlack:   isDawn ? '#737B72' : '#3D4455',
-        brightRed:     isDawn ? '#E64837' : '#FF7A84',
-        brightGreen:   isDawn ? '#3FA968' : '#5FCB85',
-        brightYellow:  isDawn ? '#E6A532' : '#F0B441',
-        brightBlue:    isDawn ? '#4E91D6' : '#7DCFFF',
-        brightMagenta: '#D4A8FF',
-        brightCyan:    isDawn ? '#33A9A8' : '#7DEBE8',
-        brightWhite:   isDawn ? '#1A211E' : '#FFFFFF',
-      },
+      theme: buildTerminalTheme(appearance),
       cursorBlink: true,
       cursorStyle: 'block',
     })
+
+    xtermRef.current = xterm
 
     const fitAddon = new FitAddon()
     const searchAddon = new SearchAddon()
@@ -166,6 +179,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
       if (unlistenFn) unlistenFn()
       resizeObserver?.disconnect()
       xterm.dispose()
+      xtermRef.current = null
       // Do NOT kill the PTY — store owns session lifecycle
     }
     // Only re-mount when tabId changes
