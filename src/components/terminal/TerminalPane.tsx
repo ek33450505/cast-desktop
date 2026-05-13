@@ -59,8 +59,16 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
   // Reactive theme update — runs whenever appearance changes WITHOUT recreating
   // the terminal instance. xterm supports live options.theme assignment.
   useEffect(() => {
+    const theme = buildTerminalTheme(appearance)
     if (xtermRef.current) {
-      xtermRef.current.options.theme = buildTerminalTheme(appearance)
+      xtermRef.current.options.theme = theme
+      // Force xterm to repaint the visible buffer — canvas renderer caches theme at render-time
+      xtermRef.current.refresh(0, xtermRef.current.rows - 1)
+    }
+    // Restyle the container element directly — the xterm wrapper background is set
+    // at .open() time and doesn't re-render when only options.theme changes
+    if (containerRef.current) {
+      containerRef.current.style.background = theme.background ?? ''
     }
   }, [appearance])
 
@@ -85,6 +93,10 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     xterm.loadAddon(searchAddon)
     xterm.loadAddon(webLinksAddon)
     xterm.open(containerRef.current)
+    // Set container background at mount — the xterm wrapper background is set once
+    // at open() time; we mirror it here so the pane shows the correct color before
+    // the appearance effect fires on a theme switch.
+    containerRef.current.style.background = buildTerminalTheme(appearance).background ?? ''
 
     let unlistenFn: (() => void) | null = null
     let resizeObserver: ResizeObserver | null = null

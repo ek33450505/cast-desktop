@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { TerminalPane, buildTerminalTheme } from './TerminalPane'
 import { useTerminalStore } from '../../stores/terminalStore'
+import { useTerminal } from '../../hooks/useTerminal'
 
 // jsdom doesn't implement matchMedia — stub it so useAppearance doesn't throw
 Object.defineProperty(window, 'matchMedia', {
@@ -103,6 +104,53 @@ describe('TerminalPane', () => {
     // The only element with overflow:hidden is the fallback wrapper — there's no xterm div
     // The fallback card has a centered flex layout, not the bare xterm host
     expect(terminalContainers.length).toBe(0)
+  })
+
+  it('sets container style.background to the current appearance background on mount', () => {
+    // Override useTerminal to simulate a supported (Tauri) environment so the
+    // xterm container div is rendered and the mount effect fires.
+    vi.mocked(useTerminal).mockReturnValueOnce({
+      supported: true,
+      create: vi.fn(() => Promise.resolve({ ptyId: 'test-pty', paneId: 'test-pane' })),
+      write: vi.fn(),
+      resize: vi.fn(),
+      kill: vi.fn(),
+      getDefaultShell: vi.fn(() => Promise.resolve('/bin/zsh')),
+    })
+
+    // Block fonts.ready so the async PTY init path is never reached — we only
+    // care that the synchronous background assignment after xterm.open() fires.
+    const originalFonts = Object.getOwnPropertyDescriptor(document, 'fonts')
+    Object.defineProperty(document, 'fonts', {
+      value: { ready: new Promise<FontFaceSet>(() => {}) }, // never resolves
+      configurable: true,
+      writable: true,
+    })
+
+    // matchMedia returns matches: false → appearance is 'dusk'
+    const expectedBackground = buildTerminalTheme('dusk').background ?? ''
+
+    try {
+      const tab = useTerminalStore.getState().addTab('~')
+      const { container } = render(<TerminalPane tabId={tab.id} />)
+
+      // The xterm host div has role="application" and overflow:hidden style
+      const terminalHost = container.querySelector('[role="application"]') as HTMLElement | null
+      // jsdom + xterm mock: open() is a no-op but style.background is still set
+      // synchronously after open() returns.
+      // jsdom normalizes hex to rgb() when reading style.background, so we use a
+      // temporary element to get the same normalized form for the expected value.
+      const probe = document.createElement('div')
+      probe.style.background = expectedBackground
+      const normalized = probe.style.background
+
+      expect(terminalHost).not.toBeNull()
+      expect(terminalHost?.style.background).toBe(normalized)
+    } finally {
+      if (originalFonts) {
+        Object.defineProperty(document, 'fonts', originalFonts)
+      }
+    }
   })
 
   // Regression test: fitAddon.fit() must NOT be called synchronously on mount.
