@@ -27,9 +27,9 @@ function StatCard({
   accent?: string
 }) {
   const inner = (
-    <div className="bento-card p-5 flex items-start gap-4 hover:border-[var(--accent)]/30 transition-colors">
+    <div className="bento-card p-5 flex items-start gap-4 hover:border-[var(--cast-accent-legacy)]/30 transition-colors">
       <div className={`p-2.5 rounded-lg ${accent ?? 'bg-[var(--accent-subtle)]'} shrink-0`}>
-        <Icon className="w-5 h-5 text-[var(--accent)]" />
+        <Icon className="w-5 h-5 text-[var(--cast-accent-legacy)]" />
       </div>
       <div className="min-w-0">
         <div className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{value}</div>
@@ -321,12 +321,12 @@ export default function HomeView() {
         <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[var(--accent)]" />
+              <Clock className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
               <h2 className="text-sm font-semibold text-[var(--text-primary)]">Recent Activity</h2>
             </div>
             <Link
               to="/activity"
-              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
+              className="text-xs text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
             >
               View all →
             </Link>
@@ -338,12 +338,12 @@ export default function HomeView() {
         <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-[var(--accent)]" />
+              <DollarSign className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
               <h2 className="text-sm font-semibold text-[var(--text-primary)]">7-Day Cost</h2>
             </div>
             <Link
               to="/analytics"
-              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
+              className="text-xs text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
             >
               View analytics →
             </Link>
@@ -361,7 +361,7 @@ export default function HomeView() {
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">System Health</h2>
           <Link
             to="/system"
-            className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
+            className="text-xs text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
           >
             System →
           </Link>

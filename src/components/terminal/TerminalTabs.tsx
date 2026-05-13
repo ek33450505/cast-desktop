@@ -167,7 +167,7 @@ export function TerminalTabs() {
           onClick={handleAddTab}
           aria-label="New terminal tab"
           style={{
-            background: 'var(--accent)',
+            background: 'var(--cast-accent-legacy)',
             color: 'var(--bg-primary)',
             border: 'none',
             borderRadius: 6,

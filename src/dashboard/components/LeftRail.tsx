@@ -78,7 +78,7 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
       <nav
         aria-label="Left rail navigation"
         className="h-full flex flex-col overflow-hidden"
-        style={{ background: 'var(--cast-rail-bg)' }}
+        style={{ background: 'var(--system-panel)' }}
       >
         <AnimatePresence initial={false} mode="wait">
           {open ? (
@@ -109,7 +109,7 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
                   type="button"
                   onClick={() => handleIconClick(id)}
                   aria-label={`Navigate to ${label} section`}
-                  className="flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-1"
+                  className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
                   style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
                 >
                   <Icon className="w-4 h-4" aria-hidden="true" />

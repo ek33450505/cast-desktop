@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import App from './App'
 import './index.css'
+import { applyAppearance, getInitialAppearance } from '../hooks/useAppearance'
+
+// Apply appearance BEFORE createRoot to avoid flash-of-wrong-appearance on first paint
+applyAppearance(getInitialAppearance())
 
 const queryClient = new QueryClient({
   defaultOptions: {

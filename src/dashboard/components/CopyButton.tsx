@@ -23,7 +23,7 @@ export default function CopyButton({ text, className = '', size = 14 }: CopyButt
       title="Copy to clipboard"
     >
       {copied
-        ? <Check className="text-[var(--accent)]" style={{ width: size, height: size }} />
+        ? <Check className="text-[var(--cast-accent-legacy)]" style={{ width: size, height: size }} />
         : <Copy className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]" style={{ width: size, height: size }} />
       }
     </button>

@@ -67,7 +67,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Skip to main content — visually hidden, visible on focus for keyboard users */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-3 focus:left-3 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[var(--accent)] focus:text-[#070A0F] focus:font-semibold focus:text-sm focus:shadow-lg focus:outline-none"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-3 focus:left-3 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[var(--cast-accent-legacy)] focus:text-[#070A0F] focus:font-semibold focus:text-sm focus:shadow-lg focus:outline-none"
       >
         Skip to main content
       </a>
@@ -98,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* Hamburger — mobile only */}
           <button
             onClick={() => setSidebarOpen(prev => !prev)}
-            className="lg:hidden p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+            className="lg:hidden p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
             aria-label="Toggle navigation"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -109,7 +109,7 @@ export default function Layout({ children }: LayoutProps) {
           <button
             onClick={() => setPaletteOpen(true)}
             aria-label="Open command palette (Cmd+K)"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:border-[var(--accent)]/30 transition-colors focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:border-[var(--cast-accent-legacy)]/30 transition-colors focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
           >
             <Search className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Search</span>

@@ -72,7 +72,7 @@ export default function MemoryAnalyticsPanel() {
     return (
       <div className="bento-card p-6">
         <div className="flex items-center gap-2.5 mb-4">
-          <Brain className="w-4 h-4 text-[var(--accent)]" />
+          <Brain className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Memory Analytics</h2>
         </div>
         <p className="text-sm text-[var(--text-muted)] py-8 text-center">No memory data in cast.db</p>
@@ -83,7 +83,7 @@ export default function MemoryAnalyticsPanel() {
   return (
     <div className="bento-card p-6">
       <div className="flex items-center gap-2.5 mb-4">
-        <Brain className="w-4 h-4 text-[var(--accent)]" />
+        <Brain className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Memory Analytics</h2>
         <span className="text-xs text-[var(--text-muted)] ml-auto tabular-nums">{memories.length} memories</span>
       </div>
@@ -118,7 +118,7 @@ export default function MemoryAnalyticsPanel() {
 
           {/* Avg importance */}
           <div className="mt-4 bg-[var(--bg-tertiary)] rounded-lg p-3 text-center">
-            <div className="text-lg font-bold text-[var(--accent)] tabular-nums">{avgImportance}</div>
+            <div className="text-lg font-bold text-[var(--cast-accent-legacy)] tabular-nums">{avgImportance}</div>
             <div className="text-xs text-[var(--text-muted)]">Avg Importance Score</div>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function MemoryAnalyticsPanel() {
                 <div key={m.id} className="flex items-center gap-2 text-xs bg-[var(--bg-tertiary)] rounded px-3 py-2">
                   <span className="font-mono text-[var(--text-primary)] truncate flex-1">{m.name}</span>
                   <span className="text-[var(--text-muted)] shrink-0">{m.agent}</span>
-                  <span className="text-[var(--accent)] font-bold tabular-nums shrink-0">{m.importance?.toFixed(2) ?? '—'}</span>
+                  <span className="text-[var(--cast-accent-legacy)] font-bold tabular-nums shrink-0">{m.importance?.toFixed(2) ?? '—'}</span>
                 </div>
               ))}
             </div>

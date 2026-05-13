@@ -1,3 +1,4 @@
+@import './styles/tokens.css';
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -13,8 +14,12 @@
   --text-primary: #E6E8EE;
   --text-secondary: #88A3D6;
   --text-muted: #5a6c8a;
-  --accent: #00FFC2;
-  --accent-hover: #33FFD1;
+  /* Legacy accent tokens — bridged to the new appearance-aware amber accent.
+     Was #00FFC2 mint / #33FFD1 mint-hover (Carbon Mint era).
+     Retired 2026-05-13 to unify the amber brand thread across legacy and
+     migrated consumers. Stage 6 (shared UI / shadcn) will remove the bridge. */
+  --cast-accent-legacy: var(--accent);
+  --cast-accent-hover-legacy: var(--accent-hover);
   --accent-subtle: rgba(0, 255, 194, 0.08);
   --success: #34d399;
   --warning: #fbbf24;
@@ -63,13 +68,64 @@
   --cast-rail-border: var(--border);
   --cast-center-bg: var(--bg-primary);
   --cast-top-bar-bg: var(--bg-secondary);
-  --cast-accent: var(--accent);
+  --cast-accent: var(--cast-accent-legacy);
   --cast-overlay-backdrop: rgba(0, 0, 0, 0.6);
 
   /* ─── Model badge colors (Wave 2.6) — derived from forge-dark chart palette ─── */
   --cast-badge-haiku: var(--chart-2);    /* #60A5FA — blue */
   --cast-badge-sonnet: var(--chart-3);   /* #A78BFA — purple */
   --cast-badge-opus: var(--chart-4);     /* #fbbf24 — gold */
+}
+
+/* ─── Dawn appearance overrides for legacy tokens (2026-05-13) ────────────────
+ * Stages 3-6 will progressively migrate components off these legacy names onto
+ * the new --system-* / --content-* token families. Until that's done, this
+ * block makes every legacy --text-*, --bg-*, --cast-*, and shadcn alias token
+ * appearance-aware so the app is fully usable in dawn TODAY.
+ * Source of truth for hex values: dawn block in src/dashboard/styles/tokens.css.
+ * ────────────────────────────────────────────────────────────────────────── */
+[data-appearance="dawn"] {
+  /* Legacy --text-* tokens */
+  --text-primary:           #1A211E;
+  --text-secondary:         #475048;
+  --text-muted:             #5A6358;
+
+  /* Legacy --bg-* tokens (sage-grey family — matches new --system-* values) */
+  --bg-primary:             #F0F2EE;
+  --bg-secondary:           #E9EDE7;
+  --bg-tertiary:            #DDE2D9;
+
+  /* Legacy chrome / border / glass */
+  --border:                 rgba(26, 33, 30, 0.10);
+  --glass:                  rgba(26, 33, 30, 0.04);
+  --glass-border:           rgba(26, 33, 30, 0.08);
+
+  /* shadcn aliases — derived from legacy in dawn */
+  --background:             #F0F2EE;
+  --foreground:             #1A211E;
+  --card:                   #E9EDE7;
+  --card-foreground:        #1A211E;
+  --popover:                #FFFFFF;
+  --popover-foreground:     #1A211E;
+  --secondary:              #DDE2D9;
+  --secondary-foreground:   #475048;
+  --muted:                  #DDE2D9;
+  --muted-foreground:       #5A6358;
+  --input:                  #DDE2D9;
+
+  /* Cast shell tokens — dawn versions */
+  --cast-rail-bg:           #E9EDE7;
+  --cast-rail-border:       rgba(26, 33, 30, 0.10);
+  --cast-center-bg:         #F0F2EE;
+  --cast-top-bar-bg:        #E9EDE7;
+  --cast-overlay-backdrop:  rgba(255, 255, 255, 0.40);
+
+  /* Sidebar (shadcn) */
+  --sidebar:                       #E9EDE7;
+  --sidebar-foreground:            #1A211E;
+  --sidebar-border:                rgba(26, 33, 30, 0.10);
+  --sidebar-accent:                rgba(212, 142, 26, 0.08);
+  --sidebar-accent-foreground:     #8C5E0B;
 }
 
 @keyframes previewModalIn {
@@ -189,7 +245,7 @@ code, pre, .font-mono {
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
+  --color-accent: var(--cast-accent-legacy);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -219,17 +275,17 @@ code, pre, .font-mono {
   --card-foreground: var(--text-primary);
   --popover: var(--bg-secondary);
   --popover-foreground: var(--text-primary);
-  --primary: var(--accent);
+  --primary: var(--cast-accent-legacy);
   --primary-foreground: var(--bg-primary);
   --secondary: var(--bg-tertiary);
   --secondary-foreground: var(--text-secondary);
   --muted: var(--bg-tertiary);
   --muted-foreground: var(--text-muted);
-  --accent-foreground: var(--accent);
+  --accent-foreground: var(--cast-accent-legacy);
   --destructive: var(--error);
   --border: rgba(255, 255, 255, 0.06);
   --input: rgba(255, 255, 255, 0.08);
-  --ring: var(--accent);
+  --ring: var(--cast-accent-legacy);
 }
 
 /* ─── View Transitions ─── */

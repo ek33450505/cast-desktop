@@ -10,7 +10,7 @@ export default function WorkLogView() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-2.5">
-          <ScrollText className="w-5 h-5 text-[var(--accent)]" />
+          <ScrollText className="w-5 h-5 text-[var(--cast-accent-legacy)]" />
           <h1 className="text-xl font-bold text-[var(--text-primary)]">Work Log</h1>
         </div>
         <p className="text-sm text-[var(--text-muted)] mt-1">

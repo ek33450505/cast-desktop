@@ -25,7 +25,7 @@ export default function QualityGatesPanel() {
     return (
       <div className="bento-card p-6">
         <div className="flex items-center gap-2.5 mb-4">
-          <Shield className="w-4 h-4 text-[var(--accent)]" />
+          <Shield className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Quality Gates</h2>
         </div>
         <p className="text-sm text-[var(--text-muted)] py-8 text-center">No quality gate data yet</p>
@@ -47,7 +47,7 @@ export default function QualityGatesPanel() {
   return (
     <div className="bento-card p-6">
       <div className="flex items-center gap-2.5 mb-4">
-        <Shield className="w-4 h-4 text-[var(--accent)]" />
+        <Shield className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Quality Gates</h2>
       </div>
 
