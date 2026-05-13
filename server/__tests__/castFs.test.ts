@@ -135,12 +135,5 @@ describe('GET /api/cast-fs/preview', () => {
   })
 })
 
-describe('GET /api/cast-fs/stream', () => {
-  it('route is registered (smoke test via direct handler inspection)', () => {
-    // SSE streams indefinitely and chokidar watchers EMFILE in test runners.
-    // Instead we verify the route handler exists by checking the router stack.
-    const stack = (castFsRouter as unknown as { stack: Array<{ route?: { path?: string } }> }).stack
-    const streamRoute = stack.find(layer => layer.route?.path === '/stream')
-    expect(streamRoute).toBeTruthy()
-  })
-})
+// /api/cast-fs/stream removed in Wave 2.13 SSE multiplex refactor.
+// FS change events are now broadcast via the single /api/events SseManager endpoint.

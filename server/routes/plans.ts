@@ -2,7 +2,6 @@ import { Router } from 'express'
 import type { Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
-import chokidar from 'chokidar'
 import { loadPlans } from '../parsers/memory.js'
 import { PLANS_DIR } from '../constants.js'
 import { safeResolve } from '../utils/safeResolve.js'
@@ -131,63 +130,6 @@ router.get('/active', (req: Request, res: Response) => {
     const empty: ActivePlanResponse = { planPath: null, title: null, tasks: [] }
     res.json(empty)
   }
-})
-
-// ── GET /stream?sessionId=<id> — SSE ─────────────────────────────────────────
-// IMPORTANT: declared before /:filename to avoid route capture
-
-router.get('/stream', (req: Request, res: Response) => {
-  const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : null
-
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
-  // Track the currently-active plan path so we only emit when the right file changes
-  let activePlanPath = findActivePlanPath(sessionId)
-
-  function emitUpdate(changedPath: string) {
-    // Refresh the active plan path — it may have changed if a new file was written
-    activePlanPath = findActivePlanPath(sessionId)
-
-    if (!activePlanPath) return
-    // Only emit if the changed file is the active plan
-    if (path.resolve(changedPath) !== path.resolve(activePlanPath)) return
-
-    try {
-      const content = fs.readFileSync(activePlanPath, 'utf-8')
-      const tasks = parsePlanTasks(content)
-      res.write(`data: ${JSON.stringify({ event: 'plan-update', tasks })}\n\n`)
-    } catch {
-      // File unreadable — swallow
-    }
-  }
-
-  const watcher = chokidar.watch(PLANS_DIR, {
-    persistent: true,
-    ignoreInitial: true,
-    depth: 0,
-  })
-
-  watcher.on('change', emitUpdate)
-  watcher.on('add', (filePath) => {
-    // New file added — may become the new active plan
-    activePlanPath = findActivePlanPath(sessionId)
-    emitUpdate(filePath)
-  })
-
-  const keepAlive = setInterval(() => {
-    res.write(':keepalive\n\n')
-  }, 30_000)
-
-  const cleanup = () => {
-    clearInterval(keepAlive)
-    void watcher.close()
-  }
-
-  req.on('close', cleanup)
-  req.on('error', cleanup)
 })
 
 // ── GET /:filename ────────────────────────────────────────────────────────────

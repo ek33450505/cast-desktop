@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEvent } from '../../../lib/SseManager'
+import type { LiveEvent } from '../../../types'
 import {
   Bot,
   Wrench,
@@ -89,32 +91,24 @@ function useCastFs(section: SectionId) {
 
 // ── SSE subscription ──────────────────────────────────────────────────────────
 
-interface StreamEvent {
-  event: string
-  section: string
-  name: string
-  path: string
-}
-
 function useCastFsStream() {
   const queryClient = useQueryClient()
 
-  useEffect(() => {
-    const es = new EventSource('/api/cast-fs/stream')
-
-    es.onmessage = (e: MessageEvent<string>) => {
-      try {
-        const data = JSON.parse(e.data) as StreamEvent
-        if (data.section) {
-          void queryClient.invalidateQueries({ queryKey: ['castFs', data.section] })
+  useEvent<LiveEvent>('cast_fs_change', (e) => {
+    // fsPath encodes the section as the first path segment under ~/.claude/
+    // e.g. /Users/edkubiak/.claude/agents/foo.md → section: 'agents'
+    if (e.fsPath) {
+      const claudeRoot = '/.claude/'
+      const idx = e.fsPath.indexOf(claudeRoot)
+      if (idx !== -1) {
+        const rel = e.fsPath.slice(idx + claudeRoot.length)
+        const section = rel.split('/')[0] as SectionId
+        if (section) {
+          void queryClient.invalidateQueries({ queryKey: ['castFs', section] })
         }
-      } catch { /* ignore malformed */ }
+      }
     }
-
-    return () => {
-      es.close()
-    }
-  }, [queryClient])
+  })
 }
 
 // ── section item rendering ─────────────────────────────────────────────────────

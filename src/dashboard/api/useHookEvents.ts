@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useEvent } from '../../lib/SseManager'
+import type { LiveEvent } from '../types'
 
 export interface HookEvent {
   id: string
@@ -12,60 +14,26 @@ export interface HookEvent {
 }
 
 /**
- * useHookEventsStream — SSE connection to /api/hook-events/stream.
+ * useHookEventsStream — subscribes to hook_event SSE via shared SseManager.
  * Returns the live ring of received events (newest first, capped at maxEvents).
  */
 export function useHookEventsStream(maxEvents = 50) {
   const [events, setEvents] = useState<HookEvent[]>([])
   const [connected, setConnected] = useState(false)
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    let es: EventSource
-    let cancelled = false
-
-    function connect() {
-      if (cancelled) return
-      es = new EventSource('/api/hook-events/stream')
-
-      es.onopen = () => {
-        if (!cancelled) setConnected(true)
-      }
-
-      es.onerror = () => {
-        if (cancelled) return
-        setConnected(false)
-        es.close()
-        if (retryTimer.current) clearTimeout(retryTimer.current)
-        retryTimer.current = setTimeout(() => {
-          retryTimer.current = null
-          connect()
-        }, 3000)
-      }
-
-      es.onmessage = (e) => {
-        if (cancelled) return
-        try {
-          const event: HookEvent = JSON.parse(e.data)
-          setEvents(prev => [event, ...prev].slice(0, maxEvents))
-        } catch {
-          // skip malformed SSE data
-        }
-      }
+  useEvent<LiveEvent>('hook_event', (e) => {
+    setConnected(true)
+    const hookEvent: HookEvent = {
+      id: e.hookAgentId ?? String(Date.now()),
+      timestamp: e.timestamp,
+      hook_type: e.hookEventName ?? '',
+      tool_name: null,
+      result: null,
+      duration_ms: null,
+      payload: {},
     }
-
-    connect()
-
-    return () => {
-      cancelled = true
-      if (retryTimer.current) {
-        clearTimeout(retryTimer.current)
-        retryTimer.current = null
-      }
-      es?.close()
-      setConnected(false)
-    }
-  }, [maxEvents])
+    setEvents(prev => [hookEvent, ...prev].slice(0, maxEvents))
+  })
 
   return { events, connected }
 }

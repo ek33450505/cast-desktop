@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEvent } from '../../../lib/SseManager'
+import type { LiveEvent } from '../../../types'
 import { useReducedMotion } from 'framer-motion'
 import { usePaneBinding } from '../../../hooks/usePaneBinding'
 import { useTerminalStore } from '../../../stores/terminalStore'
@@ -69,25 +70,9 @@ export default function CostPanel() {
   })
 
   // SSE subscription — invalidate query on update
-  useEffect(() => {
-    if (!sessionId) return
-
-    const url = `/api/session-cost/stream?sessionId=${encodeURIComponent(sessionId)}`
-    const es = new EventSource(url)
-
-    es.onmessage = () => {
-      void queryClient.invalidateQueries({ queryKey: ['session-cost', sessionId] })
-    }
-
-    es.onerror = () => {
-      console.error('Session cost SSE stream error')
-      es.close()
-    }
-
-    return () => {
-      es.close()
-    }
-  }, [sessionId, queryClient])
+  useEvent<LiveEvent>('session_cost_updated', () => {
+    void queryClient.invalidateQueries({ queryKey: ['session-cost', sessionId] })
+  })
 
   const total = data?.totalUsd ?? 0
   const burnRate = data?.burnRatePerMin ?? 0

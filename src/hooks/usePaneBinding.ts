@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { LiveEvent } from '../types'
+import { useEvent } from '../lib/SseManager'
 
 export interface PaneBinding {
   sessionId: string | null
@@ -14,13 +15,6 @@ interface PaneBindingResponse {
   startedAt: number
   endedAt: number | null
   projectPath: string
-}
-
-interface PaneBindingStreamEvent {
-  paneId: string
-  sessionId: string
-  projectPath: string
-  endedAt: number | null
 }
 
 async function fetchPaneBinding(paneId: string): Promise<PaneBindingResponse | null> {
@@ -49,27 +43,11 @@ export function usePaneBinding(paneId: string | undefined): PaneBinding {
     staleTime: 60_000,
   })
 
-  useEffect(() => {
-    if (!paneId) return
-
-    const es = new EventSource('/api/pane-bindings/stream')
-
-    es.onmessage = (event: MessageEvent<string>) => {
-      let parsed: PaneBindingStreamEvent
-      try {
-        parsed = JSON.parse(event.data) as PaneBindingStreamEvent
-      } catch {
-        return
-      }
-      if (parsed.paneId === paneId) {
-        void queryClient.invalidateQueries({ queryKey: ['paneBinding', paneId] })
-      }
+  useEvent<LiveEvent>('pane_binding_updated', (e) => {
+    if (e.paneId === paneId) {
+      void queryClient.invalidateQueries({ queryKey: ['paneBinding', paneId] })
     }
-
-    return () => {
-      es.close()
-    }
-  }, [paneId, queryClient])
+  })
 
   if (!paneId) return NULL_BINDING
 

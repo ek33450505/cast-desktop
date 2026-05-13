@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEvent } from '../../../lib/SseManager'
+import type { LiveEvent } from '../../../types'
 import { Folder, FolderOpen, File, ChevronRight, ChevronDown } from 'lucide-react'
 import type { PreviewTarget } from './CastFsTree'
 
@@ -35,28 +37,17 @@ async function fetchTreeNode(dir: string): Promise<TreeNode> {
 export function useProjectFsStream(rootPath: string) {
   const queryClient = useQueryClient()
 
-  // We use a module-level map so multiple instances don't double-subscribe
-  // Simple approach: one EventSource per component mount
-  useState(() => {
-    const es = new EventSource('/api/project-fs/stream')
-    interface StreamEvent { event: string; path: string; dir: string }
-
-    es.onmessage = (e: MessageEvent<string>) => {
-      try {
-        const data = JSON.parse(e.data) as StreamEvent
-        if (data.dir) {
-          // Invalidate the specific folder that changed
-          void queryClient.invalidateQueries({ queryKey: ['projectFs', data.dir] })
-          // Also invalidate parent so counts/items update
-          const parent = data.dir.split('/').slice(0, -1).join('/')
-          if (parent && parent.length >= rootPath.length) {
-            void queryClient.invalidateQueries({ queryKey: ['projectFs', parent] })
-          }
+  useEvent<LiveEvent>('project_fs_change', (e) => {
+    if (e.fsPath) {
+      const dir = e.fsPath.split('/').slice(0, -1).join('/')
+      if (dir) {
+        void queryClient.invalidateQueries({ queryKey: ['projectFs', dir] })
+        const parent = dir.split('/').slice(0, -1).join('/')
+        if (parent && parent.length >= rootPath.length) {
+          void queryClient.invalidateQueries({ queryKey: ['projectFs', parent] })
         }
-      } catch { /* ignore malformed */ }
+      }
     }
-
-    return () => es.close()
   })
 }
 
