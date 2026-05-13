@@ -1,5 +1,5 @@
 {
-  "productName": "Cast",
+  "productName": "cast",
   "version": "0.1.0",
   "identifier": "com.cast-desktop.app",
   "build": {
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "Cast",
+        "title": "cast",
         "width": 1200,
         "height": 800,
         "resizable": true,
