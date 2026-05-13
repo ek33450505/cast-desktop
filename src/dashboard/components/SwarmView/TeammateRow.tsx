@@ -17,7 +17,7 @@ function statusPillClass(status: string): string {
 function agentDefBadge(agentDef: string | null) {
   if (!agentDef) return null
   return (
-    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] border border-[var(--cast-accent-legacy)]/20">
+    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]/20">
       {agentDef}
     </span>
   )
@@ -32,9 +32,9 @@ export function TeammateRow({ teammate }: TeammateRowProps) {
     : null
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors">
+    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--border)] last:border-0 hover:bg-[var(--system-elevated)] transition-colors">
       {/* Role */}
-      <span className="w-32 shrink-0 text-sm font-medium text-[var(--text-primary)] truncate">
+      <span className="w-32 shrink-0 text-sm font-medium text-[var(--content-primary)] truncate">
         {teammate.agent_role}
       </span>
 
@@ -49,12 +49,12 @@ export function TeammateRow({ teammate }: TeammateRowProps) {
       </span>
 
       {/* Task subject */}
-      <span className="flex-1 text-xs text-[var(--text-secondary)] truncate min-w-0">
-        {subject ?? <span className="text-[var(--text-muted)] italic">No task</span>}
+      <span className="flex-1 text-xs text-[var(--content-secondary)] truncate min-w-0">
+        {subject ?? <span className="text-[var(--content-muted)] italic">No task</span>}
       </span>
 
       {/* Token spend */}
-      <span className="shrink-0 text-xs text-[var(--text-muted)] tabular-nums w-20 text-right">
+      <span className="shrink-0 text-xs text-[var(--content-muted)] tabular-nums w-20 text-right">
         {totalTokens > 0 ? totalTokens.toLocaleString() + ' tok' : '—'}
       </span>
     </div>

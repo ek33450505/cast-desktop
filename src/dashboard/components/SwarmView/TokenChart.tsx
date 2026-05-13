@@ -7,7 +7,7 @@ interface TokenChartProps {
   teammates: TeammateRun[]
 }
 
-const ACCENT = 'var(--cast-accent-legacy)'
+const ACCENT = 'var(--accent)'
 const ACCENT_DIM = 'rgba(0,255,194,0.4)'
 
 export function TokenChart({ teammates }: TokenChartProps) {
@@ -21,7 +21,7 @@ export function TokenChart({ teammates }: TokenChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-24 text-xs text-[var(--text-muted)]">
+      <div className="flex items-center justify-center h-24 text-xs text-[var(--content-muted)]">
         No token data yet
       </div>
     )
@@ -36,7 +36,7 @@ export function TokenChart({ teammates }: TokenChartProps) {
       >
         <XAxis
           type="number"
-          tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
+          tick={{ fill: 'var(--content-muted)', fontSize: 10 }}
           tickLine={false}
           axisLine={false}
           tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)}
@@ -45,18 +45,18 @@ export function TokenChart({ teammates }: TokenChartProps) {
           type="category"
           dataKey="role"
           width={100}
-          tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+          tick={{ fill: 'var(--content-secondary)', fontSize: 11 }}
           tickLine={false}
           axisLine={false}
         />
         <Tooltip
           cursor={{ fill: 'rgba(255,255,255,0.04)' }}
           contentStyle={{
-            background: 'var(--bg-secondary)',
+            background: 'var(--system-panel)',
             border: '1px solid var(--glass-border)',
             borderRadius: 8,
             fontSize: 12,
-            color: 'var(--text-primary)',
+            color: 'var(--content-primary)',
           }}
           formatter={(value: number) => [value.toLocaleString(), 'Tokens']}
         />

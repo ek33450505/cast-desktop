@@ -8,13 +8,13 @@ interface StubPageProps {
 function StubPage({ title, subtitle }: StubPageProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
-      <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
-      <p className="text-sm text-[var(--text-muted)] max-w-sm">
+      <h1 className="text-2xl font-semibold text-[var(--content-primary)]">{title}</h1>
+      <p className="text-sm text-[var(--content-muted)] max-w-sm">
         {subtitle ?? 'Repatriates from claude-code-dashboard in a sub-wave'}
       </p>
       <Link
         to="/"
-        className="mt-2 text-sm text-[var(--cast-accent-legacy)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-2 rounded-sm"
+        className="mt-2 text-sm text-[var(--accent)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2 rounded-sm"
       >
         ← Back to terminal
       </Link>

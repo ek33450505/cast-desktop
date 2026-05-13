@@ -27,14 +27,14 @@ function StatCard({
   accent?: string
 }) {
   const inner = (
-    <div className="bento-card p-5 flex items-start gap-4 hover:border-[var(--cast-accent-legacy)]/30 transition-colors">
-      <div className={`p-2.5 rounded-lg ${accent ?? 'bg-[var(--accent-subtle)]'} shrink-0`}>
-        <Icon className="w-5 h-5 text-[var(--cast-accent-legacy)]" />
+    <div className="bento-card p-5 flex items-start gap-4 hover:border-[var(--accent)]/30 transition-colors">
+      <div className={`p-2.5 rounded-lg ${accent ?? 'bg-[var(--accent-muted)]'} shrink-0`}>
+        <Icon className="w-5 h-5 text-[var(--accent)]" />
       </div>
       <div className="min-w-0">
-        <div className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{value}</div>
-        <div className="text-xs text-[var(--text-muted)] mt-0.5">{label}</div>
-        {sub && <div className="text-xs text-[var(--text-secondary)] mt-1">{sub}</div>}
+        <div className="text-2xl font-bold text-[var(--content-primary)] tabular-nums">{value}</div>
+        <div className="text-xs text-[var(--content-muted)] mt-0.5">{label}</div>
+        {sub && <div className="text-xs text-[var(--content-secondary)] mt-1">{sub}</div>}
       </div>
     </div>
   )
@@ -45,8 +45,8 @@ function StatCard({
 function StatCardSkeleton() {
   return (
     <div className="bento-card p-5">
-      <div className="h-4 w-24 rounded bg-[var(--bg-secondary)] animate-pulse mb-2" />
-      <div className="h-8 w-16 rounded bg-[var(--bg-secondary)] animate-pulse" />
+      <div className="h-4 w-24 rounded bg-[var(--system-panel)] animate-pulse mb-2" />
+      <div className="h-8 w-16 rounded bg-[var(--system-panel)] animate-pulse" />
     </div>
   )
 }
@@ -76,7 +76,7 @@ function MiniActivityFeed() {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-8 rounded bg-[var(--bg-secondary)] animate-pulse" />
+          <div key={i} className="h-8 rounded bg-[var(--system-panel)] animate-pulse" />
         ))}
       </div>
     )
@@ -84,7 +84,7 @@ function MiniActivityFeed() {
 
   if (runs.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-[var(--text-muted)] font-mono">
+      <div className="py-8 text-center text-sm text-[var(--content-muted)] font-mono">
         No agent runs today
       </div>
     )
@@ -95,15 +95,15 @@ function MiniActivityFeed() {
       {runs.slice(0, 8).map(run => (
         <div key={run.id} className="flex items-center gap-3 py-2.5 text-sm">
           <span className={`w-2 h-2 rounded-full shrink-0 ${statusDot(run.status)}`} />
-          <span className="font-mono text-xs text-[var(--text-primary)] truncate flex-1">
+          <span className="font-mono text-xs text-[var(--content-primary)] truncate flex-1">
             {run.agent}
           </span>
           {run.cost_usd > 0 && (
-            <span className="text-xs tabular-nums text-[var(--text-muted)] font-mono">
+            <span className="text-xs tabular-nums text-[var(--content-muted)] font-mono">
               {formatCost(run.cost_usd)}
             </span>
           )}
-          <span className="text-xs text-[var(--text-muted)] whitespace-nowrap shrink-0">
+          <span className="text-xs text-[var(--content-muted)] whitespace-nowrap shrink-0">
             {timeAgo(run.started_at)}
           </span>
         </div>
@@ -130,12 +130,12 @@ function CostSparkline() {
   }, [data])
 
   if (isLoading) {
-    return <div className="h-32 rounded bg-[var(--bg-secondary)] animate-pulse" />
+    return <div className="h-32 rounded bg-[var(--system-panel)] animate-pulse" />
   }
 
   if (chartData.length === 0) {
     return (
-      <div className="h-32 flex items-center justify-center text-sm text-[var(--text-muted)] font-mono">
+      <div className="h-32 flex items-center justify-center text-sm text-[var(--content-muted)] font-mono">
         No spend data
       </div>
     )
@@ -150,10 +150,10 @@ function CostSparkline() {
             <stop offset="95%" stopColor="#00FFC2" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <XAxis dataKey="date" tick={{ fontSize: 9, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+        <XAxis dataKey="date" tick={{ fontSize: 9, fill: 'var(--content-muted)' }} axisLine={false} tickLine={false} />
         <YAxis hide />
         <Tooltip
-          contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 11 }}
+          contentStyle={{ background: 'var(--system-panel)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 11 }}
           formatter={(v: number) => [formatCost(v), 'Cost']}
         />
         <Area type="monotone" dataKey="cost" stroke="#00FFC2" fill="url(#costGrad)" strokeWidth={1.5} dot={false} />
@@ -182,8 +182,8 @@ function HealthRow() {
             ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             : <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
           }
-          <span className="text-[var(--text-muted)]">{item.label}:</span>
-          <span className="font-mono font-semibold text-[var(--text-primary)]">{String(item.value)}</span>
+          <span className="text-[var(--content-muted)]">{item.label}:</span>
+          <span className="font-mono font-semibold text-[var(--content-primary)]">{String(item.value)}</span>
         </div>
       ))}
     </div>
@@ -269,8 +269,8 @@ export default function HomeView() {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-[var(--text-primary)]">Dashboard</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">
+        <h1 className="text-xl font-bold text-[var(--content-primary)]">Dashboard</h1>
+        <p className="text-sm text-[var(--content-muted)] mt-1">
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
       </div>
@@ -321,12 +321,12 @@ export default function HomeView() {
         <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
-              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Recent Activity</h2>
+              <Clock className="w-4 h-4 text-[var(--accent)]" />
+              <h2 className="text-sm font-semibold text-[var(--content-primary)]">Recent Activity</h2>
             </div>
             <Link
               to="/activity"
-              className="text-xs text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
+              className="text-xs text-[var(--accent)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
             >
               View all →
             </Link>
@@ -338,12 +338,12 @@ export default function HomeView() {
         <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
-              <h2 className="text-sm font-semibold text-[var(--text-primary)]">7-Day Cost</h2>
+              <DollarSign className="w-4 h-4 text-[var(--accent)]" />
+              <h2 className="text-sm font-semibold text-[var(--content-primary)]">7-Day Cost</h2>
             </div>
             <Link
               to="/analytics"
-              className="text-xs text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
+              className="text-xs text-[var(--accent)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
             >
               View analytics →
             </Link>
@@ -358,17 +358,17 @@ export default function HomeView() {
       {/* Bottom: system health */}
       <div className="bento-card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">System Health</h2>
+          <h2 className="text-sm font-semibold text-[var(--content-primary)]">System Health</h2>
           <Link
             to="/system"
-            className="text-xs text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
+            className="text-xs text-[var(--accent)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
           >
             System →
           </Link>
         </div>
         <HealthRow />
         {health?.version && (
-          <p className="text-xs text-[var(--text-muted)] font-mono mt-3">
+          <p className="text-xs text-[var(--content-muted)] font-mono mt-3">
             Claude Code {health.version} · Model: {health.model}
           </p>
         )}
