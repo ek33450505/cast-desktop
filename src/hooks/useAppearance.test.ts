@@ -52,6 +52,16 @@ beforeEach(() => {
   mockPrefersLight = false
   vi.mocked(window.matchMedia).mockImplementation((q: string) => makeMockMQ(q))
   document.documentElement.removeAttribute('data-appearance')
+
+  // Reset the shared store to 'dusk' between tests so module-level state doesn't
+  // leak between test cases. The store is module-level — a fresh renderHook alone
+  // won't reset it; we must call setAppearance explicitly.
+  const { result } = renderHook(() => useAppearance())
+  act(() => { result.current.setAppearance('dusk') })
+  // Clear storage again after the store reset — setAppearance writes to
+  // localStorage, which would cause getInitialAppearance() to return 'dusk'
+  // even in tests that expect the clean no-override state.
+  localStorageMock.clear()
 })
 
 afterEach(() => {
@@ -115,29 +125,29 @@ describe('applyAppearance', () => {
 // ── useAppearance ─────────────────────────────────────────────────────────────
 
 describe('useAppearance', () => {
-  it('returns initial appearance from localStorage', () => {
-    mockStorage['cast.appearance'] = 'dawn'
+  it('setAppearance("dawn") returns "dawn"', () => {
     const { result } = renderHook(() => useAppearance())
+    act(() => { result.current.setAppearance('dawn') })
     expect(result.current.appearance).toBe('dawn')
   })
 
   it('toggle() flips from dusk to dawn', () => {
-    mockStorage['cast.appearance'] = 'dusk'
     const { result } = renderHook(() => useAppearance())
+    act(() => { result.current.setAppearance('dusk') })
     act(() => { result.current.toggle() })
     expect(result.current.appearance).toBe('dawn')
   })
 
   it('toggle() flips from dawn to dusk', () => {
-    mockStorage['cast.appearance'] = 'dawn'
     const { result } = renderHook(() => useAppearance())
+    act(() => { result.current.setAppearance('dawn') })
     act(() => { result.current.toggle() })
     expect(result.current.appearance).toBe('dusk')
   })
 
   it('toggle() persists to localStorage', () => {
-    mockStorage['cast.appearance'] = 'dusk'
     const { result } = renderHook(() => useAppearance())
+    act(() => { result.current.setAppearance('dusk') })
     act(() => { result.current.toggle() })
     expect(localStorageMock.setItem).toHaveBeenCalledWith('cast.appearance', 'dawn')
   })
@@ -168,5 +178,35 @@ describe('useAppearance', () => {
     act(() => { firePrefersColorSchemeChange(true) })
     // Should stay dusk because manual override is set
     expect(result.current.appearance).toBe('dusk')
+  })
+
+  // ── Cross-consumer sync (the core fix) ───────────────────────────────────────
+  // Two independent hook consumers must share the same state. Toggling in one
+  // must immediately reflect in the other — this is the property that was broken
+  // before the useSyncExternalStore migration.
+
+  it('two hook consumers stay in sync — toggle in one reflects in the other', () => {
+    const { result: consumer1 } = renderHook(() => useAppearance())
+    const { result: consumer2 } = renderHook(() => useAppearance())
+
+    // Both start at the same value
+    expect(consumer1.current.appearance).toBe(consumer2.current.appearance)
+
+    // Toggle via consumer1
+    act(() => { consumer1.current.toggle() })
+
+    // consumer2 must see the new value immediately
+    expect(consumer2.current.appearance).toBe(consumer1.current.appearance)
+  })
+
+  it('two consumers stay in sync across multiple toggles', () => {
+    const { result: consumer1 } = renderHook(() => useAppearance())
+    const { result: consumer2 } = renderHook(() => useAppearance())
+
+    act(() => { consumer1.current.setAppearance('dawn') })
+    expect(consumer2.current.appearance).toBe('dawn')
+
+    act(() => { consumer2.current.setAppearance('dusk') })
+    expect(consumer1.current.appearance).toBe('dusk')
   })
 })
