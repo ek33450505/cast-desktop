@@ -50,9 +50,9 @@ function modelTierLabel(model: string): string {
 
 function modelBadgeVar(model: string): string {
   const lower = model.toLowerCase()
-  if (lower.includes('haiku')) return 'var(--cast-badge-haiku)'
-  if (lower.includes('opus')) return 'var(--cast-badge-opus)'
-  return 'var(--cast-badge-sonnet)'
+  if (lower.includes('haiku')) return 'var(--model-haiku)'
+  if (lower.includes('opus')) return 'var(--model-opus)'
+  return 'var(--model-sonnet)'
 }
 
 // ── Focusable element query ───────────────────────────────────────────────────
@@ -148,7 +148,7 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
     /* Backdrop */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'var(--cast-overlay-backdrop)' }}
+      style={{ background: 'var(--overlay-backdrop)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}

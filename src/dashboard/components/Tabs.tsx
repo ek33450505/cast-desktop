@@ -13,13 +13,13 @@ export default function Tabs({ tabs, activeTab, onChange }: TabsProps) {
           onClick={() => onChange(tab.id)}
           className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
             activeTab === tab.id
-              ? 'text-[var(--cast-accent-legacy)]'
+              ? 'text-[var(--accent)]'
               : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
           }`}
         >
           {tab.label}
           {activeTab === tab.id && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--cast-accent-legacy)] rounded-t" />
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)] rounded-t" />
           )}
         </button>
       ))}

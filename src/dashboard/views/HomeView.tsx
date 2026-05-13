@@ -326,7 +326,7 @@ export default function HomeView() {
             </div>
             <Link
               to="/activity"
-              className="text-xs text-[var(--accent)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
+              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
             >
               View all →
             </Link>
@@ -343,7 +343,7 @@ export default function HomeView() {
             </div>
             <Link
               to="/analytics"
-              className="text-xs text-[var(--accent)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
+              className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
             >
               View analytics →
             </Link>
@@ -361,7 +361,7 @@ export default function HomeView() {
           <h2 className="text-sm font-semibold text-[var(--content-primary)]">System Health</h2>
           <Link
             to="/system"
-            className="text-xs text-[var(--accent)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
+            className="text-xs text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
           >
             System →
           </Link>
