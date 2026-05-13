@@ -40,18 +40,18 @@ function EmptyState() {
     >
       <ClipboardList
         className="w-6 h-6"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: 'var(--content-muted)' }}
         aria-hidden="true"
       />
-      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+      <p className="text-xs" style={{ color: 'var(--content-muted)' }}>
         No active plan
       </p>
       <code
         className="text-xs rounded px-1.5 py-0.5 font-mono"
         style={{
-          background: 'var(--bg-tertiary)',
-          color: 'var(--text-secondary)',
-          border: '1px solid var(--cast-rail-border)',
+          background: 'var(--system-elevated)',
+          color: 'var(--content-secondary)',
+          border: '1px solid var(--stroke-regular)',
         }}
       >
         /plan
@@ -67,7 +67,7 @@ function LoadingState() {
         <div
           key={i}
           className="h-4 rounded animate-pulse"
-          style={{ background: 'var(--bg-tertiary)', opacity: 0.6 }}
+          style={{ background: 'var(--system-elevated)', opacity: 0.6 }}
         />
       ))}
     </div>
@@ -114,7 +114,7 @@ export default function PlanProgressPanel() {
       {/* Plan file header */}
       <p
         className="text-xs font-mono truncate px-1"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: 'var(--content-muted)' }}
         title={data.planPath}
       >
         {data.title}
@@ -135,12 +135,12 @@ export default function PlanProgressPanel() {
               disabled
               aria-label={task.text}
               className="mt-0.5 shrink-0 cursor-default"
-              style={{ accentColor: 'var(--cast-accent)' }}
+              style={{ accentColor: 'var(--accent)' }}
               readOnly
             />
             <span
               className={task.done ? 'line-through opacity-60' : ''}
-              style={{ color: task.done ? 'var(--text-muted)' : 'var(--text-secondary)' }}
+              style={{ color: task.done ? 'var(--content-muted)' : 'var(--content-secondary)' }}
             >
               {task.text}
             </span>

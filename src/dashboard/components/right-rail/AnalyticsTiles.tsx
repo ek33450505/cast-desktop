@@ -65,7 +65,7 @@ export default function AnalyticsTiles() {
       <div>
         <span
           className="text-[10px] uppercase tracking-wider mb-1 block"
-          style={{ color: 'var(--text-muted)' }}
+          style={{ color: 'var(--content-muted)' }}
         >
           token rate
         </span>
@@ -78,17 +78,17 @@ export default function AnalyticsTiles() {
             <AreaChart data={buckets} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="tokenRateGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--cast-accent)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--cast-accent)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <Tooltip
                 contentStyle={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--cast-rail-border)',
+                  background: 'var(--system-panel)',
+                  border: '1px solid var(--stroke-regular)',
                   borderRadius: '6px',
                   fontSize: '10px',
-                  color: 'var(--text-secondary)',
+                  color: 'var(--content-secondary)',
                 }}
                 formatter={(value: number) => [`${value} tokens`, '']}
                 labelFormatter={() => ''}
@@ -96,7 +96,7 @@ export default function AnalyticsTiles() {
               <Area
                 type="monotone"
                 dataKey="tokens"
-                stroke="var(--cast-accent)"
+                stroke="var(--accent)"
                 strokeWidth={1.5}
                 fill="url(#tokenRateGrad)"
                 dot={false}
@@ -111,12 +111,12 @@ export default function AnalyticsTiles() {
       <div className="flex flex-col gap-0.5">
         <span
           className="text-2xl font-semibold font-mono tabular-nums"
-          style={{ color: 'var(--text-primary)' }}
+          style={{ color: 'var(--content-primary)' }}
           aria-label={`${agentFanOut} agents this session`}
         >
           {agentFanOut}
         </span>
-        <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+        <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--content-muted)' }}>
           agents this session
         </span>
       </div>
@@ -127,7 +127,7 @@ export default function AnalyticsTiles() {
           className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full"
           style={{
             background: 'rgba(52, 211, 153, 0.12)',
-            color: 'var(--success)',
+            color: 'var(--status-success)',
             border: '1px solid rgba(52, 211, 153, 0.25)',
           }}
           aria-label={`${qualityPass} quality gates passed`}
@@ -138,7 +138,7 @@ export default function AnalyticsTiles() {
           className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full"
           style={{
             background: 'rgba(248, 113, 113, 0.12)',
-            color: 'var(--error)',
+            color: 'var(--status-error)',
             border: '1px solid rgba(248, 113, 113, 0.25)',
           }}
           aria-label={`${qualityFail} quality gates failed`}

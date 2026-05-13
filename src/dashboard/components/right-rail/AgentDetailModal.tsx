@@ -162,20 +162,20 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
         aria-labelledby={titleId}
         className="relative flex flex-col rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[80vh] overflow-hidden"
         style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--cast-rail-border)',
+          background: 'var(--system-panel)',
+          border: '1px solid var(--stroke-regular)',
         }}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 py-3 gap-3"
-          style={{ borderBottom: '1px solid var(--cast-rail-border)' }}
+          style={{ borderBottom: '1px solid var(--stroke-regular)' }}
         >
           <h2
             id={titleId}
             className="text-sm font-semibold truncate"
-            style={{ color: 'var(--text-primary)' }}
+            style={{ color: 'var(--content-primary)' }}
           >
             {isLoading ? 'Loading…' : (data?.name ?? 'Agent Run')}
           </h2>
@@ -198,11 +198,11 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
             type="button"
             onClick={onClose}
             aria-label="Close agent detail"
-            className="ml-auto shrink-0 rounded-md flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-1"
+            className="ml-auto shrink-0 rounded-md flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
             style={{
               width: '28px',
               height: '28px',
-              color: 'var(--text-muted)',
+              color: 'var(--content-muted)',
               background: 'transparent',
             }}
           >
@@ -218,14 +218,14 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
                 <div
                   key={i}
                   className="h-4 rounded animate-pulse"
-                  style={{ background: 'var(--bg-tertiary)', opacity: 0.6 }}
+                  style={{ background: 'var(--system-elevated)', opacity: 0.6 }}
                 />
               ))}
             </div>
           )}
 
           {error && (
-            <p className="text-xs" style={{ color: 'var(--error)' }}>
+            <p className="text-xs" style={{ color: 'var(--status-error)' }}>
               Failed to load agent run details.
             </p>
           )}
@@ -237,13 +237,13 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
                 <div>
                   <p
                     className="text-[10px] uppercase tracking-wider font-medium mb-1"
-                    style={{ color: 'var(--text-muted)' }}
+                    style={{ color: 'var(--content-muted)' }}
                   >
                     Prompt
                   </p>
                   <p
                     className="text-xs leading-relaxed select-text break-words whitespace-pre-wrap"
-                    style={{ color: 'var(--text-secondary)' }}
+                    style={{ color: 'var(--content-secondary)' }}
                   >
                     {data.prompt}
                   </p>
@@ -253,48 +253,48 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
               {/* Metadata grid */}
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--content-muted)' }}>
                     Status
                   </dt>
-                  <dd style={{ color: 'var(--text-primary)' }}>{data.status}</dd>
+                  <dd style={{ color: 'var(--content-primary)' }}>{data.status}</dd>
                 </div>
 
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--content-muted)' }}>
                     Started
                   </dt>
-                  <dd style={{ color: 'var(--text-secondary)' }}>{formatDateTime(data.startedAt)}</dd>
+                  <dd style={{ color: 'var(--content-secondary)' }}>{formatDateTime(data.startedAt)}</dd>
                 </div>
 
                 {data.endedAt && (
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--content-muted)' }}>
                       Ended
                     </dt>
-                    <dd style={{ color: 'var(--text-secondary)' }}>{formatDateTime(data.endedAt)}</dd>
+                    <dd style={{ color: 'var(--content-secondary)' }}>{formatDateTime(data.endedAt)}</dd>
                   </div>
                 )}
 
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--content-muted)' }}>
                     Input tokens
                   </dt>
-                  <dd style={{ color: 'var(--text-primary)' }}>{data.inputTokens.toLocaleString()}</dd>
+                  <dd style={{ color: 'var(--content-primary)' }}>{data.inputTokens.toLocaleString()}</dd>
                 </div>
 
                 <div>
-                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                  <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--content-muted)' }}>
                     Output tokens
                   </dt>
-                  <dd style={{ color: 'var(--text-primary)' }}>{data.outputTokens.toLocaleString()}</dd>
+                  <dd style={{ color: 'var(--content-primary)' }}>{data.outputTokens.toLocaleString()}</dd>
                 </div>
 
                 {data.costUsd > 0 && (
                   <div>
-                    <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <dt className="text-[10px] uppercase tracking-wider font-medium mb-0.5" style={{ color: 'var(--content-muted)' }}>
                       Cost
                     </dt>
-                    <dd style={{ color: 'var(--text-primary)' }}>
+                    <dd style={{ color: 'var(--content-primary)' }}>
                       ${data.costUsd.toFixed(4)}
                     </dd>
                   </div>
