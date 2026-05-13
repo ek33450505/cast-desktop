@@ -88,7 +88,7 @@
   /* Legacy --text-* tokens */
   --text-primary:           #1A211E;
   --text-secondary:         #475048;
-  --text-muted:             #737B72;
+  --text-muted:             #5A6358;
 
   /* Legacy --bg-* tokens (sage-grey family — matches new --system-* values) */
   --bg-primary:             #F0F2EE;
@@ -110,7 +110,7 @@
   --secondary:              #DDE2D9;
   --secondary-foreground:   #475048;
   --muted:                  #DDE2D9;
-  --muted-foreground:       #737B72;
+  --muted-foreground:       #5A6358;
   --input:                  #DDE2D9;
 
   /* Cast shell tokens — dawn versions */

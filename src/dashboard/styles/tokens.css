@@ -78,7 +78,7 @@
   /* Content */
   --content-primary:         #1A211E;
   --content-secondary:       #475048;
-  --content-muted:           #737B72;
+  --content-muted:           #5A6358;
   --content-disabled:        #A4ADA1;
   --content-on-accent:       #1A211E;
   --content-on-status-fill:  #FFFFFF;
@@ -92,13 +92,13 @@
   --accent-text:             #8C5E0B;
 
   /* Status */
-  --status-success:          #1F8B4C;
+  --status-success:          #15703A;
   --status-success-muted:    #D7F0DF;
-  --status-warning:          #D86B0F;
+  --status-warning:          #A85008;
   --status-warning-muted:    #F8DEC5;
-  --status-error:            #C42F1E;
+  --status-error:            #9B1F12;
   --status-error-muted:      #F5DAD7;
-  --status-info:             #2065BD;
+  --status-info:             #16518C;
   --status-info-muted:       #D4E3F4;
 
   /* Shadows */
