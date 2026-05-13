@@ -62,7 +62,9 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     const theme = buildTerminalTheme(appearance)
     if (xtermRef.current) {
       xtermRef.current.options.theme = theme
-      // Force xterm to repaint the visible buffer — canvas renderer caches theme at render-time
+      // xterm's canvas renderer caches glyphs in a texture atlas keyed on the OLD
+      // theme colors; without invalidating it, refresh() repaints with stale glyphs.
+      xtermRef.current.clearTextureAtlas()
       xtermRef.current.refresh(0, xtermRef.current.rows - 1)
     }
     // Restyle the container element directly — the xterm wrapper background is set
