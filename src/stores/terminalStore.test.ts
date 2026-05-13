@@ -107,6 +107,19 @@ describe('terminalStore', () => {
       expect(updated?.title).toBe('my-project')
     })
 
+    it('sets userRenamed=true by default', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.userRenamed).toBe(false)
+      useTerminalStore.getState().updateTabTitle(tab.id, 'research')
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.userRenamed).toBe(true)
+    })
+
+    it('sets userRenamed=false when passed explicitly as false', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().updateTabTitle(tab.id, 'auto-title', false)
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.userRenamed).toBe(false)
+    })
+
     it('does not mutate other tabs', () => {
       const tab1 = useTerminalStore.getState().addTab('~')
       const originalTitle1 = useTerminalStore.getState().tabs.find((t) => t.id === tab1.id)?.title
@@ -114,6 +127,38 @@ describe('terminalStore', () => {
       useTerminalStore.getState().updateTabTitle(tab2.id, 'changed')
       const tab1AfterUpdate = useTerminalStore.getState().tabs.find((t) => t.id === tab1.id)
       expect(tab1AfterUpdate?.title).toBe(originalTitle1)
+    })
+  })
+
+  describe('setAutoTitle', () => {
+    it('updates the title of a non-user-renamed tab', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setAutoTitle(tab.id, 'auto-cwd')
+      const updated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+      expect(updated?.title).toBe('auto-cwd')
+    })
+
+    it('does NOT update the title when the tab has been user-renamed', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().updateTabTitle(tab.id, 'my-rename')
+      useTerminalStore.getState().setAutoTitle(tab.id, 'auto-override-attempt')
+      const updated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+      expect(updated?.title).toBe('my-rename')
+      expect(updated?.userRenamed).toBe(true)
+    })
+
+    it('does not flip userRenamed to true', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setAutoTitle(tab.id, 'auto-cwd')
+      const updated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+      expect(updated?.userRenamed).toBe(false)
+    })
+  })
+
+  describe('Tab.userRenamed default', () => {
+    it('addTab creates tabs with userRenamed=false', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.userRenamed).toBe(false)
     })
   })
 })

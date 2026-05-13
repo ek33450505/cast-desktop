@@ -1,7 +1,7 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion } from 'framer-motion'
-import { useTerminalStore } from '../../stores/terminalStore'
+import { useTerminalStore, Tab } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
 import { usePaneBinding } from '../../hooks/usePaneBinding'
 
@@ -15,20 +15,306 @@ function basename(path: string): string {
 // ── TabLabel ──────────────────────────────────────────────────────────────────
 // Extracted as a subcomponent so usePaneBinding (a hook) can be called
 // unconditionally for each tab without violating Rules of Hooks.
+//
+// Title resolution priority (first match wins):
+//  1. user-renamed title (tab.userRenamed=true) — always wins
+//  2. bound session label — {projectBasename} · {sessionIdShort6}
+//  3. cwd basename — tab.cwd when not bound
+//  4. ordinal fallback — tab.title (set to "Terminal N" when cwd is empty)
 
 interface TabLabelProps {
-  paneId: string
-  fallback: string
+  tab: Tab
 }
 
-function TabLabel({ paneId, fallback }: TabLabelProps) {
-  const { bound, sessionId, projectPath } = usePaneBinding(paneId)
+function TabLabel({ tab }: TabLabelProps) {
+  const { bound, sessionId, projectPath } = usePaneBinding(tab.paneId)
 
+  // Priority 1: user-renamed title is always authoritative
+  if (tab.userRenamed) {
+    return <>{tab.title}</>
+  }
+
+  // Priority 2: bound session label
   if (bound && sessionId && projectPath) {
     return <>{basename(projectPath)} · {sessionId.slice(0, 6)}</>
   }
 
-  return <>{fallback}</>
+  // Priority 3 & 4: cwd basename or ordinal fallback (both stored in tab.title by addTab)
+  return <>{tab.title}</>
+}
+
+// ── useResolvedTitle ──────────────────────────────────────────────────────────
+// Returns the same title string that TabLabel would render, for aria-label use.
+
+function useResolvedTitle(tab: Tab): string {
+  const { bound, sessionId, projectPath } = usePaneBinding(tab.paneId)
+
+  if (tab.userRenamed) return tab.title
+  if (bound && sessionId && projectPath) return `${basename(projectPath)} · ${sessionId.slice(0, 6)}`
+  return tab.title
+}
+
+// ── TabItem ───────────────────────────────────────────────────────────────────
+// Renders a single tab with rename UX (double-click, right-click context menu).
+
+interface TabItemProps {
+  tab: Tab
+  isActive: boolean
+  shouldReduceMotion: boolean | null
+  onActivate: () => void
+  onClose: () => void
+  onKeyDown: (e: React.KeyboardEvent) => void
+}
+
+function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKeyDown }: TabItemProps) {
+  const updateTabTitle = useTerminalStore((s) => s.updateTabTitle)
+  const resolvedTitle = useResolvedTitle(tab)
+
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const tabButtonRef = useRef<HTMLDivElement>(null)
+
+  const startRename = useCallback(() => {
+    setRenameValue(resolvedTitle)
+    setIsRenaming(true)
+  }, [resolvedTitle])
+
+  const commitRename = useCallback(() => {
+    const trimmed = renameValue.trim()
+    if (trimmed) {
+      updateTabTitle(tab.id, trimmed)
+    }
+    setIsRenaming(false)
+    // Return focus to the tab button
+    requestAnimationFrame(() => tabButtonRef.current?.focus())
+  }, [renameValue, tab.id, updateTabTitle])
+
+  const cancelRename = useCallback(() => {
+    setIsRenaming(false)
+    requestAnimationFrame(() => tabButtonRef.current?.focus())
+  }, [])
+
+  // Auto-focus and select-all when rename mode activates
+  useEffect(() => {
+    if (isRenaming && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isRenaming])
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setContextMenu({ x: e.clientX, y: e.clientY })
+  }, [])
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null)
+  }, [])
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!contextMenu) return
+    const handler = () => closeContextMenu()
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [contextMenu, closeContextMenu])
+
+  return (
+    <div style={{ position: 'relative', flexShrink: 0 }}>
+      <div
+        ref={tabButtonRef}
+        role="tab"
+        aria-selected={isActive}
+        aria-label={resolvedTitle}
+        tabIndex={0}
+        data-tab-id={tab.id}
+        onClick={onActivate}
+        onDoubleClick={(e) => {
+          e.stopPropagation()
+          startRename()
+        }}
+        onContextMenu={handleContextMenu}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onActivate()
+          }
+          onKeyDown(e)
+        }}
+        title={resolvedTitle}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '0 10px',
+          height: 36,
+          cursor: 'pointer',
+          fontSize: '0.8125rem',
+          color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+          background: isActive ? 'var(--cast-center-bg)' : 'transparent',
+          borderBottom: isActive
+            ? '2px solid var(--cast-accent)'
+            : '2px solid transparent',
+          borderRight: '1px solid var(--cast-rail-border)',
+          userSelect: 'none',
+          outline: 'none',
+          transition: shouldReduceMotion ? 'none' : 'color 0.15s ease',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+          e.currentTarget.style.outlineOffset = '-2px'
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.outline = 'none'
+        }}
+      >
+        {/* Tab title: inline rename input or label */}
+        <span
+          style={{
+            maxWidth: '10rem',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {isRenaming ? (
+            <input
+              ref={inputRef}
+              type="text"
+              aria-label="Rename tab"
+              value={renameValue}
+              maxLength={40}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  commitRename()
+                } else if (e.key === 'Escape') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  cancelRename()
+                }
+              }}
+              onBlur={commitRename}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                fontSize: '0.8125rem',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--cast-accent)',
+                borderRadius: 3,
+                padding: '1px 4px',
+                outline: 'none',
+                width: '8rem',
+              }}
+            />
+          ) : (
+            <TabLabel tab={tab} />
+          )}
+        </span>
+
+        {/* Close button */}
+        <button
+          aria-label={`Close ${resolvedTitle}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            onClose()
+          }}
+          tabIndex={-1}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 18,
+            height: 18,
+            minWidth: 18,
+            minHeight: 18,
+            padding: 0,
+            border: 'none',
+            borderRadius: 3,
+            background: 'transparent',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            lineHeight: 1,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--bg-tertiary)'
+            e.currentTarget.style.color = 'var(--text-primary)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = 'var(--text-muted)'
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Context menu */}
+      {contextMenu && (
+        <ul
+          role="menu"
+          aria-label="Tab options"
+          style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            background: 'var(--cast-top-bar-bg)',
+            border: '1px solid var(--cast-rail-border)',
+            borderRadius: 6,
+            padding: '4px 0',
+            margin: 0,
+            listStyle: 'none',
+            zIndex: 1000,
+            minWidth: 120,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              closeContextMenu()
+            }
+          }}
+        >
+          <li
+            role="menuitem"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation()
+              closeContextMenu()
+              startRename()
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                closeContextMenu()
+                startRename()
+              }
+            }}
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.8125rem',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'var(--bg-tertiary)'
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent'
+            }}
+          >
+            Rename
+          </li>
+        </ul>
+      )}
+    </div>
+  )
 }
 
 // TerminalTabs — Wave 2.2b
@@ -203,103 +489,17 @@ export function TerminalTabs() {
           scrollbarWidth: 'none',
         }}
       >
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTabId
-          return (
-            <div
-              key={tab.id}
-              role="tab"
-              aria-selected={isActive}
-              tabIndex={0}
-              data-tab-id={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  setActiveTab(tab.id)
-                }
-                handleTabKeyDown(e, tab.id)
-              }}
-              title={tab.title}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0 10px',
-                height: 36,
-                cursor: 'pointer',
-                fontSize: '0.8125rem',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
-                background: isActive ? 'var(--cast-center-bg)' : 'transparent',
-                borderBottom: isActive
-                  ? '2px solid var(--cast-accent)'
-                  : '2px solid transparent',
-                borderRight: '1px solid var(--cast-rail-border)',
-                userSelect: 'none',
-                flexShrink: 0,
-                outline: 'none',
-                transition: shouldReduceMotion ? 'none' : 'color 0.15s ease',
-              }}
-              // eslint-disable-next-line react/no-unknown-property
-              onFocus={(e) => {
-                e.currentTarget.style.outline = '2px solid var(--cast-accent)'
-                e.currentTarget.style.outlineOffset = '-2px'
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.outline = 'none'
-              }}
-            >
-              {/* Tab title with overflow truncation */}
-              <span
-                style={{
-                  maxWidth: '10rem',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                <TabLabel paneId={tab.paneId} fallback={tab.title} />
-              </span>
-
-              {/* Close button */}
-              <button
-                aria-label={`Close ${tab.title}`}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleCloseTab(tab.id)
-                }}
-                tabIndex={-1}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 18,
-                  height: 18,
-                  minWidth: 18,
-                  minHeight: 18,
-                  padding: 0,
-                  border: 'none',
-                  borderRadius: 3,
-                  background: 'transparent',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  lineHeight: 1,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--bg-tertiary)'
-                  e.currentTarget.style.color = 'var(--text-primary)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = 'var(--text-muted)'
-                }}
-              >
-                ×
-              </button>
-            </div>
-          )
-        })}
+        {tabs.map((tab) => (
+          <TabItem
+            key={tab.id}
+            tab={tab}
+            isActive={tab.id === activeTabId}
+            shouldReduceMotion={shouldReduceMotion}
+            onActivate={() => setActiveTab(tab.id)}
+            onClose={() => handleCloseTab(tab.id)}
+            onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
+          />
+        ))}
 
         {/* ── New tab button ─────────────────────────────────────────── */}
         <button

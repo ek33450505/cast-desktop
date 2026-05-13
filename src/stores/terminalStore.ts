@@ -6,6 +6,10 @@ export interface Tab {
   paneId: string
   cwd: string
   title: string
+  // userRenamed: true when the user has explicitly renamed this tab.
+  // When true, the resolved display title always uses `title` (even if the tab
+  // later becomes bound to a session). Future wave: persist to localStorage.
+  userRenamed: boolean
 }
 
 interface TerminalState {
@@ -16,7 +20,11 @@ interface TerminalState {
   setActiveTab: (id: string) => void
   setTabPtyId: (id: string, ptyId: string) => void
   setTabPaneId: (id: string, paneId: string) => void
-  updateTabTitle: (id: string, title: string) => void
+  // updateTabTitle: user-intent rename — sets userRenamed=true by default.
+  // Pass userRenamed=false only for programmatic (non-user) updates.
+  updateTabTitle: (id: string, title: string, userRenamed?: boolean) => void
+  // setAutoTitle: internal auto-title update, never flips userRenamed.
+  setAutoTitle: (id: string, title: string) => void
 }
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
@@ -27,7 +35,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     const id = crypto.randomUUID()
     const tabCount = get().tabs.length + 1
     const title = cwd ? cwd.split('/').filter(Boolean).pop() ?? 'Terminal' : `Terminal ${tabCount}`
-    const tab: Tab = { id, ptyId: null, paneId: paneId ?? crypto.randomUUID(), cwd, title }
+    const tab: Tab = { id, ptyId: null, paneId: paneId ?? crypto.randomUUID(), cwd, title, userRenamed: false }
     set((state) => ({
       tabs: [...state.tabs, tab],
       activeTabId: id,
@@ -62,9 +70,20 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     }))
   },
 
-  updateTabTitle: (id: string, title: string) => {
+  updateTabTitle: (id: string, title: string, userRenamed = true) => {
     set((state) => ({
-      tabs: state.tabs.map((t) => (t.id === id ? { ...t, title } : t)),
+      tabs: state.tabs.map((t) =>
+        t.id === id ? { ...t, title, userRenamed } : t,
+      ),
+    }))
+  },
+
+  setAutoTitle: (id: string, title: string) => {
+    set((state) => ({
+      tabs: state.tabs.map((t) =>
+        // Never overwrite a user-renamed tab with an auto-title
+        t.id === id && !t.userRenamed ? { ...t, title } : t,
+      ),
     }))
   },
 }))
