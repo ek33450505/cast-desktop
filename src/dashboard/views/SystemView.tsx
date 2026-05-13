@@ -50,7 +50,7 @@ function AgentDetailInline({ name }: { name: string }) {
       <p className="text-[var(--text-secondary)]">{data.description}</p>
       {data.body && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-[var(--accent)] hover:underline">View full definition</summary>
+          <summary className="cursor-pointer text-[var(--cast-accent-legacy)] hover:underline">View full definition</summary>
           <pre className="mt-2 p-3 bg-[var(--bg-primary)] rounded text-[10px] overflow-x-auto whitespace-pre-wrap max-h-80">
             {data.body}
           </pre>
@@ -122,14 +122,14 @@ function SkillsTab() {
     <div className="space-y-6">
       <div>
         <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-[var(--accent)]" />
+          <Zap className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
           Skills ({skills?.length ?? 0})
         </h3>
         <div className="flex flex-wrap gap-1.5">
           {(skills ?? []).map(s => (
             <span
               key={s.name}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20"
+              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] border border-[var(--cast-accent-legacy)]/20"
               title={s.description}
             >
               {s.name}
@@ -139,14 +139,14 @@ function SkillsTab() {
       </div>
       <div>
         <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-[var(--accent)]" />
+          <Terminal className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
           Commands ({commands?.length ?? 0})
         </h3>
         <div className="flex flex-wrap gap-1.5">
           {(commands ?? []).map(c => (
             <span
               key={c.name}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-colors"
+              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--cast-accent-legacy)]/30 hover:text-[var(--cast-accent-legacy)] transition-colors"
             >
               /{c.name}
             </span>
@@ -177,7 +177,7 @@ function MemoryTab() {
       {allMemories.map((mem, i) => (
         <div key={i} className="border border-[var(--border)] rounded-lg p-4">
           <div className="flex items-center gap-3">
-            <Brain className="w-4 h-4 text-[var(--accent)] shrink-0" />
+            <Brain className="w-4 h-4 text-[var(--cast-accent-legacy)] shrink-0" />
             <span className="font-mono text-sm text-[var(--text-primary)]">{mem.name}</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
               {mem.source}
@@ -348,7 +348,7 @@ function CronTab() {
                   onClick={() => triggerEntry(entry)}
                   disabled={triggering === entry}
                   title="Run now"
-                  className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-40"
+                  className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--cast-accent-legacy)] hover:bg-[var(--cast-accent-legacy)]/10 transition-colors disabled:opacity-40"
                 >
                   <Play className="w-3 h-3" />
                 </button>
@@ -386,7 +386,7 @@ function CronTab() {
                 value={newSchedule}
                 onChange={e => setNewSchedule(e.target.value)}
                 placeholder="0 * * * *"
-                className={`w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--bg-tertiary)] border ${scheduleValid || !newSchedule ? 'border-[var(--border)]' : 'border-rose-400'} text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]`}
+                className={`w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--bg-tertiary)] border ${scheduleValid || !newSchedule ? 'border-[var(--border)]' : 'border-rose-400'} text-[var(--text-primary)] focus:outline-none focus:border-[var(--cast-accent-legacy)]`}
               />
             </div>
             <div className="space-y-1 flex-1 min-w-0">
@@ -397,7 +397,7 @@ function CronTab() {
                 value={newCommand}
                 onChange={e => setNewCommand(e.target.value)}
                 placeholder="cast exec --sweep"
-                className="w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                className="w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--cast-accent-legacy)]"
               />
             </div>
           </div>
@@ -405,14 +405,14 @@ function CronTab() {
             <button
               onClick={addEntry}
               disabled={!scheduleValid || !newCommand.trim()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-[#070A0F] text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--cast-accent-legacy)] text-[#070A0F] text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Check className="w-3 h-3" />
               Save
             </button>
             <button
               onClick={() => { setAdding(false); setNewSchedule(''); setNewCommand('') }}
-              className="px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--accent)]/30 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--cast-accent-legacy)]/30 transition-colors"
             >
               Cancel
             </button>
@@ -421,7 +421,7 @@ function CronTab() {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+          className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--cast-accent-legacy)] transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           Add cron entry
@@ -465,7 +465,7 @@ function ChainMapTab() {
                     {Array.isArray(successors) && successors.map((s: string) => (
                       <span
                         key={s}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20"
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] border border-[var(--cast-accent-legacy)]/20"
                       >
                         {s}
                       </span>
@@ -540,7 +540,7 @@ function PricingTab() {
                     <span className="text-xs font-mono text-[var(--text-primary)]">{model}</span>
                   </td>
                   <td className="py-2 pr-6 text-right text-[var(--text-secondary)] tabular-nums">${String(inputRate)}</td>
-                  <td className="py-2 text-right text-[var(--accent)] tabular-nums">${String(outputRate)}</td>
+                  <td className="py-2 text-right text-[var(--cast-accent-legacy)] tabular-nums">${String(outputRate)}</td>
                 </tr>
               )
             })}
@@ -600,12 +600,12 @@ function DispatchAgentPanel() {
   }
 
   const selectBase =
-    'w-full rounded-lg border border-[var(--border)] bg-[var(--bg-tertiary,var(--bg-secondary))] text-[var(--text-primary)] text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-[var(--accent)] transition-colors'
+    'w-full rounded-lg border border-[var(--border)] bg-[var(--bg-tertiary,var(--bg-secondary))] text-[var(--text-primary)] text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)] focus:border-[var(--cast-accent-legacy)] transition-colors'
 
   return (
     <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-6 space-y-4">
       <div className="flex items-center gap-2">
-        <Send className="w-4 h-4 text-[var(--accent)]" />
+        <Send className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
         <h3 className="text-sm font-semibold">Dispatch Agent</h3>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
@@ -634,7 +634,7 @@ function DispatchAgentPanel() {
         <button
           onClick={handleDispatch}
           disabled={!canSubmit}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-[#070A0F] font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--cast-accent-legacy)] text-[#070A0F] font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Send className="w-3.5 h-3.5" />
           {loading ? 'Dispatching...' : 'Dispatch'}
@@ -688,7 +688,7 @@ function HealthSignalsSection() {
                 ) : parryEvents.map(ev => (
                   <tr key={ev.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors">
                     <td className="px-3 py-2 tabular-nums text-[var(--text-muted)] shrink-0">{fmtTime(ev.rejected_at)}</td>
-                    <td className="px-3 py-2 text-[var(--accent)]">{ev.tool_name}</td>
+                    <td className="px-3 py-2 text-[var(--cast-accent-legacy)]">{ev.tool_name}</td>
                     <td className="px-3 py-2 text-[var(--text-muted)] truncate max-w-[200px]" title={ev.input_snippet ?? undefined} colSpan={2}>{ev.input_snippet ?? '—'}</td>
                   </tr>
                 ))}
@@ -774,7 +774,7 @@ export default function SystemView() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                 activeTab === tab.key
-                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  ? 'border-[var(--cast-accent-legacy)] text-[var(--cast-accent-legacy)]'
                   : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >

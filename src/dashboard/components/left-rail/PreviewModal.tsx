@@ -116,9 +116,9 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
       aria-labelledby="preview-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
-        background: 'var(--cast-overlay-backdrop, rgba(0,0,0,0.6))',
-        backdropFilter: shouldReduceMotion ? 'none' : 'blur(6px)',
-        WebkitBackdropFilter: shouldReduceMotion ? 'none' : 'blur(6px)',
+        background: 'var(--system-vibrancy-base)',
+        backdropFilter: shouldReduceMotion ? 'none' : 'var(--system-vibrancy-blur)',
+        WebkitBackdropFilter: shouldReduceMotion ? 'none' : 'var(--system-vibrancy-blur)',
       }}
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
@@ -131,14 +131,15 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
           width: '80vw',
           height: '80vh',
           maxWidth: '1200px',
-          background: 'var(--cast-rail-bg)',
-          border: '1px solid var(--cast-rail-border)',
+          background: 'var(--system-elevated)',
+          border: '1px solid var(--stroke-regular)',
+          boxShadow: 'var(--shadow-3)',
           animation: shouldReduceMotion ? 'none' : 'previewModalIn 0.15s ease-out',
         }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--cast-rail-border)] flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--stroke-regular)] flex-shrink-0">
           <div className="min-w-0 flex-1">
             <p id="preview-modal-title" className="text-sm font-medium text-[var(--text-primary)] truncate" title={fileName}>
               {fileName}

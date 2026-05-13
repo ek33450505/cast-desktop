@@ -12,7 +12,7 @@ function messageTypeColor(type: string): string {
     case 'peer_message':    return 'text-violet-400'
     case 'idle_event':      return 'text-zinc-400'
     case 'task_completed':  return 'text-emerald-400'
-    case 'worktree_created': return 'text-[var(--accent)]'
+    case 'worktree_created': return 'text-[var(--cast-accent-legacy)]'
     default:                return 'text-[var(--text-muted)]'
   }
 }

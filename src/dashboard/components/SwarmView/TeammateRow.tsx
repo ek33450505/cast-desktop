@@ -17,7 +17,7 @@ function statusPillClass(status: string): string {
 function agentDefBadge(agentDef: string | null) {
   if (!agentDef) return null
   return (
-    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
+    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] border border-[var(--cast-accent-legacy)]/20">
       {agentDef}
     </span>
   )

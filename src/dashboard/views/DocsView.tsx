@@ -115,7 +115,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2.5 mb-4">
-      <Icon className="w-4 h-4 text-[var(--accent)]" />
+      <Icon className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
       <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
       {count !== undefined && (
         <span className="text-xs text-[var(--text-muted)] tabular-nums">({count})</span>
@@ -143,7 +143,7 @@ function SlashCommandsSection() {
             {SLASH_COMMANDS.map(row => (
               <tr key={row.command} className="hover:bg-[var(--bg-tertiary)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--accent)]">{row.command}</span>
+                  <span className="text-xs font-mono text-[var(--cast-accent-legacy)]">{row.command}</span>
                 </td>
                 <td className="py-2 pr-6">
                   <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>
@@ -282,7 +282,7 @@ function CastCliSection() {
             {CAST_CLI.map(row => (
               <tr key={row.subcommand} className="hover:bg-[var(--bg-tertiary)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--accent)]">{row.subcommand}</span>
+                  <span className="text-xs font-mono text-[var(--cast-accent-legacy)]">{row.subcommand}</span>
                 </td>
                 <td className="py-2">
                   <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>
@@ -312,7 +312,7 @@ function HookDirectivesSection() {
             {HOOK_DIRECTIVES.map(row => (
               <tr key={row.directive} className="hover:bg-[var(--bg-tertiary)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--accent)]">{row.directive}</span>
+                  <span className="text-xs font-mono text-[var(--cast-accent-legacy)]">{row.directive}</span>
                 </td>
                 <td className="py-2">
                   <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>

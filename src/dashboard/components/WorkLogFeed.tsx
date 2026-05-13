@@ -62,7 +62,7 @@ function WorkLogCard({ entry }: { entry: WorkLogEntry }) {
         </h3>
 
         {/* Model badge */}
-        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
+        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] border border-[var(--cast-accent-legacy)]/20">
           {modelBadgeLabel(entry.model)}
         </span>
 

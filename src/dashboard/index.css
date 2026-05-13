@@ -14,8 +14,8 @@
   --text-primary: #E6E8EE;
   --text-secondary: #88A3D6;
   --text-muted: #5a6c8a;
-  --accent: #00FFC2;
-  --accent-hover: #33FFD1;
+  --cast-accent-legacy: #00FFC2;
+  --cast-accent-hover-legacy: #33FFD1;
   --accent-subtle: rgba(0, 255, 194, 0.08);
   --success: #34d399;
   --warning: #fbbf24;
@@ -64,7 +64,7 @@
   --cast-rail-border: var(--border);
   --cast-center-bg: var(--bg-primary);
   --cast-top-bar-bg: var(--bg-secondary);
-  --cast-accent: var(--accent);
+  --cast-accent: var(--cast-accent-legacy);
   --cast-overlay-backdrop: rgba(0, 0, 0, 0.6);
 
   /* ─── Model badge colors (Wave 2.6) — derived from forge-dark chart palette ─── */
@@ -190,7 +190,7 @@ code, pre, .font-mono {
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
+  --color-accent: var(--cast-accent-legacy);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -220,17 +220,17 @@ code, pre, .font-mono {
   --card-foreground: var(--text-primary);
   --popover: var(--bg-secondary);
   --popover-foreground: var(--text-primary);
-  --primary: var(--accent);
+  --primary: var(--cast-accent-legacy);
   --primary-foreground: var(--bg-primary);
   --secondary: var(--bg-tertiary);
   --secondary-foreground: var(--text-secondary);
   --muted: var(--bg-tertiary);
   --muted-foreground: var(--text-muted);
-  --accent-foreground: var(--accent);
+  --accent-foreground: var(--cast-accent-legacy);
   --destructive: var(--error);
   --border: rgba(255, 255, 255, 0.06);
   --input: rgba(255, 255, 255, 0.08);
-  --ring: var(--accent);
+  --ring: var(--cast-accent-legacy);
 }
 
 /* ─── View Transitions ─── */

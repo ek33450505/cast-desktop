@@ -37,7 +37,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         className="w-52 h-full flex flex-col border-r border-[var(--glass-border)] glass-surface relative overflow-y-auto"
       >
         <motion.div
-          className="absolute top-0 left-0 right-0 h-0.5 bg-[var(--accent)] origin-left z-10"
+          className="absolute top-0 left-0 right-0 h-0.5 bg-[var(--cast-accent-legacy)] origin-left z-10"
           style={{ scaleX: scrollYProgress }}
         />
 
@@ -71,7 +71,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${
                         isActive
-                          ? 'bg-[var(--accent)] text-[#070A0F] font-semibold shadow-md shadow-[#00FFC2]/20'
+                          ? 'bg-[var(--cast-accent-legacy)] text-[#070A0F] font-semibold shadow-md shadow-[#00FFC2]/20'
                           : 'text-[var(--text-secondary)] hover:bg-[var(--accent-subtle)] hover:text-[var(--text-primary)]'
                       }`
                     }

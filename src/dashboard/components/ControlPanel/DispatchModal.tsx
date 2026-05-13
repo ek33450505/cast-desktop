@@ -129,7 +129,7 @@ export default function DispatchModal({ isOpen, onClose }: DispatchModalProps) {
                 <select
                   value={agentType}
                   onChange={e => setAgentType(e.target.value)}
-                  className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)]"
                 >
                   {agents.map(a => (
                     <option key={a.name} value={a.name}>{a.name}</option>
@@ -141,7 +141,7 @@ export default function DispatchModal({ isOpen, onClose }: DispatchModalProps) {
                   value={agentType}
                   onChange={e => setAgentType(e.target.value)}
                   placeholder="e.g. code-reviewer"
-                  className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)]"
                 />
               )}
             </div>
@@ -154,7 +154,7 @@ export default function DispatchModal({ isOpen, onClose }: DispatchModalProps) {
                 onChange={e => setPrompt(e.target.value)}
                 placeholder="Describe the task for the agent..."
                 rows={4}
-                className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] resize-none"
+                className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)] resize-none"
               />
               <span className="text-[10px] text-[var(--text-muted)]">Min 10 characters</span>
             </div>
@@ -165,7 +165,7 @@ export default function DispatchModal({ isOpen, onClose }: DispatchModalProps) {
               <select
                 value={model}
                 onChange={e => setModel(e.target.value)}
-                className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                className="bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)]"
               >
                 {MODEL_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>

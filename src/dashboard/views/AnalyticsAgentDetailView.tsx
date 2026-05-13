@@ -65,7 +65,7 @@ function RunRow({ run }: { run: AgentRunRow }) {
         </td>
         <td className="px-4 py-3 text-xs text-[var(--text-muted)] text-center w-6">
           {hasSummary && (
-            <span className="text-[var(--accent)] text-xs">{expanded ? '▲' : '▼'}</span>
+            <span className="text-[var(--cast-accent-legacy)] text-xs">{expanded ? '▲' : '▼'}</span>
           )}
         </td>
       </tr>
@@ -102,7 +102,7 @@ export default function AnalyticsAgentDetailView() {
       <div className="p-6 space-y-6">
         <Link
           to="/analytics"
-          className="inline-flex items-center gap-2 text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
+          className="inline-flex items-center gap-2 text-sm text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Analytics
         </Link>
@@ -121,7 +121,7 @@ export default function AnalyticsAgentDetailView() {
       {/* Back link */}
       <Link
         to="/analytics"
-        className="inline-flex items-center gap-2 text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors no-underline"
+        className="inline-flex items-center gap-2 text-sm text-[var(--cast-accent-legacy)] hover:text-[var(--cast-accent-hover-legacy)] transition-colors no-underline"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Analytics
       </Link>
@@ -130,7 +130,7 @@ export default function AnalyticsAgentDetailView() {
       <div className="bento-card p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 rounded-lg bg-[var(--accent-subtle)]">
-            <Bot className="w-5 h-5 text-[var(--accent)]" />
+            <Bot className="w-5 h-5 text-[var(--cast-accent-legacy)]" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-[var(--text-primary)]">{data.name}</h1>

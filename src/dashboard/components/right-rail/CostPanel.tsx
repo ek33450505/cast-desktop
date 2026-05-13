@@ -90,7 +90,7 @@ export default function CostPanel() {
       <div className="flex flex-col gap-0.5">
         <span
           className="text-xl font-semibold font-mono tabular-nums"
-          style={{ color: 'var(--accent)' }}
+          style={{ color: 'var(--cast-accent-legacy)' }}
           aria-live="polite"
           aria-label={`Session cost: ${formatCurrency(total)}`}
         >

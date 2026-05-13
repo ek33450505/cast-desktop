@@ -38,7 +38,7 @@ export function SwarmCard({ session, isSelected, onClick }: SwarmCardProps) {
     <div onClick={onClick}>
     <SpotlightCard
       className={`bento-card cursor-pointer transition-all duration-150 ${
-        isSelected ? 'ring-1 ring-[var(--accent)]' : ''
+        isSelected ? 'ring-1 ring-[var(--cast-accent-legacy)]' : ''
       }`}
     >
       <div className="p-4 flex items-start justify-between gap-4">
@@ -81,7 +81,7 @@ export function SwarmCard({ session, isSelected, onClick }: SwarmCardProps) {
         </div>
 
         {/* Right: chevron */}
-        <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-colors ${isSelected ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`} />
+        <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-colors ${isSelected ? 'text-[var(--cast-accent-legacy)]' : 'text-[var(--text-muted)]'}`} />
       </div>
     </SpotlightCard>
     </div>

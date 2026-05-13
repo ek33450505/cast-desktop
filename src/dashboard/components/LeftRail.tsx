@@ -78,7 +78,7 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
       <nav
         aria-label="Left rail navigation"
         className="h-full flex flex-col overflow-hidden"
-        style={{ background: 'var(--cast-rail-bg)' }}
+        style={{ background: 'var(--system-panel)' }}
       >
         <AnimatePresence initial={false} mode="wait">
           {open ? (

@@ -75,7 +75,7 @@ function ShellLayout() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden"
-         style={{ background: 'var(--cast-center-bg)' }}>
+         style={{ background: 'var(--system-canvas)' }}>
       <TopBar
         leftRailOpen={leftRailOpen}
         rightRailOpen={rightRailOpen}
@@ -91,14 +91,14 @@ function ShellLayout() {
           animate={{ width: leftTargetPx }}
           transition={transition}
           className="shrink-0 overflow-hidden"
-          style={{ borderRight: '1px solid var(--cast-rail-border)' }}
+          style={{ borderRight: '1px solid var(--stroke-regular)' }}
         >
           <LeftRail open={leftRailOpen} onExpand={() => setLeftRailOpen(true)} />
         </motion.div>
 
         {/* ── Center ────────────────────────────────────────────────── */}
         <main id="main-content" className="flex-1 min-w-0 overflow-auto"
-              style={{ background: 'var(--cast-center-bg)' }}>
+              style={{ background: 'var(--system-canvas)' }}>
           <Suspense fallback={
             <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">
               Loading…
@@ -114,7 +114,7 @@ function ShellLayout() {
           animate={{ width: rightTargetPx }}
           transition={transition}
           className="shrink-0 overflow-hidden"
-          style={{ borderLeft: '1px solid var(--cast-rail-border)' }}
+          style={{ borderLeft: '1px solid var(--stroke-regular)' }}
         >
           <RightRail open={rightRailOpen} onExpand={() => setRightRailOpen(true)} />
         </motion.div>
@@ -183,7 +183,7 @@ export default function App() {
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
               <span className="text-5xl font-bold text-[var(--text-muted)]">404</span>
               <p className="text-[var(--text-secondary)]">Page not found</p>
-              <Link to="/" className="text-sm text-[var(--accent)] hover:underline">Back to Home</Link>
+              <Link to="/" className="text-sm text-[var(--cast-accent-legacy)] hover:underline">Back to Home</Link>
             </div>
           } />
         </Route>

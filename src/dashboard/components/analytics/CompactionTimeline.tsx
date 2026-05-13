@@ -17,7 +17,7 @@ export default function CompactionTimeline() {
     return (
       <div className="bento-card p-6">
         <div className="flex items-center gap-2.5 mb-4">
-          <Minimize2 className="w-4 h-4 text-[var(--accent)]" />
+          <Minimize2 className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Compaction Timeline</h2>
         </div>
         <p className="text-sm text-[var(--text-muted)] py-8 text-center">No compaction events recorded</p>
@@ -28,7 +28,7 @@ export default function CompactionTimeline() {
   return (
     <div className="bento-card p-6">
       <div className="flex items-center gap-2.5 mb-4">
-        <Minimize2 className="w-4 h-4 text-[var(--accent)]" />
+        <Minimize2 className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Compaction Timeline</h2>
         <span className="text-xs text-[var(--text-muted)] ml-auto tabular-nums">{events.length} events</span>
       </div>
@@ -36,7 +36,7 @@ export default function CompactionTimeline() {
       <div className="space-y-1.5">
         {events.slice(0, 15).map(event => (
           <div key={event.id} className="flex items-center gap-3 text-xs bg-[var(--bg-tertiary)] rounded px-3 py-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent)] shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-[var(--cast-accent-legacy)] shrink-0" />
             <span className="text-[var(--text-muted)] shrink-0 w-28 truncate">
               {new Date(event.timestamp).toLocaleString(undefined, {
                 month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -46,7 +46,7 @@ export default function CompactionTimeline() {
               {event.trigger}
             </span>
             {event.compaction_tier && (
-              <span className="px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)] text-[10px]">
+              <span className="px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] text-[10px]">
                 tier {event.compaction_tier}
               </span>
             )}

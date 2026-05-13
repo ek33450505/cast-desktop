@@ -68,7 +68,7 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
           {frontmatter.type && (
             <div className="flex gap-2">
               <dt className="text-[10px] text-[var(--text-muted)] flex-shrink-0 w-16">type</dt>
-              <dd className="text-[10px] text-[var(--accent)] truncate" style={{ margin: 0 }}>{String(frontmatter.type)}</dd>
+              <dd className="text-[10px] text-[var(--cast-accent-legacy)] truncate" style={{ margin: 0 }}>{String(frontmatter.type)}</dd>
             </div>
           )}
           {frontmatter.description && (
@@ -109,7 +109,7 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
                     )
                   }
                   return (
-                    <code className="text-xs bg-[var(--bg-tertiary)] rounded px-1 text-[var(--accent)]">
+                    <code className="text-xs bg-[var(--bg-tertiary)] rounded px-1 text-[var(--cast-accent-legacy)]">
                       {children}
                     </code>
                   )
@@ -117,7 +117,7 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
                 ul: ({ children }) => <ul className="text-sm text-[var(--text-secondary)] list-disc list-inside mb-2 space-y-0.5">{children}</ul>,
                 ol: ({ children }) => <ol className="text-sm text-[var(--text-secondary)] list-decimal list-inside mb-2 space-y-0.5">{children}</ol>,
                 li: ({ children }) => <li className="text-sm">{children}</li>,
-                a: ({ href, children }) => <a href={href} className="text-[var(--accent)] hover:underline" target="_blank" rel="noreferrer">{children}</a>,
+                a: ({ href, children }) => <a href={href} className="text-[var(--cast-accent-legacy)] hover:underline" target="_blank" rel="noreferrer">{children}</a>,
                 blockquote: ({ children }) => <blockquote className="border-l-2 border-[var(--cast-rail-border)] pl-2 text-[var(--text-muted)] italic mb-2">{children}</blockquote>,
                 hr: () => <hr className="border-[var(--cast-rail-border)] my-2" />,
               }}

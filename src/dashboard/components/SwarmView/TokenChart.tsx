@@ -7,7 +7,7 @@ interface TokenChartProps {
   teammates: TeammateRun[]
 }
 
-const ACCENT = 'var(--accent)'
+const ACCENT = 'var(--cast-accent-legacy)'
 const ACCENT_DIM = 'rgba(0,255,194,0.4)'
 
 export function TokenChart({ teammates }: TokenChartProps) {

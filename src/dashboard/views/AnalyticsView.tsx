@@ -163,7 +163,7 @@ function AgentScorecard() {
                       )}
                       <Link
                         to={`/analytics/agents/${encodeURIComponent(a.name)}`}
-                        className="hover:text-[var(--accent)] transition-colors no-underline"
+                        className="hover:text-[var(--cast-accent-legacy)] transition-colors no-underline"
                       >
                         {a.name}
                       </Link>
@@ -247,7 +247,7 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: React.ComponentType
   return (
     <div className="bento-card p-5 flex items-start gap-4">
       <div className="p-2.5 rounded-lg bg-[var(--accent-subtle)] shrink-0">
-        <Icon className="w-5 h-5 text-[var(--accent)]" />
+        <Icon className="w-5 h-5 text-[var(--cast-accent-legacy)]" />
       </div>
       <div className="min-w-0">
         <div className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{value}</div>
@@ -287,7 +287,7 @@ function DelegationSavingsPanel({ savings }: { savings: DelegationSavings }) {
     >
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 rounded-lg bg-[var(--accent-subtle)]">
-          <Zap className="w-4 h-4 text-[var(--accent)]" />
+          <Zap className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
         </div>
         <div>
           <h2 style={{ ...PIXEL_FONT, fontSize: 9, color: '#00FFC2', lineHeight: 2 }}>
@@ -557,7 +557,7 @@ export default function AnalyticsView() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               activeTab === tab.key
-                ? 'border-[var(--accent)] text-[var(--accent)]'
+                ? 'border-[var(--cast-accent-legacy)] text-[var(--cast-accent-legacy)]'
                 : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
@@ -578,7 +578,7 @@ export default function AnalyticsView() {
             onClick={runSeed}
             disabled={seedLoading}
             aria-busy={seedLoading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--bg-secondary)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)] transition-all disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--bg-secondary)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:border-[var(--cast-accent-legacy)]/40 hover:text-[var(--cast-accent-legacy)] transition-all disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
           >
             <RefreshCw className={`w-4 h-4 ${seedLoading ? 'animate-spin' : ''}`} />
             {seedLoading ? 'Seeding…' : 'Refresh Data'}
@@ -745,7 +745,7 @@ export default function AnalyticsView() {
                   <div key={entry.model} className="flex items-center gap-2 text-xs">
                     <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: getModelColor(entry.model) }} />
                     <span className="text-[var(--text-secondary)]">{getModelShort(entry.model)}</span>
-                    <span className="text-[var(--accent)] font-medium tabular-nums">{formatCost(entry.cost)}</span>
+                    <span className="text-[var(--cast-accent-legacy)] font-medium tabular-nums">{formatCost(entry.cost)}</span>
                     <span className="text-[var(--text-muted)]">({pct}%)</span>
                   </div>
                 )
@@ -833,16 +833,16 @@ export default function AnalyticsView() {
             <table className="w-full text-sm min-w-[480px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th scope="col" onClick={() => toggleSort('project')} aria-sort={sortKey === 'project' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--accent)] transition-colors">
+                  <th scope="col" onClick={() => toggleSort('project')} aria-sort={sortKey === 'project' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--cast-accent-legacy)] transition-colors">
                     Project{sortIndicator('project')}
                   </th>
-                  <th scope="col" onClick={() => toggleSort('sessions')} aria-sort={sortKey === 'sessions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--accent)] transition-colors">
+                  <th scope="col" onClick={() => toggleSort('sessions')} aria-sort={sortKey === 'sessions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--cast-accent-legacy)] transition-colors">
                     Sessions{sortIndicator('sessions')}
                   </th>
-                  <th scope="col" onClick={() => toggleSort('tokens')} aria-sort={sortKey === 'tokens' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--accent)] transition-colors">
+                  <th scope="col" onClick={() => toggleSort('tokens')} aria-sort={sortKey === 'tokens' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--cast-accent-legacy)] transition-colors">
                     Tokens{sortIndicator('tokens')}
                   </th>
-                  <th scope="col" onClick={() => toggleSort('cost')} aria-sort={sortKey === 'cost' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--accent)] transition-colors">
+                  <th scope="col" onClick={() => toggleSort('cost')} aria-sort={sortKey === 'cost' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] cursor-pointer hover:text-[var(--cast-accent-legacy)] transition-colors">
                     Est. Cost{sortIndicator('cost')}
                   </th>
                 </tr>
@@ -853,7 +853,7 @@ export default function AnalyticsView() {
                     <td className="px-6 py-3 font-semibold text-[var(--text-primary)]">{project}</td>
                     <td className="px-6 py-3 text-right text-[var(--text-secondary)] tabular-nums">{sessions}</td>
                     <td className="px-6 py-3 text-right text-[var(--text-secondary)] tabular-nums">{formatTokens(tokens)}</td>
-                    <td className="px-6 py-3 text-right text-[var(--accent)] tabular-nums font-medium">{formatCost(cost)}</td>
+                    <td className="px-6 py-3 text-right text-[var(--cast-accent-legacy)] tabular-nums font-medium">{formatCost(cost)}</td>
                   </tr>
                 ))}
               </tbody>

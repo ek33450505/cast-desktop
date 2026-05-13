@@ -89,7 +89,7 @@ function RoutingIntelSection() {
                 onClick={() => setTab(t)}
                 className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
                   tab === t
-                    ? 'border-[var(--accent)] text-[var(--accent)]'
+                    ? 'border-[var(--cast-accent-legacy)] text-[var(--cast-accent-legacy)]'
                     : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
@@ -118,7 +118,7 @@ function RoutingIntelSection() {
                   ) : decisions.map(d => (
                     <tr key={d.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors">
                       <td className="px-3 py-2 tabular-nums text-[var(--text-muted)]">{fmtTime(d.timestamp)}</td>
-                      <td className="px-3 py-2 font-medium text-[var(--accent)]">{d.dispatch_backend ?? '—'}</td>
+                      <td className="px-3 py-2 font-medium text-[var(--cast-accent-legacy)]">{d.dispatch_backend ?? '—'}</td>
                       <td className="px-3 py-2 text-[var(--text-secondary)] truncate max-w-[180px]" title={d.plan_file ?? undefined}>{d.plan_file ?? '—'}</td>
                       <td className="px-3 py-2 text-[var(--text-muted)] font-mono">{d.session_id ? d.session_id.slice(0, 8) : '—'}</td>
                     </tr>
@@ -147,7 +147,7 @@ function RoutingIntelSection() {
                   ) : entries.map(e => (
                     <tr key={e.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors">
                       <td className="px-3 py-2 tabular-nums text-[var(--text-muted)]">{fmtTime(e.injected_at)}</td>
-                      <td className="px-3 py-2 text-[var(--accent)]">{e.fact_id}</td>
+                      <td className="px-3 py-2 text-[var(--cast-accent-legacy)]">{e.fact_id}</td>
                       <td className="px-3 py-2 text-[var(--text-secondary)] truncate max-w-[300px]" title={e.prompt_hash}>
                         {e.score != null ? `${e.score.toFixed(2)} · ` : ''}{e.prompt_hash.slice(0, 12)}…
                       </td>
@@ -289,7 +289,7 @@ export default function AgentsView() {
     >
       {/* ── Page header ── */}
       <div className="flex items-center gap-3">
-        <Bot className="w-6 h-6 text-[var(--accent)]" />
+        <Bot className="w-6 h-6 text-[var(--cast-accent-legacy)]" />
         <h1 className="text-xl font-bold text-[var(--text-primary)]">Agents</h1>
         <span className="ml-auto text-xs text-[var(--text-muted)]">
           {agents?.length ?? 0} registered
@@ -338,7 +338,7 @@ export default function AgentsView() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               aria-label="Filter agents by name or description"
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)]"
             />
           </div>
         </div>
@@ -407,7 +407,7 @@ export default function AgentsView() {
                   >
                     <span className="flex items-center gap-1">
                       {label}
-                      {sortKey === key && <ArrowUpDown className="w-3 h-3 text-[var(--accent)]" />}
+                      {sortKey === key && <ArrowUpDown className="w-3 h-3 text-[var(--cast-accent-legacy)]" />}
                     </span>
                   </th>
                 ))}
@@ -448,7 +448,7 @@ export default function AgentsView() {
             value={runAgentFilter}
             onChange={(e) => setRunAgentFilter(e.target.value)}
             aria-label="Filter by agent"
-            className="text-xs px-2 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+            className="text-xs px-2 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)]"
           >
             <option value="">All agents</option>
             {agents?.map((a) => (
@@ -459,7 +459,7 @@ export default function AgentsView() {
             value={runStatusFilter}
             onChange={(e) => setRunStatusFilter(e.target.value)}
             aria-label="Filter by status"
-            className="text-xs px-2 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+            className="text-xs px-2 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)]"
           >
             <option value="">All statuses</option>
             <option value="DONE">DONE</option>

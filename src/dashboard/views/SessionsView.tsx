@@ -33,7 +33,7 @@ function HookEventRow({ event }: { event: HookEvent }) {
   return (
     <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors text-xs">
       <span className="text-[var(--text-muted)] tabular-nums shrink-0 w-20">{time}</span>
-      <span className="font-medium text-[var(--accent)] shrink-0 w-28 truncate">{event.hook_type}</span>
+      <span className="font-medium text-[var(--cast-accent-legacy)] shrink-0 w-28 truncate">{event.hook_type}</span>
       <span className="text-[var(--text-secondary)] truncate flex-1">{event.tool_name ?? '—'}</span>
       <span className={`shrink-0 w-16 text-right font-medium ${resultColor(event.result)}`}>
         {event.result ?? '—'}
@@ -52,7 +52,7 @@ function HookEventsFeed() {
     <div className="bento-card overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
-          <Radio className="w-4 h-4 text-[var(--accent)]" />
+          <Radio className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
           <h2 className="text-sm font-semibold text-[var(--text-primary)]">Live Hook Events</h2>
         </div>
         <div className="flex items-center gap-1.5 text-xs">
@@ -276,14 +276,14 @@ export default function SessionsView() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             aria-label="Search sessions"
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]/50 focus-visible:ring-1 focus-visible:ring-[var(--accent)] transition-colors"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--cast-accent-legacy)]/50 focus-visible:ring-1 focus-visible:ring-[var(--cast-accent-legacy)] transition-colors"
           />
         </div>
         <select
           value={projectFilter}
           onChange={e => setProjectFilter(e.target.value)}
           aria-label="Filter by project"
-          className="px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]/50 focus-visible:ring-1 focus-visible:ring-[var(--accent)] transition-colors"
+          className="px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--cast-accent-legacy)]/50 focus-visible:ring-1 focus-visible:ring-[var(--cast-accent-legacy)] transition-colors"
         >
           <option value="">All projects</option>
           {projects.map(p => (
@@ -331,7 +331,7 @@ export default function SessionsView() {
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/sessions/${session.projectEncoded}/${session.id}`) }}
               aria-label={`Session for ${extractProjectName(session.projectPath)}, started ${timeAgo(session.startedAt)}`}
-              className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+              className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 min-w-0">
@@ -350,7 +350,7 @@ export default function SessionsView() {
                     onClick={(e) => handleDelete(e, session)}
                     disabled={deletingId === session.id}
                     aria-label={`Delete session ${session.id.slice(0, 8)}`}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -359,7 +359,7 @@ export default function SessionsView() {
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
                 <span>{timeAgo(session.startedAt)}</span>
                 {session.durationMs != null && <span>{formatDuration(session.durationMs)}</span>}
-                <span className="text-[var(--accent)] font-medium">{tokens > 0 ? formatTokens(tokens) : '--'} tokens</span>
+                <span className="text-[var(--cast-accent-legacy)] font-medium">{tokens > 0 ? formatTokens(tokens) : '--'} tokens</span>
                 <span>{cost > 0 ? formatCost(cost) : '--'}</span>
               </div>
             </div>
@@ -428,7 +428,7 @@ export default function SessionsView() {
                     tabIndex={0}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/sessions/${session.projectEncoded}/${session.id}`) }}
                     aria-label={`Session: ${extractProjectName(session.projectPath)}, ${timeAgo(session.startedAt)}`}
-                    className="grid grid-cols-9 border-b border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+                    className="grid grid-cols-9 border-b border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -458,7 +458,7 @@ export default function SessionsView() {
                     <div className="px-4 py-3 text-right text-[var(--text-secondary)] tabular-nums">
                       {session.toolCallCount}
                     </div>
-                    <div className="px-4 py-3 text-right text-[var(--accent)] tabular-nums font-medium">
+                    <div className="px-4 py-3 text-right text-[var(--cast-accent-legacy)] tabular-nums font-medium">
                       {tokens > 0 ? formatTokens(tokens) : '--'}
                     </div>
                     <div className="px-4 py-3 text-right text-[var(--text-secondary)] tabular-nums">
@@ -472,7 +472,7 @@ export default function SessionsView() {
                         onClick={(e) => handleDelete(e, session)}
                         disabled={deletingId === session.id}
                         aria-label={`Delete session ${session.id.slice(0, 8)}`}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

@@ -14,7 +14,7 @@ function StubPage({ title, subtitle }: StubPageProps) {
       </p>
       <Link
         to="/"
-        className="mt-2 text-sm text-[var(--accent)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-2 rounded-sm"
+        className="mt-2 text-sm text-[var(--cast-accent-legacy)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-2 rounded-sm"
       >
         ← Back to terminal
       </Link>

@@ -52,7 +52,7 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
-          <Network className="w-4 h-4 text-[var(--accent)]" />
+          <Network className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
           <span className="text-sm font-semibold text-[var(--text-primary)]">{session.team_name}</span>
         </div>
         {session.notes && (
@@ -68,7 +68,7 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
             onClick={() => setTab(t)}
             className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors capitalize ${
               tab === t
-                ? 'text-[var(--accent)] border-b-2 border-[var(--accent)] -mb-px'
+                ? 'text-[var(--cast-accent-legacy)] border-b-2 border-[var(--cast-accent-legacy)] -mb-px'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
             }`}
           >
@@ -145,7 +145,7 @@ export default function SwarmView() {
     <div className="p-6 space-y-8 min-h-full">
       {/* Page header */}
       <div className="flex items-center gap-3">
-        <Network className="w-6 h-6 text-[var(--accent)]" />
+        <Network className="w-6 h-6 text-[var(--cast-accent-legacy)]" />
         <div>
           <h1 className="text-xl font-bold text-[var(--text-primary)]">Swarm</h1>
           <p className="text-xs text-[var(--text-muted)]">CAST Agent Team sessions</p>
