@@ -126,7 +126,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="relative flex flex-col rounded-xl shadow-2xl overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-1"
+        className="relative flex flex-col rounded-xl shadow-2xl overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-1"
         style={{
           width: '80vw',
           height: '80vh',
@@ -141,10 +141,10 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--stroke-regular)] flex-shrink-0">
           <div className="min-w-0 flex-1">
-            <p id="preview-modal-title" className="text-sm font-medium text-[var(--text-primary)] truncate" title={fileName}>
+            <p id="preview-modal-title" className="text-sm font-medium text-[var(--content-primary)] truncate" title={fileName}>
               {fileName}
             </p>
-            <p className="text-[11px] text-[var(--text-muted)] truncate" title={filePath}>
+            <p className="text-[11px] text-[var(--content-muted)] truncate" title={filePath}>
               {filePath}
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
               {[1, 2, 3, 4, 5].map(i => (
                 <div
                   key={i}
-                  className="h-4 rounded bg-[var(--bg-tertiary)] animate-pulse"
+                  className="h-4 rounded bg-[var(--system-elevated)] animate-pulse"
                   style={{ width: `${35 + i * 12}%` }}
                   aria-hidden="true"
                 />
@@ -175,7 +175,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
           )}
 
           {error && (
-            <div className="p-4 text-sm text-[var(--error)]" role="alert">
+            <div className="p-4 text-sm text-[var(--status-error)]" role="alert">
               Failed to load file: {error instanceof Error ? error.message : 'Unknown error'}
             </div>
           )}

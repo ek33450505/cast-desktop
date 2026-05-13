@@ -82,7 +82,7 @@ function FolderNode({ dirPath, name, depth, onPreview, initialExpanded = false }
         aria-expanded={expanded}
         aria-controls={expanded ? childrenId : undefined}
         aria-label={`${expanded ? 'Collapse' : 'Expand'} folder ${name}`}
-        className="w-full flex items-center gap-1.5 text-left hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+        className="w-full flex items-center gap-1.5 text-left hover:bg-[var(--system-elevated)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
         style={{
           paddingLeft: `${8 + depth * 12}px`,
           paddingRight: '8px',
@@ -91,23 +91,23 @@ function FolderNode({ dirPath, name, depth, onPreview, initialExpanded = false }
           alignItems: 'center',
         }}
       >
-        <span className="flex-shrink-0 text-[var(--text-muted)]">
+        <span className="flex-shrink-0 text-[var(--content-muted)]">
           {expanded
             ? <ChevronDown className="w-3 h-3" aria-hidden="true" />
             : <ChevronRight className="w-3 h-3" aria-hidden="true" />
           }
         </span>
-        <span className="flex-shrink-0 text-[var(--text-muted)]">
+        <span className="flex-shrink-0 text-[var(--content-muted)]">
           {expanded
             ? <FolderOpen className="w-3.5 h-3.5" aria-hidden="true" />
             : <Folder className="w-3.5 h-3.5" aria-hidden="true" />
           }
         </span>
-        <span className="text-xs text-[var(--text-secondary)] truncate select-none">
+        <span className="text-xs text-[var(--content-secondary)] truncate select-none">
           {name}
         </span>
         {isLoading && expanded && (
-          <span className="ml-auto text-[10px] text-[var(--text-muted)]" aria-hidden="true">…</span>
+          <span className="ml-auto text-[10px] text-[var(--content-muted)]" aria-hidden="true">…</span>
         )}
       </button>
 
@@ -133,7 +133,7 @@ function FolderNode({ dirPath, name, depth, onPreview, initialExpanded = false }
           ))}
           {!isLoading && children.length === 0 && (
             <p
-              className="text-[10px] text-[var(--text-muted)] select-none"
+              className="text-[10px] text-[var(--content-muted)] select-none"
               style={{ paddingLeft: `${8 + (depth + 1) * 12}px` }}
             >
               Empty
@@ -165,17 +165,17 @@ function FileNode({ node, depth, onPreview }: FileNodeProps) {
       }}
       aria-label={`Preview project file: ${node.name}`}
       title={node.path}
-      className="w-full flex items-center gap-1.5 text-left hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--cast-accent)] focus-visible:outline-offset-[-2px] rounded-sm"
+      className="w-full flex items-center gap-1.5 text-left hover:bg-[var(--system-elevated)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
       style={{
         paddingLeft: `${8 + depth * 12}px`,
         paddingRight: '8px',
         minHeight: '32px',
         display: 'flex',
         alignItems: 'center',
-        color: 'var(--text-secondary)',
+        color: 'var(--content-secondary)',
       }}
     >
-      <File className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" aria-hidden="true" />
+      <File className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
       <span className="text-xs truncate">{node.name}</span>
     </button>
   )
@@ -199,7 +199,7 @@ export default function ProjectFsTree({ onPreview }: ProjectFsTreeProps) {
         {[1, 2, 3].map(i => (
           <div
             key={i}
-            className="h-4 rounded bg-[var(--bg-tertiary)] animate-pulse"
+            className="h-4 rounded bg-[var(--system-elevated)] animate-pulse"
             style={{ width: `${40 + i * 14}%` }}
             aria-hidden="true"
           />
@@ -233,7 +233,7 @@ export default function ProjectFsTree({ onPreview }: ProjectFsTreeProps) {
         </div>
       ))}
       {children.length === 0 && (
-        <p className="px-3 py-1 text-xs text-[var(--text-muted)] select-none">
+        <p className="px-3 py-1 text-xs text-[var(--content-muted)] select-none">
           No files
         </p>
       )}
