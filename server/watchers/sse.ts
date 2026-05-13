@@ -3,12 +3,13 @@ import path from 'path'
 import type { Express, Request, Response } from 'express'
 import chokidar from 'chokidar'
 import Database from 'better-sqlite3'
-import { PROJECTS_DIR, DASHBOARD_COMMANDS_DIR, CAST_DB } from '../constants.js'
+import { PROJECTS_DIR, DASHBOARD_COMMANDS_DIR, CAST_DB, CLAUDE_DIR, PLANS_DIR } from '../constants.js'
 import { decodeProjectPath } from '../parsers/projectPath.js'
 import type { LiveEvent, LogEntry } from '../../src/types/index.js'
 import { parseWorkLog, synthesizeWorkLog } from '../parsers/workLog.js'
 import type { ParsedWorkLog } from '../../src/types/index.js'
 import { startCastDbWatcher, stopCastDbWatcher } from './castDbWatcher.js'
+import { parsePlanTasks } from '../routes/plans.js'
 
 const clients: Set<Response> = new Set()
 
@@ -535,12 +536,81 @@ export function attachSSE(app: Express) {
   // Start cast.db change watcher — polls every 3s and broadcasts db_change_* SSE events
   startCastDbWatcher(broadcast)
 
+  // ── cast_fs_change: watch CAST root (~/.claude) depth 3 ───────────────────
+  const castFsWatcher = chokidar.watch(CLAUDE_DIR, {
+    persistent: true,
+    ignoreInitial: true,
+    depth: 3,
+    ignored: ['**/node_modules/**', '**/.git/**'],
+    followSymlinks: false,
+  })
+
+  for (const evt of ['add', 'change', 'unlink'] as const) {
+    castFsWatcher.on(evt, (filePath: string) => {
+      broadcast({
+        type: 'cast_fs_change',
+        timestamp: new Date().toISOString(),
+        fsPath: filePath.slice(0, 512),
+        fsEvent: evt,
+      })
+    })
+  }
+
+  // ── project_fs_change: watch project root (cwd) depth 2 ──────────────────
+  const projectRoot = process.cwd()
+  const projectFsWatcher = chokidar.watch(projectRoot, {
+    persistent: true,
+    ignoreInitial: true,
+    depth: 2,
+    ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**'],
+    followSymlinks: false,
+  })
+
+  for (const evt of ['add', 'change', 'unlink'] as const) {
+    projectFsWatcher.on(evt, (filePath: string) => {
+      broadcast({
+        type: 'project_fs_change',
+        timestamp: new Date().toISOString(),
+        fsPath: filePath.slice(0, 512),
+        fsEvent: evt,
+      })
+    })
+  }
+
+  // ── plan_progress_updated: watch PLANS_DIR depth 0 ───────────────────────
+  const plansWatcher = chokidar.watch(PLANS_DIR, {
+    persistent: true,
+    ignoreInitial: true,
+    depth: 0,
+  })
+
+  const emitPlanUpdate = (filePath: string) => {
+    if (!filePath.endsWith('.md')) return
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8')
+      const planTasks = parsePlanTasks(content)
+      broadcast({
+        type: 'plan_progress_updated',
+        timestamp: new Date().toISOString(),
+        planPath: filePath,
+        planTitle: path.basename(filePath),
+        planTasks,
+      })
+    } catch { /* file unreadable — skip */ }
+  }
+
+  plansWatcher.on('change', emitPlanUpdate)
+  plansWatcher.on('add', emitPlanUpdate)
+
   // Cleanup on process shutdown — prevent timer leaks
   const shutdown = () => {
     idleTimers.forEach(clearTimeout)
     idleTimers.clear()
     clearInterval(staleInterval)
     commandsWatcher.close()
+    castFsWatcher.close()
+    projectFsWatcher.close()
+    plansWatcher.close()
     stopCastDbWatcher()
   }
   process.on('SIGTERM', shutdown)

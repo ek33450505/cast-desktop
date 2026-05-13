@@ -17,19 +17,24 @@ const localStorageMock = (() => {
 })()
 vi.stubGlobal('localStorage', localStorageMock)
 
-// ── mock EventSource ──────────────────────────────────────────────────────────
+// ── mock SseManager ───────────────────────────────────────────────────────────
 
-class MockEventSource {
-  onmessage: ((e: MessageEvent) => void) | null = null
-  static instances: MockEventSource[] = []
-  constructor(public url: string) {
-    MockEventSource.instances.push(this)
-  }
-  close() {
-    MockEventSource.instances = MockEventSource.instances.filter(i => i !== this)
-  }
-}
-vi.stubGlobal('EventSource', MockEventSource)
+type Handler = (e: unknown) => void
+const capturedHandlers = new Map<string, Handler>()
+
+vi.mock('../../../lib/SseManager', () => ({
+  sseManager: {
+    subscribe: vi.fn((type: string, h: Handler) => {
+      capturedHandlers.set(type, h)
+      return () => capturedHandlers.delete(type)
+    }),
+    get connectionState() { return -1 },
+  },
+  useEvent: vi.fn((type: string, h: Handler) => {
+    capturedHandlers.set(type, h)
+  }),
+  useEventValue: vi.fn((_t: string, initial: unknown) => initial),
+}))
 
 // ── mock fetch ────────────────────────────────────────────────────────────────
 
@@ -66,7 +71,7 @@ describe('CastFsTree', () => {
   const mockProjectRoot = { name: 'cast-desktop', path: '/some/path', type: 'dir' }
 
   beforeEach(() => {
-    MockEventSource.instances = []
+    capturedHandlers.clear()
     // Default: agents section returns mockAgents; project-fs root returns mockProjectRoot; rest return []
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const url = input.toString()
@@ -144,9 +149,8 @@ describe('CastFsTree', () => {
 
   it('subscribes to cast-fs SSE on mount', () => {
     renderTree()
-    expect(MockEventSource.instances.length).toBeGreaterThan(0)
-    const castFsInstance = MockEventSource.instances.find(i => i.url.includes('/api/cast-fs/stream'))
-    expect(castFsInstance).toBeTruthy()
+    // useCastFsStream calls useEvent('cast_fs_change', ...) via sseManager singleton
+    expect(capturedHandlers.has('cast_fs_change')).toBe(true)
   })
 
   it('shows "No items" empty state when section is expanded and has no data', async () => {

@@ -115,28 +115,3 @@ describe('GET /session-cost', () => {
   })
 })
 
-describe('GET /session-cost/stream', () => {
-  it('establishes SSE connection and emits initial data', async () => {
-    const row = makeRunRow()
-    mockPrepare.mockReturnValue({ all: vi.fn(() => [row]) })
-
-    const res = await request(buildApp())
-      .get('/session-cost/stream?sessionId=sess-abc')
-      .buffer(false)
-      .parse((res, callback) => {
-        let body = ''
-        res.on('data', (chunk: Buffer) => {
-          body += chunk.toString()
-          // Close after first data line
-          if (body.includes('data:')) {
-            callback(null, body)
-          }
-        })
-        res.on('end', () => callback(null, body))
-        // End the request after a short delay to avoid hanging
-        setTimeout(() => res.destroy(), 200)
-      })
-
-    expect(res.headers['content-type']).toContain('text/event-stream')
-  })
-})

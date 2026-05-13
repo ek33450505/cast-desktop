@@ -1,5 +1,7 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEvent } from '../../../lib/SseManager'
+import type { LiveEvent } from '../../../types'
 import { Bot } from 'lucide-react'
 import { usePaneBinding } from '../../../hooks/usePaneBinding'
 import { useTerminalStore } from '../../../stores/terminalStore'
@@ -17,11 +19,6 @@ export interface RunningAgent {
 }
 
 interface RunningAgentsResponse {
-  agents: RunningAgent[]
-}
-
-interface AgentsUpdateEvent {
-  event: 'agents-update'
   agents: RunningAgent[]
 }
 
@@ -181,33 +178,9 @@ export default function LiveAgentsPanel() {
   })
 
   // SSE subscription — invalidate query on agents-update
-  useEffect(() => {
-    if (!sessionId) return
-
-    const url = `/api/agents/stream?sessionId=${encodeURIComponent(sessionId)}`
-    const es = new EventSource(url)
-
-    es.onmessage = (event: MessageEvent<string>) => {
-      let parsed: AgentsUpdateEvent
-      try {
-        parsed = JSON.parse(event.data) as AgentsUpdateEvent
-      } catch {
-        return
-      }
-      if (parsed.event === 'agents-update') {
-        void queryClient.invalidateQueries({ queryKey: ['running-agents', sessionId] })
-      }
-    }
-
-    es.onerror = () => {
-      console.error('Live agents SSE stream error')
-      es.close()
-    }
-
-    return () => {
-      es.close()
-    }
-  }, [sessionId, queryClient])
+  useEvent<LiveEvent>('db_change_agent_run', () => {
+    void queryClient.invalidateQueries({ queryKey: ['running-agents', sessionId] })
+  })
 
   // Single shared timer — avoids one interval per agent row
   useEffect(() => {

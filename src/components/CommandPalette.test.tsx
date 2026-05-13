@@ -111,10 +111,10 @@ describe('CommandPalette', () => {
     expect(screen.queryByRole('option', { name: /^Sessions Sessions \/sessions/i })).not.toBeInTheDocument()
   })
 
-  it('shows 15 nav items when no search', () => {
+  it('shows 16 nav items when no search', () => {
     renderPalette(true)
     const items = screen.getAllByRole('option')
-    expect(items.length).toBe(15)
+    expect(items.length).toBe(16)
   })
 
   it('focus trap: Tab from last focusable element wraps to first (search input)', async () => {

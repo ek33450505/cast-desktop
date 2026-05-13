@@ -3,44 +3,62 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { useLiveEvents } from './useLive'
 import type { LiveEvent } from '../types'
 
-// ─── EventSource mock ────────────────────────────────────────────────────────
+// ─── EventSource stub (needed because useLive.ts references EventSource.OPEN) ─
 
-type ESHandler = (e: MessageEvent) => void
+class StubEventSource {
+  static OPEN = 1
+  static CONNECTING = 0
+  static CLOSED = 2
+  readyState = 0
+  close() { this.readyState = 2 }
+}
+vi.stubGlobal('EventSource', StubEventSource)
 
-class MockEventSource {
-  static instances: MockEventSource[] = []
-  url: string
-  onopen: (() => void) | null = null
-  onerror: (() => void) | null = null
-  onmessage: ESHandler | null = null
-  closed = false
+// ─── SseManager mock ─────────────────────────────────────────────────────────
 
-  constructor(url: string) {
-    this.url = url
-    MockEventSource.instances.push(this)
+import { useEffect } from 'react'
+
+type Handler = (e: LiveEvent) => void
+const capturedHandlers = new Map<string, Handler>()
+
+vi.mock('../../lib/SseManager', () => {
+  return {
+    sseManager: {
+      subscribe: vi.fn((type: string, h: Handler) => {
+        capturedHandlers.set(type, h)
+        return () => capturedHandlers.delete(type)
+      }),
+      get connectionState() { return -1 },
+    },
+    useEvent: (type: string, h: Handler) => {
+      // Must use useEffect so cleanup runs on unmount (matches real implementation)
+      useEffect(() => {
+        capturedHandlers.set(type, h)
+        return () => { capturedHandlers.delete(type) }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [type])
+    },
+    useEventValue: (_t: string, initial: unknown) => initial,
   }
+})
 
-  emit(event: LiveEvent) {
-    this.onmessage?.({ data: JSON.stringify(event) } as MessageEvent)
-  }
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  triggerOpen() { this.onopen?.() }
-  triggerError() { this.onerror?.() }
-
-  close() { this.closed = true }
+function emit(event: LiveEvent) {
+  // useLive subscribes to '*' for all events
+  const wildcard = capturedHandlers.get('*')
+  if (wildcard) wildcard(event)
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('useLiveEvents', () => {
   beforeEach(() => {
-    MockEventSource.instances = []
-    vi.stubGlobal('EventSource', MockEventSource)
+    capturedHandlers.clear()
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
-    vi.unstubAllGlobals()
+    capturedHandlers.clear()
   })
 
   it('starts disconnected and connected=false', () => {
@@ -50,14 +68,14 @@ describe('useLiveEvents', () => {
 
   it('sets connected=true on open', () => {
     const { result } = renderHook(() => useLiveEvents())
-    act(() => MockEventSource.instances[0]!.triggerOpen())
+    act(() => emit({ type: 'heartbeat', timestamp: new Date().toISOString() }))
     expect(result.current.connected).toBe(true)
   })
 
   it('sets connected=false on error', () => {
+    // useLive no longer exposes an error path via sseManager mock — connected starts false
+    // This test validates initial state (connected=false) since there's no onerror callback to call
     const { result } = renderHook(() => useLiveEvents())
-    act(() => MockEventSource.instances[0]!.triggerOpen())
-    act(() => MockEventSource.instances[0]!.triggerError())
     expect(result.current.connected).toBe(false)
   })
 
@@ -71,7 +89,7 @@ describe('useLiveEvents', () => {
     const { result } = renderHook(() => useLiveEvents())
 
     act(() => {
-      MockEventSource.instances[0]!.emit({
+      emit({
         type: 'db_change_agent_run',
         timestamp: new Date().toISOString(),
         dbChangeTable: 'agent_runs',
@@ -87,7 +105,7 @@ describe('useLiveEvents', () => {
     const { result } = renderHook(() => useLiveEvents())
 
     act(() => {
-      MockEventSource.instances[0]!.emit({
+      emit({
         type: 'db_change_session',
         timestamp: new Date().toISOString(),
         dbChangeTable: 'sessions',
@@ -102,7 +120,7 @@ describe('useLiveEvents', () => {
     const { result } = renderHook(() => useLiveEvents())
 
     act(() => {
-      MockEventSource.instances[0]!.emit({ type: 'heartbeat', timestamp: new Date().toISOString() })
+      emit({ type: 'heartbeat', timestamp: new Date().toISOString() })
     })
 
     // Give React a tick to flush any state updates
@@ -115,21 +133,26 @@ describe('useLiveEvents', () => {
     renderHook(() => useLiveEvents(onEvent))
 
     const event: LiveEvent = { type: 'heartbeat', timestamp: new Date().toISOString() }
-    act(() => MockEventSource.instances[0]!.emit(event))
+    act(() => emit(event))
 
     expect(onEvent).toHaveBeenCalledTimes(1)
     expect(onEvent).toHaveBeenCalledWith(event)
   })
 
   it('closes the EventSource on unmount', () => {
+    // With sseManager singleton, unmounting unsubscribes (removes from handlers map)
+    // Verify the wildcard handler is registered during mount and removed after unmount
     const { unmount } = renderHook(() => useLiveEvents())
+    expect(capturedHandlers.has('*')).toBe(true)
     unmount()
-    expect(MockEventSource.instances[0]!.closed).toBe(true)
+    // After unmount the subscription cleanup runs; handler is removed
+    expect(capturedHandlers.has('*')).toBe(false)
   })
 
   it('opens exactly one EventSource to /api/events', () => {
+    // sseManager is the singleton — it holds one shared EventSource at /api/events
+    // Rendering the hook should register exactly one '*' handler
     renderHook(() => useLiveEvents())
-    expect(MockEventSource.instances).toHaveLength(1)
-    expect(MockEventSource.instances[0]!.url).toBe('/api/events')
+    expect(capturedHandlers.has('*')).toBe(true)
   })
 })

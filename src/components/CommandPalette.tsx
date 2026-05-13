@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Command } from 'cmdk'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
+  Home,
   History,
   BarChart2,
   Users,
@@ -29,6 +30,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { label: 'Terminal', path: '/', icon: Home },
   { label: 'Sessions', path: '/sessions', icon: History },
   { label: 'Analytics', path: '/analytics', icon: BarChart2 },
   { label: 'Agents', path: '/agents', icon: Users },

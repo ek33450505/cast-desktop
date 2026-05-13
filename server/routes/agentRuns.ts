@@ -77,52 +77,6 @@ liveAgentsRouter.get('/running', (req: Request, res: Response) => {
   }
 })
 
-// ── GET /stream?sessionId=<id> — SSE ─────────────────────────────────────────
-// IMPORTANT: declared before /runs/:agentRunId to avoid param route capture
-
-liveAgentsRouter.get('/stream', (req: Request, res: Response) => {
-  const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : null
-
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
-  // Snapshot key: agentRunId+status pairs joined so we detect new rows + transitions
-  let lastSnapshot = ''
-
-  function poll() {
-    if (!sessionId) return
-    try {
-      const agents = queryRunningAgents(sessionId)
-      const snapshot = agents.map(a => `${a.agentRunId}:${a.status}`).join(',')
-      if (snapshot !== lastSnapshot) {
-        lastSnapshot = snapshot
-        res.write(`data: ${JSON.stringify({ event: 'agents-update', agents })}\n\n`)
-      }
-    } catch {
-      // DB unavailable — skip this tick
-    }
-  }
-
-  // Emit initial snapshot immediately
-  poll()
-
-  const pollInterval = setInterval(poll, 3_000)
-
-  const keepAlive = setInterval(() => {
-    res.write(':keepalive\n\n')
-  }, 30_000)
-
-  const cleanup = () => {
-    clearInterval(pollInterval)
-    clearInterval(keepAlive)
-  }
-
-  req.on('close', cleanup)
-  req.on('error', cleanup)
-})
-
 // ── GET /runs/:agentRunId ─────────────────────────────────────────────────────
 
 liveAgentsRouter.get('/runs/:agentRunId', (req: Request, res: Response) => {

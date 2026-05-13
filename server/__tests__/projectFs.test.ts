@@ -108,10 +108,3 @@ describe('GET /api/project-fs/preview', () => {
   })
 })
 
-describe('GET /api/project-fs/stream', () => {
-  it('route is registered (smoke test via router stack inspection)', () => {
-    const stack = (projectFsRouter as unknown as { stack: Array<{ route?: { path?: string } }> }).stack
-    const streamRoute = stack.find(layer => layer.route?.path === '/stream')
-    expect(streamRoute).toBeTruthy()
-  })
-})

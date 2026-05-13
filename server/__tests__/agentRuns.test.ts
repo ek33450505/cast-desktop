@@ -184,32 +184,10 @@ describe('GET /agents/runs/:agentRunId', () => {
 })
 
 describe('GET /agents/stream — SSE smoke test', () => {
-  it('responds with text/event-stream content-type', () =>
-    new Promise<void>((resolve, reject) => {
-      mockPrepare.mockReturnValue({ all: vi.fn(() => []) })
-
-      const app = buildApp()
-      const server = app.listen(0, () => {
-        const port = (server.address() as { port: number }).port
-        const req = require('http').get(
-          `http://localhost:${port}/agents/stream?sessionId=sess-test`,
-          (res: { headers: Record<string, string>; destroy: () => void }) => {
-            try {
-              expect(res.headers['content-type']).toContain('text/event-stream')
-              res.destroy()
-              server.close()
-              resolve()
-            } catch (err) {
-              server.close()
-              reject(err as Error)
-            }
-          }
-        )
-        req.on('error', (err: Error) => { server.close(); reject(err) })
-      })
-    }),
-  10_000)
-
+  // /agents/stream was removed in Wave 2.13 SSE multiplex refactor.
+  // Events are now delivered via the single /api/events SseManager endpoint.
+  // The test below validates that the surviving /running route is still correctly
+  // ordered and not captured by the /runs/:agentRunId param route.
 
   it('route /running is not captured by /runs/:agentRunId', async () => {
     // This test verifies the route ordering invariant:

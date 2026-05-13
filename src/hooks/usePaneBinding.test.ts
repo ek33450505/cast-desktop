@@ -5,31 +5,23 @@ import { createElement } from 'react'
 import type { ReactNode } from 'react'
 import { usePaneBinding } from './usePaneBinding'
 
-// ── EventSource mock ──────────────────────────────────────────────────────────
+// ── SseManager mock ───────────────────────────────────────────────────────────
 
-interface MockEventSourceInstance {
-  url: string
-  onmessage: ((e: MessageEvent) => void) | null
-  close: () => void
-}
+type Handler = (e: unknown) => void
+const capturedHandlers = new Map<string, Handler>()
 
-let mockEventSourceInstances: MockEventSourceInstance[] = []
-
-class MockEventSource {
-  url: string
-  onmessage: ((e: MessageEvent) => void) | null = null
-
-  constructor(url: string) {
-    this.url = url
-    mockEventSourceInstances.push(this)
-  }
-
-  close() {
-    mockEventSourceInstances = mockEventSourceInstances.filter((i) => i !== this)
-  }
-}
-
-vi.stubGlobal('EventSource', MockEventSource)
+vi.mock('../lib/SseManager', () => ({
+  sseManager: {
+    subscribe: vi.fn((type: string, h: Handler) => {
+      capturedHandlers.set(type, h)
+      return () => capturedHandlers.delete(type)
+    }),
+  },
+  useEvent: vi.fn((type: string, h: Handler) => {
+    capturedHandlers.set(type, h)
+  }),
+  useEventValue: vi.fn((_t: string, initial: unknown) => initial),
+}))
 
 // ── fetch mock ────────────────────────────────────────────────────────────────
 
@@ -50,12 +42,12 @@ function makeWrapper(qc: QueryClient) {
 }
 
 beforeEach(() => {
-  mockEventSourceInstances = []
+  capturedHandlers.clear()
   mockFetch.mockReset()
 })
 
 afterEach(() => {
-  mockEventSourceInstances = []
+  capturedHandlers.clear()
 })
 
 // ── tests ─────────────────────────────────────────────────────────────────────
@@ -151,17 +143,12 @@ describe('usePaneBinding', () => {
     })
 
     await waitFor(() => {
-      expect(mockEventSourceInstances.length).toBeGreaterThan(0)
+      expect(capturedHandlers.has('pane_binding_updated')).toBe(true)
     })
 
-    const es = mockEventSourceInstances[0]
-    expect(es).toBeDefined()
-
-    // Simulate SSE event with matching paneId
-    const event = new MessageEvent('message', {
-      data: JSON.stringify({ paneId: 'pane-match', sessionId: 'sess-new', projectPath: '/some/path', endedAt: null }),
-    })
-    es.onmessage?.(event)
+    // Simulate SSE event with matching paneId via the captured useEvent handler
+    const handler = capturedHandlers.get('pane_binding_updated')!
+    handler({ type: 'pane_binding_updated', paneId: 'pane-match', sessionId: 'sess-new', projectPath: '/some/path', endedAt: null })
 
     await waitFor(() => {
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['paneBinding', 'pane-match'] })
@@ -189,16 +176,12 @@ describe('usePaneBinding', () => {
     })
 
     await waitFor(() => {
-      expect(mockEventSourceInstances.length).toBeGreaterThan(0)
+      expect(capturedHandlers.has('pane_binding_updated')).toBe(true)
     })
 
-    const es = mockEventSourceInstances[0]
-
-    // Simulate SSE event with DIFFERENT paneId
-    const event = new MessageEvent('message', {
-      data: JSON.stringify({ paneId: 'pane-B', sessionId: 'sess-B', projectPath: '/path/B', endedAt: null }),
-    })
-    es.onmessage?.(event)
+    // Simulate SSE event with DIFFERENT paneId via the captured useEvent handler
+    const handler = capturedHandlers.get('pane_binding_updated')!
+    handler({ type: 'pane_binding_updated', paneId: 'pane-B', sessionId: 'sess-B', projectPath: '/path/B', endedAt: null })
 
     // Give microtasks a chance to run
     await new Promise((r) => setTimeout(r, 10))

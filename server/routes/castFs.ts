@@ -2,8 +2,6 @@ import { Router } from 'express'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import chokidar from 'chokidar'
-import type { Response } from 'express'
 import {
   CLAUDE_DIR,
   AGENTS_DIR,
@@ -252,75 +250,6 @@ router.get('/preview', (req, res) => {
       res.status(500).json({ error: 'failed to read file' })
     }
   }
-})
-
-// ── SSE stream ───────────────────────────────────────────────────────────────
-
-const WATCHED_DIRS = [
-  AGENTS_DIR,
-  SKILLS_DIR,
-  RULES_DIR,
-  PLANS_DIR,
-  COMMANDS_DIR,
-  PROJECTS_MEMORY_DIR,
-  SETTINGS_GLOBAL_FILE,
-]
-
-function sectionFromPath(filePath: string): string {
-  if (filePath.startsWith(AGENTS_DIR)) return 'agents'
-  if (filePath.startsWith(SKILLS_DIR)) return 'skills'
-  if (filePath.startsWith(RULES_DIR)) return 'rules'
-  if (filePath.startsWith(PLANS_DIR)) return 'plans'
-  if (filePath.startsWith(COMMANDS_DIR)) return 'commands'
-  if (filePath.startsWith(PROJECTS_MEMORY_DIR)) return 'memory'
-  if (filePath === SETTINGS_GLOBAL_FILE) return 'hooks'
-  return 'unknown'
-}
-
-router.get('/stream', (req, res: Response) => {
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
-  const watcher = chokidar.watch(WATCHED_DIRS, {
-    persistent: false,
-    ignoreInitial: true,
-    depth: 2,
-    ignored: (p: string) => {
-      // Under projects dir, only watch */memory/*.md
-      if (p.startsWith(PROJECTS_MEMORY_DIR)) {
-        const rel = p.slice(PROJECTS_MEMORY_DIR.length + 1)
-        const parts = rel.split(path.sep)
-        // allow: projectId/memory/*.md (3 parts) or projectId/memory (2 parts) or projectId (1 part)
-        if (parts.length > 3) return true
-        if (parts.length === 2 && parts[1] !== 'memory') return true
-        if (parts.length === 3 && parts[1] !== 'memory') return true
-      }
-      return false
-    },
-  })
-
-  const send = (event: string, data: Record<string, unknown>) => {
-    res.write(`data: ${JSON.stringify({ event, ...data })}\n\n`)
-  }
-
-  for (const evt of ['add', 'change', 'unlink'] as const) {
-    watcher.on(evt, (filePath: string) => {
-      const section = sectionFromPath(filePath)
-      const name = path.basename(filePath, '.md')
-      send(evt, { section, name, path: filePath })
-    })
-  }
-
-  const keepAlive = setInterval(() => {
-    res.write(': keepalive\n\n')
-  }, 30_000)
-
-  req.on('close', () => {
-    clearInterval(keepAlive)
-    watcher.close()
-  })
 })
 
 export { router as castFsRouter }

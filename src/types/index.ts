@@ -159,7 +159,7 @@ export interface DashboardCommand {
 
 // SSE live event
 export interface LiveEvent {
-  type: 'session_updated' | 'agent_spawned' | 'file_changed' | 'heartbeat' | 'routing_event' | 'session_stale' | 'tool_use_event' | 'session_complete' | 'command_queued' | 'hook_event' | 'db_change_agent_run' | 'db_change_session' | 'db_change_routing_event' | 'stale_reconcile'
+  type: 'session_updated' | 'agent_spawned' | 'file_changed' | 'heartbeat' | 'routing_event' | 'session_stale' | 'tool_use_event' | 'session_complete' | 'command_queued' | 'hook_event' | 'db_change_agent_run' | 'db_change_session' | 'db_change_routing_event' | 'stale_reconcile' | 'cast_fs_change' | 'project_fs_change' | 'plan_progress_updated' | 'session_cost_updated' | 'pane_binding_updated'
   event?: SseRoutingEvent
   path?: string
   sessionId?: string
@@ -199,6 +199,20 @@ export interface LiveEvent {
   dbChangeStatus?: string
   dbChangeSessionId?: string
   dbChangeBatchId?: number | null
+  // cast_fs_change / project_fs_change fields
+  fsPath?: string             // full path to changed file
+  fsEvent?: 'add' | 'change' | 'unlink'
+  // plan_progress_updated fields
+  planPath?: string
+  planTitle?: string
+  planTasks?: Array<{ id: string; text: string; done: boolean }>
+  // session_cost_updated fields
+  totalUsd?: number
+  sessionCount?: number
+  // pane_binding_updated fields
+  paneId?: string
+  projectPath?: string
+  endedAt?: number | null
 }
 
 // Todo item (from TodoWrite tool_use inside subagent JSONL)

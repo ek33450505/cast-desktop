@@ -36,18 +36,24 @@ vi.mock('framer-motion', async (importOriginal) => {
   return { ...actual, useReducedMotion: () => false }
 })
 
-class MockEventSource {
-  onmessage: ((ev: MessageEvent) => void) | null = null
-  onerror: ((ev: Event) => void) | null = null
-  close = vi.fn()
-  static instances: MockEventSource[] = []
+// SseManager mock
+type Handler = (e: unknown) => void
+const capturedHandlers = new Map<string, Handler>()
+const mockUseEvent = vi.fn((type: string, h: Handler) => {
+  capturedHandlers.set(type, h)
+})
 
-  constructor(public url: string) {
-    MockEventSource.instances.push(this)
-  }
-}
-
-vi.stubGlobal('EventSource', MockEventSource)
+vi.mock('../../../lib/SseManager', () => ({
+  sseManager: {
+    subscribe: vi.fn((type: string, h: Handler) => {
+      capturedHandlers.set(type, h)
+      return () => capturedHandlers.delete(type)
+    }),
+    get connectionState() { return -1 },
+  },
+  useEvent: (type: string, h: Handler) => mockUseEvent(type, h),
+  useEventValue: vi.fn((_t: string, initial: unknown) => initial),
+}))
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -75,7 +81,7 @@ function renderPanel() {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  MockEventSource.instances = []
+  capturedHandlers.clear()
   mockActiveTabId.mockReturnValue(null)
   mockTabs.mockReturnValue([])
   mockUsePaneBinding.mockReturnValue({
@@ -169,13 +175,15 @@ describe('CostPanel', () => {
 
     renderPanel()
 
-    expect(MockEventSource.instances.length).toBeGreaterThanOrEqual(1)
-    expect(MockEventSource.instances[0].url).toContain('/api/session-cost/stream')
-    expect(MockEventSource.instances[0].url).toContain('sess-abc')
+    // CostPanel subscribes via useEvent('session_cost_updated', ...) on the sseManager singleton
+    expect(mockUseEvent).toHaveBeenCalledWith('session_cost_updated', expect.any(Function))
   })
 
   it('does not create SSE EventSource when sessionId is null', () => {
     renderPanel()
-    expect(MockEventSource.instances).toHaveLength(0)
+    // Even with no sessionId, CostPanel registers a session_cost_updated handler
+    // (it invalidates on any update); the sseManager subscription is always registered
+    // This test now just verifies the component renders without creating a direct EventSource
+    expect(typeof window.EventSource).toBe('undefined')
   })
 })

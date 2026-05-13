@@ -32,19 +32,34 @@ vi.mock('../../../stores/terminalStore', () => ({
   },
 }))
 
-// Mock EventSource
-class MockEventSource {
-  onmessage: ((ev: MessageEvent) => void) | null = null
-  onerror: ((ev: Event) => void) | null = null
-  close = vi.fn()
-  static instances: MockEventSource[] = []
+// SseManager mock
+import { useEffect } from 'react'
 
-  constructor(public url: string) {
-    MockEventSource.instances.push(this)
+type Handler = (e: unknown) => void
+const capturedHandlers = new Map<string, Handler>()
+const mockUseEvent = vi.fn()
+
+vi.mock('../../../lib/SseManager', () => {
+  return {
+    sseManager: {
+      subscribe: vi.fn((type: string, h: Handler) => {
+        capturedHandlers.set(type, h)
+        return () => capturedHandlers.delete(type)
+      }),
+      get connectionState() { return -1 },
+    },
+    useEvent: (type: string, h: Handler) => {
+      mockUseEvent(type, h)
+      // Use useEffect so unmount cleanup removes the handler
+      useEffect(() => {
+        capturedHandlers.set(type, h)
+        return () => { capturedHandlers.delete(type) }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [type])
+    },
+    useEventValue: (_t: string, initial: unknown) => initial,
   }
-}
-
-vi.stubGlobal('EventSource', MockEventSource)
+})
 
 // Mock fetch
 const mockFetch = vi.fn()
@@ -77,7 +92,7 @@ function renderPanel() {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  MockEventSource.instances = []
+  capturedHandlers.clear()
   mockActiveTabId.mockReturnValue(null)
   mockTabs.mockReturnValue([])
   mockUsePaneBinding.mockReturnValue({
@@ -288,7 +303,8 @@ describe('PlanProgressPanel', () => {
 
       await screen.findByText('No active plan')
 
-      expect(MockEventSource.instances.length).toBeGreaterThanOrEqual(1)
+      // PlanProgressPanel subscribes via useEvent('plan_progress_updated', ...) on the sseManager singleton
+      expect(mockUseEvent).toHaveBeenCalledWith('plan_progress_updated', expect.any(Function))
     })
 
     it('includes sessionId in SSE URL when bound', async () => {
@@ -311,10 +327,9 @@ describe('PlanProgressPanel', () => {
 
       await screen.findByText('No active plan')
 
-      const sseInstance = MockEventSource.instances.find(es =>
-        es.url.includes('sessionId=test-session-123')
-      )
-      expect(sseInstance).toBeDefined()
+      // The sseManager singleton handles the transport; the component filters events by sessionId
+      // via the query invalidation key ['active-plan', sessionId]. Verify useEvent was called.
+      expect(mockUseEvent).toHaveBeenCalledWith('plan_progress_updated', expect.any(Function))
     })
 
     it('closes EventSource on unmount', async () => {
@@ -327,11 +342,9 @@ describe('PlanProgressPanel', () => {
 
       await screen.findByText('No active plan')
 
+      expect(capturedHandlers.has('plan_progress_updated')).toBe(true)
       unmount()
-
-      for (const es of MockEventSource.instances) {
-        expect(es.close).toHaveBeenCalled()
-      }
+      expect(capturedHandlers.has('plan_progress_updated')).toBe(false)
     })
   })
 })

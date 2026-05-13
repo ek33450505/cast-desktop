@@ -27,21 +27,6 @@ function addEvent(event: HookEvent) {
   ringBuffer.push(event)
 }
 
-// ── SSE client registry ──────────────────────────────────────────────────────
-
-const sseClients: Set<Response> = new Set()
-
-function broadcastToSse(event: HookEvent) {
-  const data = `data: ${JSON.stringify(event)}\n\n`
-  for (const client of sseClients) {
-    try {
-      client.write(data)
-    } catch {
-      sseClients.delete(client)
-    }
-  }
-}
-
 // ── POST /api/hook-events ─────────────────────────────────────────────────────
 // Receives hook event JSON from HTTP hooks (e.g. CAST v4.6 HTTP hook scripts)
 hookEventsRouter.post('/', (req: Request, res: Response) => {
@@ -59,7 +44,6 @@ hookEventsRouter.post('/', (req: Request, res: Response) => {
     }
 
     addEvent(event)
-    broadcastToSse(event)
 
     // Write to cast.db stream_events if table exists — non-fatal if it doesn't
     try {
@@ -97,26 +81,6 @@ hookEventsRouter.post('/', (req: Request, res: Response) => {
     console.error('[hook-events] POST error:', err)
     res.status(500).json({ error: 'Failed to store hook event' })
   }
-})
-
-// ── GET /api/hook-events/stream — SSE endpoint ───────────────────────────────
-hookEventsRouter.get('/stream', (req: Request, res: Response) => {
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
-  // Send last 10 buffered events on connect so client has immediate data
-  const recent = ringBuffer.slice(-10)
-  for (const event of recent) {
-    res.write(`data: ${JSON.stringify(event)}\n\n`)
-  }
-
-  sseClients.add(res)
-
-  req.on('close', () => {
-    sseClients.delete(res)
-  })
 })
 
 // ── GET /api/hook-events/recent — last N events as JSON ──────────────────────

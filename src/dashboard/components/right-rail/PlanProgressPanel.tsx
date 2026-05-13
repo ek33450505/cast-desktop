@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEvent } from '../../../lib/SseManager'
+import type { LiveEvent } from '../../../types'
 import { ClipboardList } from 'lucide-react'
 import { usePaneBinding } from '../../../hooks/usePaneBinding'
 import { useTerminalStore } from '../../../stores/terminalStore'
@@ -15,11 +16,6 @@ interface PlanTask {
 interface ActivePlanData {
   planPath: string | null
   title: string | null
-  tasks: PlanTask[]
-}
-
-interface PlanUpdateEvent {
-  event: 'plan-update'
   tasks: PlanTask[]
 }
 
@@ -99,29 +95,9 @@ export default function PlanProgressPanel() {
   })
 
   // Subscribe to SSE for live plan updates
-  useEffect(() => {
-    const url = sessionId
-      ? `/api/plans/stream?sessionId=${encodeURIComponent(sessionId)}`
-      : '/api/plans/stream'
-
-    const es = new EventSource(url)
-
-    es.onmessage = (event: MessageEvent<string>) => {
-      let parsed: PlanUpdateEvent
-      try {
-        parsed = JSON.parse(event.data) as PlanUpdateEvent
-      } catch {
-        return
-      }
-      if (parsed.event === 'plan-update') {
-        void queryClient.invalidateQueries({ queryKey: ['active-plan', sessionId] })
-      }
-    }
-
-    return () => {
-      es.close()
-    }
-  }, [sessionId, queryClient])
+  useEvent<LiveEvent>('plan_progress_updated', () => {
+    void queryClient.invalidateQueries({ queryKey: ['active-plan', sessionId] })
+  })
 
   if (isLoading) {
     return <LoadingState />

@@ -30,18 +30,34 @@ vi.mock('../../../stores/terminalStore', () => ({
   },
 }))
 
-class MockEventSource {
-  onmessage: ((ev: MessageEvent) => void) | null = null
-  onerror: ((ev: Event) => void) | null = null
-  close = vi.fn()
-  static instances: MockEventSource[] = []
+// SseManager mock
+import { useEffect } from 'react'
 
-  constructor(public url: string) {
-    MockEventSource.instances.push(this)
+type Handler = (e: unknown) => void
+const capturedHandlers = new Map<string, Handler>()
+const mockUseEvent = vi.fn()
+
+vi.mock('../../../lib/SseManager', () => {
+  return {
+    sseManager: {
+      subscribe: vi.fn((type: string, h: Handler) => {
+        capturedHandlers.set(type, h)
+        return () => capturedHandlers.delete(type)
+      }),
+      get connectionState() { return -1 },
+    },
+    useEvent: (type: string, h: Handler) => {
+      mockUseEvent(type, h)
+      // Use useEffect so unmount cleanup removes the handler
+      useEffect(() => {
+        capturedHandlers.set(type, h)
+        return () => { capturedHandlers.delete(type) }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [type])
+    },
+    useEventValue: (_t: string, initial: unknown) => initial,
   }
-}
-
-vi.stubGlobal('EventSource', MockEventSource)
+})
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -84,7 +100,7 @@ function makeAgent(overrides: Partial<{
 
 beforeEach(() => {
   vi.clearAllMocks()
-  MockEventSource.instances = []
+  capturedHandlers.clear()
   mockActiveTabId.mockReturnValue(null)
   mockTabs.mockReturnValue([])
   mockUsePaneBinding.mockReturnValue({
@@ -340,10 +356,8 @@ describe('LiveAgentsPanel', () => {
 
       await screen.findByText('No active agents')
 
-      const sseInstance = MockEventSource.instances.find(es =>
-        es.url.includes('sessionId=sess-xyz')
-      )
-      expect(sseInstance).toBeDefined()
+      // LiveAgentsPanel subscribes via useEvent('db_change_agent_run', ...) on the sseManager singleton
+      expect(mockUseEvent).toHaveBeenCalledWith('db_change_agent_run', expect.any(Function))
     })
 
     it('does NOT create EventSource when sessionId is null', async () => {
@@ -363,11 +377,8 @@ describe('LiveAgentsPanel', () => {
 
       await screen.findByText('No active agents')
 
-      // No SSE instance for agents/stream
-      const sseInstance = MockEventSource.instances.find(es =>
-        es.url.includes('/api/agents/stream')
-      )
-      expect(sseInstance).toBeUndefined()
+      // Component does not create a direct EventSource regardless of sessionId
+      expect(typeof window.EventSource).toBe('undefined')
     })
 
     it('closes EventSource on unmount', async () => {
@@ -389,11 +400,12 @@ describe('LiveAgentsPanel', () => {
       const { unmount } = renderPanel()
 
       await screen.findByText('No active agents')
-      unmount()
 
-      for (const es of MockEventSource.instances) {
-        expect(es.close).toHaveBeenCalled()
-      }
+      // Capture handler state before unmount
+      expect(capturedHandlers.has('db_change_agent_run')).toBe(true)
+      unmount()
+      // After unmount, subscription is cleaned up
+      expect(capturedHandlers.has('db_change_agent_run')).toBe(false)
     })
   })
 })

@@ -1,8 +1,6 @@
 import { Router } from 'express'
 import fs from 'fs'
 import path from 'path'
-import chokidar from 'chokidar'
-import type { Response } from 'express'
 
 const router = Router()
 
@@ -169,71 +167,6 @@ router.get('/preview', (req, res) => {
       res.status(500).json({ error: 'failed to read file' })
     }
   }
-})
-
-// ── SSE stream ────────────────────────────────────────────────────────────────
-
-const CHOKIDAR_IGNORED = [
-  /(^|[/\\])\../,       // dotfiles
-  /node_modules/,
-  /\.git/,
-  /dist/,
-  /build/,
-  /target/,
-  /coverage/,
-  /\.next/,
-  /__pycache__/,
-]
-
-/**
- * GET /stream
- *
- * SSE: emits { event: 'change'|'add'|'unlink', path, dir } on file changes.
- * `dir` = parent folder — client can invalidate just that folder's query.
- *
- * Debounces SSE emits by folder + 250ms to avoid storms during npm install etc.
- */
-router.get('/stream', (req, res: Response) => {
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
-  const watcher = chokidar.watch(PROJECT_ROOT.slice(0, -1), {
-    persistent: false,
-    ignoreInitial: true,
-    depth: 4,
-    ignored: CHOKIDAR_IGNORED,
-  })
-
-  // Debounce per-folder events to coalesce storms (e.g. npm install)
-  const pending = new Map<string, ReturnType<typeof setTimeout>>()
-
-  const sendEvent = (evt: string, filePath: string) => {
-    const dir = path.dirname(filePath)
-    const key = `${evt}:${dir}`
-    const existing = pending.get(key)
-    if (existing) clearTimeout(existing)
-    pending.set(key, setTimeout(() => {
-      pending.delete(key)
-      res.write(`data: ${JSON.stringify({ event: evt, path: filePath, dir })}\n\n`)
-    }, 250))
-  }
-
-  for (const evt of ['add', 'change', 'unlink'] as const) {
-    watcher.on(evt, (filePath: string) => sendEvent(evt, filePath))
-  }
-
-  const keepAlive = setInterval(() => {
-    res.write(': keepalive\n\n')
-  }, 30_000)
-
-  req.on('close', () => {
-    clearInterval(keepAlive)
-    for (const t of pending.values()) clearTimeout(t)
-    pending.clear()
-    watcher.close()
-  })
 })
 
 export { router as projectFsRouter }

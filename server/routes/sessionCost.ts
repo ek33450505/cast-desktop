@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import type { Request, Response } from 'express'
+import type { Request } from 'express'
 import { getCastDb } from './castDb.js'
 import { estimateCost } from '../utils/costEstimate.js'
 
@@ -71,7 +71,7 @@ function computeSessionCost(sessionId: string): SessionCostResponse {
 
 // ── GET /?sessionId=<id> ──────────────────────────────────────────────────────
 
-sessionCostRouter.get('/', (req: Request, res: Response) => {
+sessionCostRouter.get('/', (req: Request, res) => {
   const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : null
   if (!sessionId) {
     res.json({ totalUsd: 0, burnRatePerMin: 0, projectedFourHourUsd: 0, budgetUsd: null })
@@ -85,47 +85,3 @@ sessionCostRouter.get('/', (req: Request, res: Response) => {
   }
 })
 
-// ── GET /stream?sessionId=<id> — SSE ─────────────────────────────────────────
-
-sessionCostRouter.get('/stream', (req: Request, res: Response) => {
-  const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : null
-
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
-  let lastTotalUsd = -1
-
-  function poll() {
-    try {
-      const data = sessionId
-        ? computeSessionCost(sessionId)
-        : { totalUsd: 0, burnRatePerMin: 0, projectedFourHourUsd: 0, budgetUsd: null }
-
-      if (Math.abs(data.totalUsd - lastTotalUsd) > 1e-6) {
-        lastTotalUsd = data.totalUsd
-        res.write(`data: ${JSON.stringify(data)}\n\n`)
-      }
-    } catch {
-      // DB unavailable — skip this tick
-    }
-  }
-
-  // Emit initial snapshot immediately
-  poll()
-
-  const pollInterval = setInterval(poll, 10_000)
-
-  const keepAlive = setInterval(() => {
-    res.write(':keepalive\n\n')
-  }, 30_000)
-
-  const cleanup = () => {
-    clearInterval(pollInterval)
-    clearInterval(keepAlive)
-  }
-
-  req.on('close', cleanup)
-  req.on('error', cleanup)
-})
