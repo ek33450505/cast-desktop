@@ -210,6 +210,186 @@ describe('TerminalTabs', () => {
       render(<TerminalTabs />)
       expect(screen.getByText('~')).toBeTruthy()
     })
+
+    it('shows user-renamed title even when bound to a session', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().updateTabTitle(tab.id, 'research')
+      mockUsePaneBinding.mockReturnValue({
+        bound: true,
+        sessionId: 'abcdef123456',
+        projectPath: '/Users/ed/Projects/my-app',
+        endedAt: null,
+      })
+      render(<TerminalTabs />)
+      // User rename takes priority over bound session label
+      expect(screen.getByText('research')).toBeTruthy()
+      expect(screen.queryByText('my-app · abcdef')).toBeNull()
+    })
+  })
+
+  describe('rename UX — double-click', () => {
+    it('double-click on tab puts it into rename mode (shows input)', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      expect(tabEl).toBeTruthy()
+      fireEvent.dblClick(tabEl!)
+
+      const input = screen.getByRole('textbox', { name: 'Rename tab' })
+      expect(input).toBeTruthy()
+      expect((input as HTMLInputElement).value).toBe('~')
+    })
+
+    it('Enter commits the rename and updates the store', async () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.dblClick(tabEl!)
+
+      const input = screen.getByRole('textbox', { name: 'Rename tab' })
+      fireEvent.change(input, { target: { value: 'watch' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+
+      await waitFor(() => {
+        const updated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+        expect(updated?.title).toBe('watch')
+        expect(updated?.userRenamed).toBe(true)
+      })
+      // Input should be gone
+      expect(screen.queryByRole('textbox', { name: 'Rename tab' })).toBeNull()
+    })
+
+    it('Escape cancels rename without updating the store', async () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.dblClick(tabEl!)
+
+      const input = screen.getByRole('textbox', { name: 'Rename tab' })
+      fireEvent.change(input, { target: { value: 'scratch' } })
+      fireEvent.keyDown(input, { key: 'Escape' })
+
+      await waitFor(() => {
+        expect(screen.queryByRole('textbox', { name: 'Rename tab' })).toBeNull()
+      })
+      const notUpdated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+      expect(notUpdated?.title).toBe('~')
+      expect(notUpdated?.userRenamed).toBe(false)
+    })
+
+    it('blur commits the rename (same as Enter)', async () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.dblClick(tabEl!)
+
+      const input = screen.getByRole('textbox', { name: 'Rename tab' })
+      fireEvent.change(input, { target: { value: 'blurred-name' } })
+      fireEvent.blur(input)
+
+      await waitFor(() => {
+        const updated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+        expect(updated?.title).toBe('blurred-name')
+        expect(updated?.userRenamed).toBe(true)
+      })
+    })
+
+    it('empty rename is ignored (title stays unchanged)', async () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.dblClick(tabEl!)
+
+      const input = screen.getByRole('textbox', { name: 'Rename tab' })
+      fireEvent.change(input, { target: { value: '   ' } })
+      fireEvent.keyDown(input, { key: 'Enter' })
+
+      await waitFor(() => {
+        expect(screen.queryByRole('textbox', { name: 'Rename tab' })).toBeNull()
+      })
+      const notUpdated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+      expect(notUpdated?.title).toBe('~')
+    })
+  })
+
+  describe('rename UX — context menu', () => {
+    it('right-click shows context menu with Rename item', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+
+      expect(screen.getByRole('menu')).toBeTruthy()
+      expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeTruthy()
+    })
+
+    it('clicking Rename in context menu enters rename mode', async () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+
+      const renameItem = screen.getByRole('menuitem', { name: 'Rename' })
+      fireEvent.click(renameItem)
+
+      await waitFor(() => {
+        expect(screen.getByRole('textbox', { name: 'Rename tab' })).toBeTruthy()
+      })
+    })
+
+    it('Escape closes context menu without entering rename', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+      expect(screen.getByRole('menu')).toBeTruthy()
+
+      const menu = screen.getByRole('menu')
+      fireEvent.keyDown(menu, { key: 'Escape' })
+
+      expect(screen.queryByRole('menu')).toBeNull()
+      expect(screen.queryByRole('textbox', { name: 'Rename tab' })).toBeNull()
+    })
+  })
+
+  describe('a11y — aria-label on tab button', () => {
+    it('tab button aria-label reflects the resolved title (cwd basename)', () => {
+      useTerminalStore.getState().addTab('/Users/ed/Projects/cast-desktop')
+      render(<TerminalTabs />)
+
+      const tabEls = screen.getAllByRole('tab')
+      // The tab button aria-label should be 'cast-desktop' (basename of cwd)
+      const tabEl = tabEls[0]
+      expect(tabEl.getAttribute('aria-label')).toBe('cast-desktop')
+    })
+
+    it('tab button aria-label uses user-renamed title', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().updateTabTitle(tab.id, 'my-label')
+      render(<TerminalTabs />)
+
+      const tabEls = screen.getAllByRole('tab')
+      expect(tabEls[0].getAttribute('aria-label')).toBe('my-label')
+    })
+
+    it('rename input has aria-label="Rename tab"', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.dblClick(tabEl!)
+
+      const input = screen.getByLabelText('Rename tab')
+      expect(input).toBeTruthy()
+    })
   })
 
   it('shows empty state with "No terminal sessions" when no tabs', async () => {
