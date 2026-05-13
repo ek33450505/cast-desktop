@@ -108,16 +108,16 @@ function TimelineCard({ entry }: { entry: TimelineEntry }) {
     <div className={`rounded-xl border px-5 py-4 ${style.bg} ${entry.isSidechain ? 'ml-6 opacity-80' : ''}`}>
       <div className="flex items-center gap-3 mb-2">
         <span className={`w-2.5 h-2.5 rounded-full ${style.dot} shrink-0`} />
-        <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+        <span className="text-xs font-semibold uppercase tracking-wider text-[var(--content-secondary)]">
           {style.label}
         </span>
         {entry.toolName && (
-          <span className="text-xs font-mono px-2 py-0.5 rounded bg-[var(--bg-tertiary)] text-amber-300">
+          <span className="text-xs font-mono px-2 py-0.5 rounded bg-[var(--system-elevated)] text-amber-300">
             {entry.toolName}
           </span>
         )}
         {entry.model && (
-          <span className="text-xs px-2 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
+          <span className="text-xs px-2 py-0.5 rounded bg-[var(--system-elevated)] text-[var(--content-muted)]">
             {entry.model}
           </span>
         )}
@@ -126,12 +126,12 @@ function TimelineCard({ entry }: { entry: TimelineEntry }) {
             sidechain
           </span>
         )}
-        <span className="ml-auto text-xs text-[var(--text-muted)]">
+        <span className="ml-auto text-xs text-[var(--content-muted)]">
           {timeAgo(entry.timestamp)}
         </span>
       </div>
       <div className="relative group/content">
-        <pre className="text-sm text-[var(--text-primary)] whitespace-pre-wrap break-all font-mono leading-relaxed max-h-64 overflow-y-auto m-0 pr-8">
+        <pre className="text-sm text-[var(--content-primary)] whitespace-pre-wrap break-all font-mono leading-relaxed max-h-64 overflow-y-auto m-0 pr-8">
           {entry.content.length > 1000 ? entry.content.slice(0, 1000) + '...' : entry.content}
         </pre>
         <div className="absolute top-0 right-0 opacity-0 group-hover/content:opacity-100 transition-opacity">
@@ -194,15 +194,15 @@ export default function SessionDetailView() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-5 w-24 bg-[var(--bg-tertiary)] rounded animate-pulse" />
+        <div className="h-5 w-24 bg-[var(--system-elevated)] rounded animate-pulse" />
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-5 animate-pulse">
+            <div key={i} className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-5 animate-pulse">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-[var(--bg-tertiary)]" />
-                <div className="h-4 w-20 bg-[var(--bg-tertiary)] rounded" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--system-elevated)]" />
+                <div className="h-4 w-20 bg-[var(--system-elevated)] rounded" />
               </div>
-              <div className="h-4 w-3/4 bg-[var(--bg-tertiary)] rounded" />
+              <div className="h-4 w-3/4 bg-[var(--system-elevated)] rounded" />
             </div>
           ))}
         </div>
@@ -213,10 +213,10 @@ export default function SessionDetailView() {
   if (error || !entries || entries.length === 0) {
     return (
       <div className="space-y-6">
-        <Link to="/sessions" className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors no-underline">
+        <Link to="/sessions" className="inline-flex items-center gap-2 text-sm text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors no-underline">
           <ArrowLeft className="w-4 h-4" /> Back to Sessions
         </Link>
-        <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--error)]/30 px-5 py-4 text-sm text-[var(--error)]">
+        <div className="rounded-xl bg-[var(--system-panel)] border border-[var(--status-error)]/30 px-5 py-4 text-sm text-[var(--status-error)]">
           Session not found
         </div>
       </div>
@@ -266,12 +266,12 @@ export default function SessionDetailView() {
     <div className="space-y-6">
       {/* Back link */}
       <div className="flex items-center justify-between">
-        <Link to="/sessions" className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors no-underline">
+        <Link to="/sessions" className="inline-flex items-center gap-2 text-sm text-[var(--content-secondary)] hover:text-[var(--content-primary)] transition-colors no-underline">
           <ArrowLeft className="w-4 h-4" /> Back to Sessions
         </Link>
         <button
           onClick={handleExport}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-xs text-[var(--text-secondary)] hover:text-[var(--cast-accent-legacy)] hover:border-[var(--cast-accent-legacy)]/30 transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--system-elevated)] border border-[var(--border)] text-xs text-[var(--content-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)]/30 transition-colors"
         >
           <Download className="w-3.5 h-3.5" />
           Export MD
@@ -279,27 +279,27 @@ export default function SessionDetailView() {
       </div>
 
       {/* Session header */}
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">{projectName}</h1>
+      <div className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-6">
+        <h1 className="text-2xl font-bold text-[var(--content-primary)] mb-2">{projectName}</h1>
         <div className="flex items-center gap-1 mb-4">
-          <p className="text-xs font-mono text-[var(--text-muted)]">{sessionId}</p>
+          <p className="text-xs font-mono text-[var(--content-muted)]">{sessionId}</p>
           <CopyButton text={sessionId || ''} size={12} />
         </div>
 
         <div className="flex flex-wrap gap-4 text-sm">
           <div>
-            <span className="text-[var(--text-muted)]">Started: </span>
-            <span className="text-[var(--text-secondary)]">{timeAgo(firstEntry?.timestamp)}</span>
+            <span className="text-[var(--content-muted)]">Started: </span>
+            <span className="text-[var(--content-secondary)]">{timeAgo(firstEntry?.timestamp)}</span>
           </div>
           {lastEntry && (
             <div>
-              <span className="text-[var(--text-muted)]">Last activity: </span>
-              <span className="text-[var(--text-secondary)]">{timeAgo(lastEntry.timestamp)}</span>
+              <span className="text-[var(--content-muted)]">Last activity: </span>
+              <span className="text-[var(--content-secondary)]">{timeAgo(lastEntry.timestamp)}</span>
             </div>
           )}
           {firstEntry?.gitBranch && (
             <div>
-              <span className="inline-block px-2 py-0.5 text-xs rounded bg-[var(--bg-tertiary)] text-[var(--text-muted)] font-mono">
+              <span className="inline-block px-2 py-0.5 text-xs rounded bg-[var(--system-elevated)] text-[var(--content-muted)] font-mono">
                 {firstEntry.gitBranch}
               </span>
             </div>
@@ -309,20 +309,20 @@ export default function SessionDetailView() {
         {/* Stats row */}
         <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-[var(--border)]">
           <div>
-            <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">{userMessages}</span>
-            <span className="text-xs text-[var(--text-muted)] ml-1.5">user</span>
+            <span className="text-lg font-bold text-[var(--content-primary)] tabular-nums">{userMessages}</span>
+            <span className="text-xs text-[var(--content-muted)] ml-1.5">user</span>
           </div>
           <div>
-            <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">{assistantMessages}</span>
-            <span className="text-xs text-[var(--text-muted)] ml-1.5">assistant</span>
+            <span className="text-lg font-bold text-[var(--content-primary)] tabular-nums">{assistantMessages}</span>
+            <span className="text-xs text-[var(--content-muted)] ml-1.5">assistant</span>
           </div>
           <div>
-            <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">{toolCalls}</span>
-            <span className="text-xs text-[var(--text-muted)] ml-1.5">tool calls</span>
+            <span className="text-lg font-bold text-[var(--content-primary)] tabular-nums">{toolCalls}</span>
+            <span className="text-xs text-[var(--content-muted)] ml-1.5">tool calls</span>
           </div>
           <div>
-            <span className="text-lg font-bold text-[var(--text-primary)] tabular-nums">{entries.length}</span>
-            <span className="text-xs text-[var(--text-muted)] ml-1.5">entries</span>
+            <span className="text-lg font-bold text-[var(--content-primary)] tabular-nums">{entries.length}</span>
+            <span className="text-xs text-[var(--content-muted)] ml-1.5">entries</span>
           </div>
         </div>
       </div>
@@ -339,39 +339,39 @@ export default function SessionDetailView() {
             </div>
           </ResizablePanel>
 
-          <ResizableHandle withHandle className="mx-1 bg-[var(--border)] data-[resize-handle-state=hover]:bg-[var(--cast-accent-legacy)]/40 data-[resize-handle-state=drag]:bg-[var(--cast-accent-legacy)] transition-colors [&>div]:bg-[var(--cast-accent-legacy)]" />
+          <ResizableHandle withHandle className="mx-1 bg-[var(--border)] data-[resize-handle-state=hover]:bg-[var(--accent)]/40 data-[resize-handle-state=drag]:bg-[var(--accent)] transition-colors [&>div]:bg-[var(--accent)]" />
 
           {/* Right panel: Token Usage + Tool Usage */}
           <ResizablePanel defaultSize={35} minSize={20}>
             <div className="space-y-4 pl-2 h-full overflow-y-auto">
               {/* Token Usage Summary */}
               {totalTokens > 0 && (
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-5">
-                  <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Token Usage</h2>
+                <div className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-5">
+                  <h2 className="text-sm font-semibold text-[var(--content-muted)] uppercase tracking-wider mb-3">Token Usage</h2>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="text-center p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
-                      <div className="text-lg font-bold text-[var(--cast-accent-legacy)] tabular-nums">{formatTokens(tokens.inputTokens)}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Input</div>
+                      <div className="text-lg font-bold text-[var(--accent)] tabular-nums">{formatTokens(tokens.inputTokens)}</div>
+                      <div className="text-xs text-[var(--content-muted)]">Input</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
-                      <div className="text-lg font-bold text-[var(--text-primary)] tabular-nums">{formatTokens(tokens.outputTokens)}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Output</div>
+                      <div className="text-lg font-bold text-[var(--content-primary)] tabular-nums">{formatTokens(tokens.outputTokens)}</div>
+                      <div className="text-xs text-[var(--content-muted)]">Output</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
-                      <div className="text-lg font-bold text-[var(--text-secondary)] tabular-nums">{formatTokens(tokens.cacheCreation)}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Cache Write</div>
+                      <div className="text-lg font-bold text-[var(--content-secondary)] tabular-nums">{formatTokens(tokens.cacheCreation)}</div>
+                      <div className="text-xs text-[var(--content-muted)]">Cache Write</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
-                      <div className="text-lg font-bold text-[var(--text-secondary)] tabular-nums">{formatTokens(tokens.cacheRead)}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Cache Read</div>
+                      <div className="text-lg font-bold text-[var(--content-secondary)] tabular-nums">{formatTokens(tokens.cacheRead)}</div>
+                      <div className="text-xs text-[var(--content-muted)]">Cache Read</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
-                      <div className="text-lg font-bold text-[var(--text-primary)] tabular-nums">{formatTokens(totalTokens)}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Total</div>
+                      <div className="text-lg font-bold text-[var(--content-primary)] tabular-nums">{formatTokens(totalTokens)}</div>
+                      <div className="text-xs text-[var(--content-muted)]">Total</div>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-[var(--accent-subtle)] border border-[var(--cast-accent-legacy)]/20">
-                      <div className="text-lg font-bold text-[var(--cast-accent-legacy)] tabular-nums">{formatCost(cost)}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Est. Cost</div>
+                    <div className="text-center p-3 rounded-lg bg-[var(--accent-muted)] border border-[var(--accent)]/20">
+                      <div className="text-lg font-bold text-[var(--accent)] tabular-nums">{formatCost(cost)}</div>
+                      <div className="text-xs text-[var(--content-muted)]">Est. Cost</div>
                     </div>
                   </div>
                 </div>
@@ -379,22 +379,22 @@ export default function SessionDetailView() {
 
               {/* Tool Usage Breakdown */}
               {toolUsage.length > 0 && (
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-5">
-                  <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Tool Usage</h2>
+                <div className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-5">
+                  <h2 className="text-sm font-semibold text-[var(--content-muted)] uppercase tracking-wider mb-3">Tool Usage</h2>
                   <div className="grid grid-cols-1 gap-2">
                     {(() => {
                       const maxCount = toolUsage[0]?.count ?? 1
                       return toolUsage.map(({ tool, count }) => (
                       <div key={tool} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
-                        <span className="text-sm font-mono text-[var(--text-primary)]">{tool}</span>
+                        <span className="text-sm font-mono text-[var(--content-primary)]">{tool}</span>
                         <div className="flex items-center gap-2">
-                          <div className="w-20 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                          <div className="w-20 h-1.5 rounded-full bg-[var(--system-elevated)] overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-[var(--cast-accent-legacy)]"
+                              className="h-full rounded-full bg-[var(--accent)]"
                               style={{ width: `${Math.min(100, (count / maxCount) * 100)}%` }}
                             />
                           </div>
-                          <span className="text-xs text-[var(--text-muted)] tabular-nums w-8 text-right">{count}</span>
+                          <span className="text-xs text-[var(--content-muted)] tabular-nums w-8 text-right">{count}</span>
                         </div>
                       </div>
                     ))

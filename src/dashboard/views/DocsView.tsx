@@ -96,7 +96,7 @@ function InvocableBadge({ invocable }: { invocable: boolean }) {
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
         invocable
           ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-          : 'bg-zinc-500/15 text-[var(--text-muted)] border border-zinc-500/20'
+          : 'bg-zinc-500/15 text-[var(--content-muted)] border border-zinc-500/20'
       }`}
     >
       {invocable ? 'Yes' : 'No'}
@@ -115,10 +115,10 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2.5 mb-4">
-      <Icon className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
-      <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
+      <Icon className="w-4 h-4 text-[var(--accent)]" />
+      <h2 className="text-base font-semibold text-[var(--content-primary)]">{title}</h2>
       {count !== undefined && (
-        <span className="text-xs text-[var(--text-muted)] tabular-nums">({count})</span>
+        <span className="text-xs text-[var(--content-muted)] tabular-nums">({count})</span>
       )}
     </div>
   )
@@ -134,25 +134,25 @@ function SlashCommandsSection() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Command</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Description</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Agent</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Command</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Description</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Agent</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {SLASH_COMMANDS.map(row => (
-              <tr key={row.command} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+              <tr key={row.command} className="hover:bg-[var(--system-elevated)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--cast-accent-legacy)]">{row.command}</span>
+                  <span className="text-xs font-mono text-[var(--accent)]">{row.command}</span>
                 </td>
                 <td className="py-2 pr-6">
-                  <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>
+                  <span className="text-sm text-[var(--content-secondary)]">{row.description}</span>
                 </td>
                 <td className="py-2">
                   {row.agent === '—' ? (
-                    <span className="text-xs text-[var(--text-muted)]">—</span>
+                    <span className="text-xs text-[var(--content-muted)]">—</span>
                   ) : (
-                    <span className="text-xs font-mono text-[var(--text-secondary)]">{row.agent}</span>
+                    <span className="text-xs font-mono text-[var(--content-secondary)]">{row.agent}</span>
                   )}
                 </td>
               </tr>
@@ -181,28 +181,28 @@ function AgentsSection() {
     <div className="bento-card p-6">
       <SectionHeader icon={Bot} title="CAST Agents" count={agents.length} />
       {liveAgents && liveAgents.length > 0 && (
-        <p className="text-[10px] text-[var(--text-muted)] mb-3">Live from /api/agents</p>
+        <p className="text-[10px] text-[var(--content-muted)] mb-3">Live from /api/agents</p>
       )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Agent</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Model</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Description</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Agent</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Model</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Description</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {agents.map(row => (
-              <tr key={row.name} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+              <tr key={row.name} className="hover:bg-[var(--system-elevated)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--text-primary)]">{row.name}</span>
+                  <span className="text-xs font-mono text-[var(--content-primary)]">{row.name}</span>
                 </td>
                 <td className="py-2 pr-6">
                   <ModelBadge model={row.model} />
                 </td>
                 <td className="py-2">
-                  <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>
+                  <span className="text-sm text-[var(--content-secondary)]">{row.description}</span>
                 </td>
               </tr>
             ))}
@@ -239,22 +239,22 @@ function SkillsSection() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Skill</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">User-Invocable</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Description</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Skill</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">User-Invocable</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Description</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {skills.map(row => (
-              <tr key={row.name} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+              <tr key={row.name} className="hover:bg-[var(--system-elevated)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--text-primary)]">{row.name}</span>
+                  <span className="text-xs font-mono text-[var(--content-primary)]">{row.name}</span>
                 </td>
                 <td className="py-2 pr-6">
                   <InvocableBadge invocable={row.invocable} />
                 </td>
                 <td className="py-2">
-                  <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>
+                  <span className="text-sm text-[var(--content-secondary)]">{row.description}</span>
                 </td>
               </tr>
             ))}
@@ -269,23 +269,23 @@ function CastCliSection() {
   return (
     <div className="bento-card p-6">
       <SectionHeader icon={Command} title="CAST CLI" />
-      <p className="text-xs text-[var(--text-muted)] mb-4 font-mono">cast &lt;subcommand&gt;</p>
+      <p className="text-xs text-[var(--content-muted)] mb-4 font-mono">cast &lt;subcommand&gt;</p>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Subcommand</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Description</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Subcommand</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Description</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {CAST_CLI.map(row => (
-              <tr key={row.subcommand} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+              <tr key={row.subcommand} className="hover:bg-[var(--system-elevated)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--cast-accent-legacy)]">{row.subcommand}</span>
+                  <span className="text-xs font-mono text-[var(--accent)]">{row.subcommand}</span>
                 </td>
                 <td className="py-2">
-                  <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>
+                  <span className="text-sm text-[var(--content-secondary)]">{row.description}</span>
                 </td>
               </tr>
             ))}
@@ -304,18 +304,18 @@ function HookDirectivesSection() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Directive</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Description</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Directive</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Description</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {HOOK_DIRECTIVES.map(row => (
-              <tr key={row.directive} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+              <tr key={row.directive} className="hover:bg-[var(--system-elevated)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--cast-accent-legacy)]">{row.directive}</span>
+                  <span className="text-xs font-mono text-[var(--accent)]">{row.directive}</span>
                 </td>
                 <td className="py-2">
-                  <span className="text-sm text-[var(--text-secondary)]">{row.description}</span>
+                  <span className="text-sm text-[var(--content-secondary)]">{row.description}</span>
                 </td>
               </tr>
             ))}
@@ -332,7 +332,7 @@ export default function DocsView() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Docs</h1>
-      <p className="text-sm text-[var(--text-muted)] mb-6">CAST reference: commands, agents, skills, and directives.</p>
+      <p className="text-sm text-[var(--content-muted)] mb-6">CAST reference: commands, agents, skills, and directives.</p>
 
       <div className="space-y-6">
         <SlashCommandsSection />

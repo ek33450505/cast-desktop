@@ -36,21 +36,21 @@ const SYSTEM_TABS: { key: SystemTab; label: string; icon: React.ComponentType<{ 
 
 function AgentDetailInline({ name }: { name: string }) {
   const { data, isLoading } = useAgent(name)
-  if (isLoading) return <div className="p-4 text-xs text-[var(--text-muted)]">Loading...</div>
+  if (isLoading) return <div className="p-4 text-xs text-[var(--content-muted)]">Loading...</div>
   if (!data) return null
   return (
-    <div className="p-4 bg-[var(--bg-tertiary)] rounded-lg text-xs space-y-2">
+    <div className="p-4 bg-[var(--system-elevated)] rounded-lg text-xs space-y-2">
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="font-semibold text-[var(--text-primary)]">{data.name}</span>
-        <span className="text-[var(--text-muted)]">{data.model}</span>
+        <span className="font-semibold text-[var(--content-primary)]">{data.name}</span>
+        <span className="text-[var(--content-muted)]">{data.model}</span>
         {data.color && (
           <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
         )}
       </div>
-      <p className="text-[var(--text-secondary)]">{data.description}</p>
+      <p className="text-[var(--content-secondary)]">{data.description}</p>
       {data.body && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-[var(--cast-accent-legacy)] hover:underline">View full definition</summary>
+          <summary className="cursor-pointer text-[var(--accent)] hover:underline">View full definition</summary>
           <pre className="mt-2 p-3 bg-[var(--bg-primary)] rounded text-[10px] overflow-x-auto whitespace-pre-wrap max-h-80">
             {data.body}
           </pre>
@@ -64,8 +64,8 @@ function AgentsTab() {
   const { data: agents, isLoading } = useAgents()
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Loading agents...</div>
-  if (!agents || agents.length === 0) return <div className="p-6 text-[var(--text-muted)]">No agents found.</div>
+  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading agents...</div>
+  if (!agents || agents.length === 0) return <div className="p-6 text-[var(--content-muted)]">No agents found.</div>
 
   return (
     <div className="space-y-1">
@@ -73,13 +73,13 @@ function AgentsTab() {
         <div key={agent.name} className="border border-[var(--border)] rounded-lg overflow-hidden">
           <button
             onClick={() => setExpanded(expanded === agent.name ? null : agent.name)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--bg-secondary)] transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors"
           >
             {expanded === agent.name
-              ? <ChevronDown className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
-              : <ChevronRight className="w-4 h-4 text-[var(--text-muted)] shrink-0" />}
-            <span className="font-medium text-sm text-[var(--text-primary)]">{agent.name}</span>
-            <span className="text-xs text-[var(--text-muted)] ml-auto">{agent.model}</span>
+              ? <ChevronDown className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
+              : <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />}
+            <span className="font-medium text-sm text-[var(--content-primary)]">{agent.name}</span>
+            <span className="text-xs text-[var(--content-muted)] ml-auto">{agent.model}</span>
           </button>
           {expanded === agent.name && <AgentDetailInline name={agent.name} />}
         </div>
@@ -92,19 +92,19 @@ function AgentsTab() {
 
 function RulesTab() {
   const { data: rules, isLoading } = useRules()
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Loading rules...</div>
-  if (!rules || rules.length === 0) return <div className="p-6 text-[var(--text-muted)]">No rules found.</div>
+  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading rules...</div>
+  if (!rules || rules.length === 0) return <div className="p-6 text-[var(--content-muted)]">No rules found.</div>
 
   return (
     <div className="space-y-2">
       {rules.map(rule => (
         <div key={rule.filename} className="border border-[var(--border)] rounded-lg p-4">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-sm text-[var(--text-primary)]">{rule.filename}</span>
-            <span className="text-xs text-[var(--text-muted)]">{new Date(rule.modifiedAt).toLocaleDateString()}</span>
+            <span className="font-mono text-sm text-[var(--content-primary)]">{rule.filename}</span>
+            <span className="text-xs text-[var(--content-muted)]">{new Date(rule.modifiedAt).toLocaleDateString()}</span>
           </div>
           {rule.preview && (
-            <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-2">{rule.preview}</p>
+            <p className="text-xs text-[var(--content-secondary)] mt-1 line-clamp-2">{rule.preview}</p>
           )}
         </div>
       ))}
@@ -121,15 +121,15 @@ function SkillsTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
+        <h3 className="text-sm font-semibold text-[var(--content-primary)] mb-3 flex items-center gap-2">
+          <Zap className="w-4 h-4 text-[var(--accent)]" />
           Skills ({skills?.length ?? 0})
         </h3>
         <div className="flex flex-wrap gap-1.5">
           {(skills ?? []).map(s => (
             <span
               key={s.name}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] border border-[var(--cast-accent-legacy)]/20"
+              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]/20"
               title={s.description}
             >
               {s.name}
@@ -138,15 +138,15 @@ function SkillsTab() {
         </div>
       </div>
       <div>
-        <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
+        <h3 className="text-sm font-semibold text-[var(--content-primary)] mb-3 flex items-center gap-2">
+          <Terminal className="w-4 h-4 text-[var(--accent)]" />
           Commands ({commands?.length ?? 0})
         </h3>
         <div className="flex flex-wrap gap-1.5">
           {(commands ?? []).map(c => (
             <span
               key={c.name}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--cast-accent-legacy)]/30 hover:text-[var(--cast-accent-legacy)] transition-colors"
+              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--system-elevated)] text-[var(--content-secondary)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-colors"
             >
               /{c.name}
             </span>
@@ -163,28 +163,28 @@ function MemoryTab() {
   const { data: agentMem, isLoading: loadingAgent } = useAgentMemory()
   const { data: projectMem, isLoading: loadingProject } = useProjectMemory()
 
-  if (loadingAgent || loadingProject) return <div className="p-6 text-[var(--text-muted)]">Loading memory...</div>
+  if (loadingAgent || loadingProject) return <div className="p-6 text-[var(--content-muted)]">Loading memory...</div>
 
   const allMemories = [
     ...(agentMem ?? []).map(m => ({ ...m, source: 'agent' as const })),
     ...(projectMem ?? []).map(m => ({ ...m, source: 'project' as const })),
   ]
 
-  if (allMemories.length === 0) return <div className="p-6 text-[var(--text-muted)]">No memory files found in agent-memory-local/.</div>
+  if (allMemories.length === 0) return <div className="p-6 text-[var(--content-muted)]">No memory files found in agent-memory-local/.</div>
 
   return (
     <div className="space-y-2">
       {allMemories.map((mem, i) => (
         <div key={i} className="border border-[var(--border)] rounded-lg p-4">
           <div className="flex items-center gap-3">
-            <Brain className="w-4 h-4 text-[var(--cast-accent-legacy)] shrink-0" />
-            <span className="font-mono text-sm text-[var(--text-primary)]">{mem.name}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
+            <Brain className="w-4 h-4 text-[var(--accent)] shrink-0" />
+            <span className="font-mono text-sm text-[var(--content-primary)]">{mem.name}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--system-elevated)] text-[var(--content-muted)]">
               {mem.source}
             </span>
           </div>
           {mem.description && (
-            <p className="text-xs text-[var(--text-secondary)] mt-1 ml-7">{mem.description}</p>
+            <p className="text-xs text-[var(--content-secondary)] mt-1 ml-7">{mem.description}</p>
           )}
         </div>
       ))}
@@ -196,10 +196,10 @@ function MemoryTab() {
 
 function PlanDetailInline({ filename }: { filename: string }) {
   const { data, isLoading } = usePlan(filename)
-  if (isLoading) return <div className="p-4 text-xs text-[var(--text-muted)]">Loading...</div>
+  if (isLoading) return <div className="p-4 text-xs text-[var(--content-muted)]">Loading...</div>
   if (!data) return null
   return (
-    <pre className="p-4 bg-[var(--bg-tertiary)] rounded-lg text-[10px] overflow-x-auto whitespace-pre-wrap max-h-96">
+    <pre className="p-4 bg-[var(--system-elevated)] rounded-lg text-[10px] overflow-x-auto whitespace-pre-wrap max-h-96">
       {data.body}
     </pre>
   )
@@ -209,8 +209,8 @@ function PlansTab() {
   const { data: plans, isLoading } = usePlans()
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Loading plans...</div>
-  if (!plans || plans.length === 0) return <div className="p-6 text-[var(--text-muted)]">No plans found.</div>
+  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading plans...</div>
+  if (!plans || plans.length === 0) return <div className="p-6 text-[var(--content-muted)]">No plans found.</div>
 
   return (
     <div className="space-y-1">
@@ -218,14 +218,14 @@ function PlansTab() {
         <div key={plan.filename} className="border border-[var(--border)] rounded-lg overflow-hidden">
           <button
             onClick={() => setExpanded(expanded === plan.filename ? null : plan.filename)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--bg-secondary)] transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors"
           >
             {expanded === plan.filename
-              ? <ChevronDown className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
-              : <ChevronRight className="w-4 h-4 text-[var(--text-muted)] shrink-0" />}
+              ? <ChevronDown className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
+              : <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />}
             <div className="min-w-0 flex-1">
-              <span className="font-medium text-sm text-[var(--text-primary)] block truncate">{plan.title || plan.filename}</span>
-              {plan.date && <span className="text-xs text-[var(--text-muted)]">{plan.date}</span>}
+              <span className="font-medium text-sm text-[var(--content-primary)] block truncate">{plan.title || plan.filename}</span>
+              {plan.date && <span className="text-xs text-[var(--content-muted)]">{plan.date}</span>}
             </div>
           </button>
           {expanded === plan.filename && <PlanDetailInline filename={plan.filename} />}
@@ -325,14 +325,14 @@ function CronTab() {
 
   const scheduleValid = isValidCronSchedule(newSchedule)
 
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Loading cron status...</div>
+  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading cron status...</div>
 
   return (
     <div className="space-y-4">
-      {data?.error && <p className="text-xs text-[var(--error)]">{data.error}</p>}
+      {data?.error && <p className="text-xs text-[var(--status-error)]">{data.error}</p>}
 
       {data?.count === 0 && !adding && (
-        <p className="text-sm text-[var(--text-muted)]">No CAST cron entries found.</p>
+        <p className="text-sm text-[var(--content-muted)]">No CAST cron entries found.</p>
       )}
 
       {(data?.entries ?? []).length > 0 && (
@@ -340,7 +340,7 @@ function CronTab() {
           {data!.entries.map((entry, i) => (
             <li
               key={i}
-              className="flex items-start gap-2 font-mono text-xs text-[var(--text-secondary)] bg-[var(--bg-tertiary)] rounded-lg px-3 py-2"
+              className="flex items-start gap-2 font-mono text-xs text-[var(--content-secondary)] bg-[var(--system-elevated)] rounded-lg px-3 py-2"
             >
               <span className="flex-1 break-all">{entry}</span>
               <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -348,7 +348,7 @@ function CronTab() {
                   onClick={() => triggerEntry(entry)}
                   disabled={triggering === entry}
                   title="Run now"
-                  className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--cast-accent-legacy)] hover:bg-[var(--cast-accent-legacy)]/10 transition-colors disabled:opacity-40"
+                  className="p-1 rounded text-[var(--content-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-40"
                 >
                   <Play className="w-3 h-3" />
                 </button>
@@ -356,7 +356,7 @@ function CronTab() {
                   onClick={() => deleteEntry(entry)}
                   disabled={deleting === entry}
                   title="Delete entry"
-                  className="p-1 rounded text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-400/10 transition-colors disabled:opacity-40"
+                  className="p-1 rounded text-[var(--content-muted)] hover:text-rose-400 hover:bg-rose-400/10 transition-colors disabled:opacity-40"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -368,7 +368,7 @@ function CronTab() {
 
       {triggerResult && (
         <p
-          className={`text-xs font-mono px-2 py-1 rounded ${triggerResult.ok ? 'text-[var(--success)] bg-[var(--success)]/10' : 'text-[var(--error)] bg-[var(--error)]/10'}`}
+          className={`text-xs font-mono px-2 py-1 rounded ${triggerResult.ok ? 'text-[var(--status-success)] bg-[var(--status-success)]/10' : 'text-[var(--status-error)] bg-[var(--status-error)]/10'}`}
           role="status"
         >
           {triggerResult.ok ? 'OK' : 'FAIL'} {triggerResult.msg.slice(0, 120)}
@@ -379,25 +379,25 @@ function CronTab() {
         <div className="space-y-2 pt-2 border-t border-[var(--border)]">
           <div className="flex gap-2">
             <div className="space-y-1 flex-shrink-0 w-44">
-              <label htmlFor="cron-schedule" className="block text-xs text-[var(--text-muted)]">Schedule (5 fields)</label>
+              <label htmlFor="cron-schedule" className="block text-xs text-[var(--content-muted)]">Schedule (5 fields)</label>
               <input
                 id="cron-schedule"
                 type="text"
                 value={newSchedule}
                 onChange={e => setNewSchedule(e.target.value)}
                 placeholder="0 * * * *"
-                className={`w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--bg-tertiary)] border ${scheduleValid || !newSchedule ? 'border-[var(--border)]' : 'border-rose-400'} text-[var(--text-primary)] focus:outline-none focus:border-[var(--cast-accent-legacy)]`}
+                className={`w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--system-elevated)] border ${scheduleValid || !newSchedule ? 'border-[var(--border)]' : 'border-rose-400'} text-[var(--content-primary)] focus:outline-none focus:border-[var(--accent)]`}
               />
             </div>
             <div className="space-y-1 flex-1 min-w-0">
-              <label htmlFor="cron-command" className="block text-xs text-[var(--text-muted)]">Command</label>
+              <label htmlFor="cron-command" className="block text-xs text-[var(--content-muted)]">Command</label>
               <input
                 id="cron-command"
                 type="text"
                 value={newCommand}
                 onChange={e => setNewCommand(e.target.value)}
                 placeholder="cast exec --sweep"
-                className="w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--cast-accent-legacy)]"
+                className="w-full px-2 py-1.5 rounded-lg text-xs font-mono bg-[var(--system-elevated)] border border-[var(--border)] text-[var(--content-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
           </div>
@@ -405,14 +405,14 @@ function CronTab() {
             <button
               onClick={addEntry}
               disabled={!scheduleValid || !newCommand.trim()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--cast-accent-legacy)] text-[#070A0F] text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-[#070A0F] text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Check className="w-3 h-3" />
               Save
             </button>
             <button
               onClick={() => { setAdding(false); setNewSchedule(''); setNewCommand('') }}
-              className="px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--cast-accent-legacy)]/30 transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs text-[var(--content-muted)] hover:text-[var(--content-secondary)] border border-[var(--border)] hover:border-[var(--accent)]/30 transition-colors"
             >
               Cancel
             </button>
@@ -421,7 +421,7 @@ function CronTab() {
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--cast-accent-legacy)] transition-colors"
+          className="flex items-center gap-1.5 text-xs text-[var(--content-muted)] hover:text-[var(--accent)] transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           Add cron entry
@@ -436,42 +436,42 @@ function CronTab() {
 function ChainMapTab() {
   const { data: chainMap, isLoading } = useChainMap()
 
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Loading chain map...</div>
+  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading chain map...</div>
   if (!chainMap || Object.keys(chainMap).length === 0) {
-    return <div className="p-6 text-[var(--text-muted)]">No chain map found. Place chain-map.json in ~/.claude/config/.</div>
+    return <div className="p-6 text-[var(--content-muted)]">No chain map found. Place chain-map.json in ~/.claude/config/.</div>
   }
 
   const entries = Object.entries(chainMap).sort(([a], [b]) => a.localeCompare(b))
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-[var(--text-muted)] mb-4">Agent dispatch chain definitions from config/chain-map.json</p>
+      <p className="text-xs text-[var(--content-muted)] mb-4">Agent dispatch chain definitions from config/chain-map.json</p>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Agent</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Successors</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Agent</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Successors</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {entries.map(([agent, successors]) => (
-              <tr key={agent} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+              <tr key={agent} className="hover:bg-[var(--system-elevated)] transition-colors">
                 <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--text-primary)]">{agent}</span>
+                  <span className="text-xs font-mono text-[var(--content-primary)]">{agent}</span>
                 </td>
                 <td className="py-2">
                   <div className="flex flex-wrap gap-1.5">
                     {Array.isArray(successors) && successors.map((s: string) => (
                       <span
                         key={s}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-[var(--accent-subtle)] text-[var(--cast-accent-legacy)] border border-[var(--cast-accent-legacy)]/20"
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]/20"
                       >
                         {s}
                       </span>
                     ))}
                     {(!Array.isArray(successors) || successors.length === 0) && (
-                      <span className="text-xs text-[var(--text-muted)]">--</span>
+                      <span className="text-xs text-[var(--content-muted)]">--</span>
                     )}
                   </div>
                 </td>
@@ -489,15 +489,15 @@ function ChainMapTab() {
 function PoliciesTab() {
   const { data: policies, isLoading } = usePolicies()
 
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Loading policies...</div>
+  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading policies...</div>
   if (!policies || Object.keys(policies).length === 0) {
-    return <div className="p-6 text-[var(--text-muted)]">No policies found. Place policies.json in ~/.claude/config/.</div>
+    return <div className="p-6 text-[var(--content-muted)]">No policies found. Place policies.json in ~/.claude/config/.</div>
   }
 
   return (
     <div>
-      <p className="text-xs text-[var(--text-muted)] mb-4">Policy rules from config/policies.json</p>
-      <pre className="p-4 bg-[var(--bg-tertiary)] rounded-lg text-xs overflow-x-auto whitespace-pre-wrap max-h-96 text-[var(--text-secondary)]">
+      <p className="text-xs text-[var(--content-muted)] mb-4">Policy rules from config/policies.json</p>
+      <pre className="p-4 bg-[var(--system-elevated)] rounded-lg text-xs overflow-x-auto whitespace-pre-wrap max-h-96 text-[var(--content-secondary)]">
         {JSON.stringify(policies, null, 2)}
       </pre>
     </div>
@@ -509,9 +509,9 @@ function PoliciesTab() {
 function PricingTab() {
   const { data: pricing, isLoading } = useModelPricing()
 
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Loading pricing...</div>
+  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading pricing...</div>
   if (!pricing || Object.keys(pricing).length === 0) {
-    return <div className="p-6 text-[var(--text-muted)]">No pricing data. Place model-pricing.json in ~/.claude/config/.</div>
+    return <div className="p-6 text-[var(--content-muted)]">No pricing data. Place model-pricing.json in ~/.claude/config/.</div>
   }
 
   // Try to render as a table if it's a Record<model, {input, output}>
@@ -519,14 +519,14 @@ function PricingTab() {
 
   return (
     <div>
-      <p className="text-xs text-[var(--text-muted)] mb-4">Token pricing from config/model-pricing.json ($/1M tokens)</p>
+      <p className="text-xs text-[var(--content-muted)] mb-4">Token pricing from config/model-pricing.json ($/1M tokens)</p>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Model</th>
-              <th className="text-right pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider pr-6">Input ($/1M)</th>
-              <th className="text-right pb-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Output ($/1M)</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Model</th>
+              <th className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Input ($/1M)</th>
+              <th className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Output ($/1M)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
@@ -535,12 +535,12 @@ function PricingTab() {
               const inputRate = typeof r === 'object' ? (r.input ?? r.input_per_1m ?? '--') : '--'
               const outputRate = typeof r === 'object' ? (r.output ?? r.output_per_1m ?? '--') : '--'
               return (
-                <tr key={model} className="hover:bg-[var(--bg-tertiary)] transition-colors">
+                <tr key={model} className="hover:bg-[var(--system-elevated)] transition-colors">
                   <td className="py-2 pr-6">
-                    <span className="text-xs font-mono text-[var(--text-primary)]">{model}</span>
+                    <span className="text-xs font-mono text-[var(--content-primary)]">{model}</span>
                   </td>
-                  <td className="py-2 pr-6 text-right text-[var(--text-secondary)] tabular-nums">${String(inputRate)}</td>
-                  <td className="py-2 text-right text-[var(--cast-accent-legacy)] tabular-nums">${String(outputRate)}</td>
+                  <td className="py-2 pr-6 text-right text-[var(--content-secondary)] tabular-nums">${String(inputRate)}</td>
+                  <td className="py-2 text-right text-[var(--accent)] tabular-nums">${String(outputRate)}</td>
                 </tr>
               )
             })}
@@ -600,24 +600,24 @@ function DispatchAgentPanel() {
   }
 
   const selectBase =
-    'w-full rounded-lg border border-[var(--border)] bg-[var(--bg-tertiary,var(--bg-secondary))] text-[var(--text-primary)] text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--cast-accent-legacy)] focus:border-[var(--cast-accent-legacy)] transition-colors'
+    'w-full rounded-lg border border-[var(--border)] bg-[var(--system-elevated,var(--system-panel))] text-[var(--content-primary)] text-sm px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-[var(--accent)] transition-colors'
 
   return (
-    <div className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-6 space-y-4">
+    <div className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-6 space-y-4">
       <div className="flex items-center gap-2">
-        <Send className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
+        <Send className="w-4 h-4 text-[var(--accent)]" />
         <h3 className="text-sm font-semibold">Dispatch Agent</h3>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
         <div className="space-y-1.5">
-          <label htmlFor="dispatch-agent" className="block text-xs font-medium text-[var(--text-secondary)]">Agent</label>
+          <label htmlFor="dispatch-agent" className="block text-xs font-medium text-[var(--content-secondary)]">Agent</label>
           <select id="dispatch-agent" value={agentType} onChange={e => { setAgentType(e.target.value); setResult(null) }} className={selectBase} disabled={agentsLoading}>
             {agentsLoading ? <option value="" disabled>Loading...</option> : <option value="" disabled>Select agent...</option>}
             {agentNames.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="dispatch-model" className="block text-xs font-medium text-[var(--text-secondary)]">Model</label>
+          <label htmlFor="dispatch-model" className="block text-xs font-medium text-[var(--content-secondary)]">Model</label>
           <select id="dispatch-model" value={model} onChange={e => setModel(e.target.value as typeof model)} className={selectBase}>
             {MODEL_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
@@ -634,13 +634,13 @@ function DispatchAgentPanel() {
         <button
           onClick={handleDispatch}
           disabled={!canSubmit}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--cast-accent-legacy)] text-[#070A0F] font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] text-[#070A0F] font-semibold text-sm hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Send className="w-3.5 h-3.5" />
           {loading ? 'Dispatching...' : 'Dispatch'}
         </button>
-        {result?.kind === 'success' && <p className="text-xs text-[var(--success)]" role="status">Dispatched: {String(result.id).slice(0, 8)}</p>}
-        {result?.kind === 'error' && <p className="text-xs text-[var(--error)]" role="alert">{result.message}</p>}
+        {result?.kind === 'success' && <p className="text-xs text-[var(--status-success)]" role="status">Dispatched: {String(result.id).slice(0, 8)}</p>}
+        {result?.kind === 'error' && <p className="text-xs text-[var(--status-error)]" role="alert">{result.message}</p>}
       </div>
     </div>
   )
@@ -661,7 +661,7 @@ function HealthSignalsSection() {
 
   return (
     <div className="mt-8 space-y-4">
-      <h2 className="text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-2">
+      <h2 className="text-sm font-semibold text-[var(--content-secondary)] flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 text-yellow-400" />
         Health Signals
       </h2>
@@ -669,27 +669,27 @@ function HealthSignalsSection() {
         {/* Parry Guard Events */}
         <div className="bento-card overflow-hidden">
           <div className="px-4 py-3 border-b border-[var(--border)]">
-            <span className="text-xs font-semibold text-[var(--text-primary)]">Parry Guard Events</span>
+            <span className="text-xs font-semibold text-[var(--content-primary)]">Parry Guard Events</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-                  <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)]">Rejected At</th>
-                  <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)]">Tool Name</th>
-                  <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)]">Input Snippet</th>
+                <tr className="border-b border-[var(--border)] bg-[var(--system-panel)]">
+                  <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Rejected At</th>
+                  <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Tool Name</th>
+                  <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Input Snippet</th>
                 </tr>
               </thead>
               <tbody>
                 {parryEvents.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-4 text-center text-[var(--text-muted)]">No parry guard events</td>
+                    <td colSpan={4} className="px-3 py-4 text-center text-[var(--content-muted)]">No parry guard events</td>
                   </tr>
                 ) : parryEvents.map(ev => (
-                  <tr key={ev.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors">
-                    <td className="px-3 py-2 tabular-nums text-[var(--text-muted)] shrink-0">{fmtTime(ev.rejected_at)}</td>
-                    <td className="px-3 py-2 text-[var(--cast-accent-legacy)]">{ev.tool_name}</td>
-                    <td className="px-3 py-2 text-[var(--text-muted)] truncate max-w-[200px]" title={ev.input_snippet ?? undefined} colSpan={2}>{ev.input_snippet ?? '—'}</td>
+                  <tr key={ev.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--system-elevated)] transition-colors">
+                    <td className="px-3 py-2 tabular-nums text-[var(--content-muted)] shrink-0">{fmtTime(ev.rejected_at)}</td>
+                    <td className="px-3 py-2 text-[var(--accent)]">{ev.tool_name}</td>
+                    <td className="px-3 py-2 text-[var(--content-muted)] truncate max-w-[200px]" title={ev.input_snippet ?? undefined} colSpan={2}>{ev.input_snippet ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -700,29 +700,29 @@ function HealthSignalsSection() {
         {/* Agent Truncations */}
         <div className="bento-card overflow-hidden">
           <div className="px-4 py-3 border-b border-[var(--border)]">
-            <span className="text-xs font-semibold text-[var(--text-primary)]">Agent Truncations</span>
+            <span className="text-xs font-semibold text-[var(--content-primary)]">Agent Truncations</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-                  <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)]">Time</th>
-                  <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)]">Agent Type</th>
-                  <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)]">Chars</th>
-                  <th className="text-left px-3 py-2 font-medium text-[var(--text-muted)]">Last Line</th>
+                <tr className="border-b border-[var(--border)] bg-[var(--system-panel)]">
+                  <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Time</th>
+                  <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Agent Type</th>
+                  <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Chars</th>
+                  <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Last Line</th>
                 </tr>
               </thead>
               <tbody>
                 {truncations.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-4 text-center text-[var(--text-muted)]">No agent truncations</td>
+                    <td colSpan={4} className="px-3 py-4 text-center text-[var(--content-muted)]">No agent truncations</td>
                   </tr>
                 ) : truncations.map(t => (
-                  <tr key={t.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors">
-                    <td className="px-3 py-2 tabular-nums text-[var(--text-muted)]">{fmtTime(t.timestamp)}</td>
-                    <td className="px-3 py-2 text-[var(--text-primary)]">{t.agent_type}</td>
-                    <td className="px-3 py-2 text-[var(--text-secondary)]">{t.char_count ?? '—'}</td>
-                    <td className="px-3 py-2 text-[var(--text-muted)] truncate max-w-[140px]" title={t.last_line ?? undefined}>{t.last_line ?? '—'}</td>
+                  <tr key={t.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--system-elevated)] transition-colors">
+                    <td className="px-3 py-2 tabular-nums text-[var(--content-muted)]">{fmtTime(t.timestamp)}</td>
+                    <td className="px-3 py-2 text-[var(--content-primary)]">{t.agent_type}</td>
+                    <td className="px-3 py-2 text-[var(--content-secondary)]">{t.char_count ?? '—'}</td>
+                    <td className="px-3 py-2 text-[var(--content-muted)] truncate max-w-[140px]" title={t.last_line ?? undefined}>{t.last_line ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -774,8 +774,8 @@ export default function SystemView() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                 activeTab === tab.key
-                  ? 'border-[var(--cast-accent-legacy)] text-[var(--cast-accent-legacy)]'
-                  : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--content-secondary)] hover:text-[var(--content-primary)]'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />

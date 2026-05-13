@@ -12,8 +12,8 @@ function messageTypeColor(type: string): string {
     case 'peer_message':    return 'text-violet-400'
     case 'idle_event':      return 'text-zinc-400'
     case 'task_completed':  return 'text-emerald-400'
-    case 'worktree_created': return 'text-[var(--cast-accent-legacy)]'
-    default:                return 'text-[var(--text-muted)]'
+    case 'worktree_created': return 'text-[var(--accent)]'
+    default:                return 'text-[var(--content-muted)]'
   }
 }
 
@@ -31,7 +31,7 @@ function parsePayloadPreview(payload: string | null): string {
 export function MessageFeed({ messages }: MessageFeedProps) {
   if (messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-24 text-xs text-[var(--text-muted)]">
+      <div className="flex items-center justify-center h-24 text-xs text-[var(--content-muted)]">
         No messages yet
       </div>
     )
@@ -42,10 +42,10 @@ export function MessageFeed({ messages }: MessageFeedProps) {
       {messages.map(msg => (
         <div
           key={msg.id}
-          className="flex items-start gap-3 px-4 py-2.5 border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors"
+          className="flex items-start gap-3 px-4 py-2.5 border-b border-[var(--border)] last:border-0 hover:bg-[var(--system-elevated)] transition-colors"
         >
           {/* Time */}
-          <span className="text-[10px] text-[var(--text-muted)] tabular-nums shrink-0 w-20 pt-0.5">
+          <span className="text-[10px] text-[var(--content-muted)] tabular-nums shrink-0 w-20 pt-0.5">
             {formatTimeOfDay(msg.timestamp) || '—'}
           </span>
 
@@ -55,13 +55,13 @@ export function MessageFeed({ messages }: MessageFeedProps) {
           </span>
 
           {/* From/to */}
-          <span className="text-[10px] text-[var(--text-secondary)] shrink-0 w-32 pt-0.5 truncate">
+          <span className="text-[10px] text-[var(--content-secondary)] shrink-0 w-32 pt-0.5 truncate">
             {msg.from_agent ?? '—'}
             {msg.to_agent ? ` → ${msg.to_agent}` : ''}
           </span>
 
           {/* Payload preview */}
-          <span className="flex-1 text-xs text-[var(--text-muted)] truncate min-w-0">
+          <span className="flex-1 text-xs text-[var(--content-muted)] truncate min-w-0">
             {parsePayloadPreview(msg.payload)}
           </span>
         </div>

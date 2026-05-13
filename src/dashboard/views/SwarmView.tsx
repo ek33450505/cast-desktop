@@ -12,9 +12,9 @@ import type { SwarmSession } from '../types'
 function SectionHeader({ label, count }: { label: string; count?: number }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <h2 className="text-sm font-semibold text-[var(--text-primary)]">{label}</h2>
+      <h2 className="text-sm font-semibold text-[var(--content-primary)]">{label}</h2>
       {count !== undefined && (
-        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
+        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--system-elevated)] text-[var(--content-muted)]">
           {count}
         </span>
       )}
@@ -32,7 +32,7 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
   if (detailLoading) {
     return (
       <div className="bento-card p-6 flex items-center justify-center">
-        <span className="text-xs text-[var(--text-muted)] animate-pulse">Loading swarm details…</span>
+        <span className="text-xs text-[var(--content-muted)] animate-pulse">Loading swarm details…</span>
       </div>
     )
   }
@@ -40,7 +40,7 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
   if (!detail) {
     return (
       <div className="bento-card p-6 flex items-center justify-center">
-        <span className="text-xs text-[var(--text-muted)]">Swarm not found</span>
+        <span className="text-xs text-[var(--content-muted)]">Swarm not found</span>
       </div>
     )
   }
@@ -52,11 +52,11 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
-          <Network className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{session.team_name}</span>
+          <Network className="w-4 h-4 text-[var(--accent)]" />
+          <span className="text-sm font-semibold text-[var(--content-primary)]">{session.team_name}</span>
         </div>
         {session.notes && (
-          <p className="text-xs text-[var(--text-muted)] mt-1">{session.notes}</p>
+          <p className="text-xs text-[var(--content-muted)] mt-1">{session.notes}</p>
         )}
       </div>
 
@@ -68,8 +68,8 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
             onClick={() => setTab(t)}
             className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors capitalize ${
               tab === t
-                ? 'text-[var(--cast-accent-legacy)] border-b-2 border-[var(--cast-accent-legacy)] -mb-px'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                ? 'text-[var(--accent)] border-b-2 border-[var(--accent)] -mb-px'
+                : 'text-[var(--content-muted)] hover:text-[var(--content-secondary)]'
             }`}
           >
             {t === 'teammates' && <Users className="w-3.5 h-3.5" />}
@@ -85,7 +85,7 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
         {tab === 'teammates' && (
           <div>
             {teammates.length === 0 ? (
-              <div className="p-6 text-center text-xs text-[var(--text-muted)]">
+              <div className="p-6 text-center text-xs text-[var(--content-muted)]">
                 No teammate runs recorded yet
               </div>
             ) : (
@@ -97,7 +97,7 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
         {tab === 'messages' && (
           <div className="p-4">
             {messagesLoading ? (
-              <div className="text-xs text-[var(--text-muted)] animate-pulse">Loading messages…</div>
+              <div className="text-xs text-[var(--content-muted)] animate-pulse">Loading messages…</div>
             ) : (
               <MessageFeed messages={messages} />
             )}
@@ -119,10 +119,10 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
 function EmptyState() {
   return (
     <div className="bento-card p-10 flex flex-col items-center justify-center gap-3 text-center col-span-full">
-      <Network className="w-10 h-10 text-[var(--text-muted)] opacity-40" />
-      <p className="text-sm font-medium text-[var(--text-muted)]">No swarms yet</p>
-      <p className="text-xs text-[var(--text-muted)] max-w-xs">
-        Start a swarm with <code className="bg-[var(--bg-tertiary)] px-1 rounded">/swarm &lt;team&gt; &quot;&lt;task&gt;&quot;</code> in Claude Code.
+      <Network className="w-10 h-10 text-[var(--content-muted)] opacity-40" />
+      <p className="text-sm font-medium text-[var(--content-muted)]">No swarms yet</p>
+      <p className="text-xs text-[var(--content-muted)] max-w-xs">
+        Start a swarm with <code className="bg-[var(--system-elevated)] px-1 rounded">/swarm &lt;team&gt; &quot;&lt;task&gt;&quot;</code> in Claude Code.
       </p>
     </div>
   )
@@ -145,10 +145,10 @@ export default function SwarmView() {
     <div className="p-6 space-y-8 min-h-full">
       {/* Page header */}
       <div className="flex items-center gap-3">
-        <Network className="w-6 h-6 text-[var(--cast-accent-legacy)]" />
+        <Network className="w-6 h-6 text-[var(--accent)]" />
         <div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">Swarm</h1>
-          <p className="text-xs text-[var(--text-muted)]">CAST Agent Team sessions</p>
+          <h1 className="text-xl font-bold text-[var(--content-primary)]">Swarm</h1>
+          <p className="text-xs text-[var(--content-muted)]">CAST Agent Team sessions</p>
         </div>
       </div>
 
@@ -162,8 +162,8 @@ export default function SwarmView() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2].map(i => (
             <div key={i} className="bento-card p-5 animate-pulse">
-              <div className="h-4 w-32 bg-[var(--bg-secondary)] rounded mb-3" />
-              <div className="h-3 w-24 bg-[var(--bg-secondary)] rounded" />
+              <div className="h-4 w-32 bg-[var(--system-panel)] rounded mb-3" />
+              <div className="h-3 w-24 bg-[var(--system-panel)] rounded" />
             </div>
           ))}
         </div>
@@ -175,7 +175,7 @@ export default function SwarmView() {
           <section>
             <SectionHeader label="Active Swarms" count={active.length} />
             {active.length === 0 ? (
-              <p className="text-xs text-[var(--text-muted)]">No active swarms</p>
+              <p className="text-xs text-[var(--content-muted)]">No active swarms</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {active.map((s: SwarmSession) => (
@@ -203,7 +203,7 @@ export default function SwarmView() {
             {past.length === 0 && active.length === 0 ? (
               <EmptyState />
             ) : past.length === 0 ? (
-              <p className="text-xs text-[var(--text-muted)]">No past swarms</p>
+              <p className="text-xs text-[var(--content-muted)]">No past swarms</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {past.map((s: SwarmSession) => (

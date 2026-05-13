@@ -21,24 +21,24 @@ function extractProjectName(projectPath: string): string {
 // ── Hook Events Live Feed ─────────────────────────────────────────────────────
 
 function resultColor(result: string | null): string {
-  if (!result) return 'text-[var(--text-muted)]'
+  if (!result) return 'text-[var(--content-muted)]'
   const r = result.toLowerCase()
   if (r === 'allow' || r === 'ok' || r === 'success') return 'text-emerald-400'
   if (r === 'block' || r === 'error' || r === 'fail') return 'text-rose-400'
-  return 'text-[var(--text-secondary)]'
+  return 'text-[var(--content-secondary)]'
 }
 
 function HookEventRow({ event }: { event: HookEvent }) {
   const time = new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   return (
-    <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-tertiary)] transition-colors text-xs">
-      <span className="text-[var(--text-muted)] tabular-nums shrink-0 w-20">{time}</span>
-      <span className="font-medium text-[var(--cast-accent-legacy)] shrink-0 w-28 truncate">{event.hook_type}</span>
-      <span className="text-[var(--text-secondary)] truncate flex-1">{event.tool_name ?? '—'}</span>
+    <div className="flex items-center gap-3 px-4 py-2 border-b border-[var(--border)] last:border-0 hover:bg-[var(--system-elevated)] transition-colors text-xs">
+      <span className="text-[var(--content-muted)] tabular-nums shrink-0 w-20">{time}</span>
+      <span className="font-medium text-[var(--accent)] shrink-0 w-28 truncate">{event.hook_type}</span>
+      <span className="text-[var(--content-secondary)] truncate flex-1">{event.tool_name ?? '—'}</span>
       <span className={`shrink-0 w-16 text-right font-medium ${resultColor(event.result)}`}>
         {event.result ?? '—'}
       </span>
-      <span className="text-[var(--text-muted)] tabular-nums shrink-0 w-16 text-right">
+      <span className="text-[var(--content-muted)] tabular-nums shrink-0 w-16 text-right">
         {event.duration_ms != null ? `${event.duration_ms}ms` : '—'}
       </span>
     </div>
@@ -52,17 +52,17 @@ function HookEventsFeed() {
     <div className="bento-card overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
-          <Radio className="w-4 h-4 text-[var(--cast-accent-legacy)]" />
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Live Hook Events</h2>
+          <Radio className="w-4 h-4 text-[var(--accent)]" />
+          <h2 className="text-sm font-semibold text-[var(--content-primary)]">Live Hook Events</h2>
         </div>
         <div className="flex items-center gap-1.5 text-xs">
           <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
-          <span className="text-[var(--text-muted)]">{connected ? 'connected' : 'disconnected'}</span>
+          <span className="text-[var(--content-muted)]">{connected ? 'connected' : 'disconnected'}</span>
         </div>
       </div>
 
       {events.length === 0 ? (
-        <div className="px-4 py-8 text-center text-xs text-[var(--text-muted)]">
+        <div className="px-4 py-8 text-center text-xs text-[var(--content-muted)]">
           Waiting for hook events from CAST v6.0 HTTP hooks…
         </div>
       ) : (
@@ -95,7 +95,7 @@ function UnstagedWarningsCard() {
           {count > 0
             ? <AlertTriangle className="w-4 h-4 text-rose-400" />
             : <CheckCircle className="w-4 h-4 text-emerald-400" />}
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Unstaged File Warnings</h2>
+          <h2 className="text-sm font-semibold text-[var(--content-primary)]">Unstaged File Warnings</h2>
         </div>
         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
           count > 0
@@ -106,14 +106,14 @@ function UnstagedWarningsCard() {
         </span>
       </div>
       {preview.length === 0 ? (
-        <div className="px-4 py-3 text-xs text-[var(--text-muted)]">No unstaged file warnings — all clear</div>
+        <div className="px-4 py-3 text-xs text-[var(--content-muted)]">No unstaged file warnings — all clear</div>
       ) : (
         <div>
           {preview.map(w => (
-            <div key={w.id} className="flex items-center gap-3 px-4 py-2 border-b border-[var(--border)] last:border-0 text-xs hover:bg-[var(--bg-tertiary)] transition-colors">
-              <span className="text-[var(--text-muted)] tabular-nums shrink-0 w-20">{fmtTime(w.timestamp)}</span>
+            <div key={w.id} className="flex items-center gap-3 px-4 py-2 border-b border-[var(--border)] last:border-0 text-xs hover:bg-[var(--system-elevated)] transition-colors">
+              <span className="text-[var(--content-muted)] tabular-nums shrink-0 w-20">{fmtTime(w.timestamp)}</span>
               <span className="text-rose-300 truncate flex-1 font-mono">{w.unstaged_files ?? '—'}</span>
-              <span className="text-[var(--text-secondary)] shrink-0">{w.commit_sha ? w.commit_sha.slice(0, 7) : '—'}</span>
+              <span className="text-[var(--content-secondary)] shrink-0">{w.commit_sha ? w.commit_sha.slice(0, 7) : '—'}</span>
             </div>
           ))}
         </div>
@@ -127,7 +127,7 @@ function SkeletonRow() {
     <tr className="border-b border-[var(--border)]">
       {Array.from({ length: 9 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 bg-[var(--bg-tertiary)] rounded animate-pulse" />
+          <div className="h-4 bg-[var(--system-elevated)] rounded animate-pulse" />
         </td>
       ))}
     </tr>
@@ -135,7 +135,7 @@ function SkeletonRow() {
 }
 
 function ModelBadge({ model }: { model?: string }) {
-  if (!model) return <span className="text-[var(--text-muted)] text-xs">—</span>
+  if (!model) return <span className="text-[var(--content-muted)] text-xs">—</span>
   const lower = model.toLowerCase()
   const label = lower.includes('opus') ? 'Opus'
     : lower.includes('haiku') ? 'Haiku'
@@ -147,7 +147,7 @@ function ModelBadge({ model }: { model?: string }) {
     ? 'bg-blue-500/20 text-blue-300'
     : lower.includes('sonnet')
     ? 'bg-emerald-500/20 text-emerald-300'
-    : 'bg-[var(--bg-secondary)] text-[var(--text-muted)]'
+    : 'bg-[var(--system-panel)] text-[var(--content-muted)]'
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
       {label}
@@ -252,7 +252,7 @@ export default function SessionsView() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Sessions</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
+          <p className="text-sm text-[var(--content-muted)] mt-1">
             {isLoading
               ? 'Loading sessions...'
               : `${filtered.length} session${filtered.length !== 1 ? 's' : ''} · ${formatTokens(totalTokens)} tokens · ${formatCost(totalCost)}`}
@@ -269,21 +269,21 @@ export default function SessionsView() {
       {/* Filter bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 sm:max-w-sm min-w-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--content-muted)]" />
           <input
             type="text"
             placeholder="Search sessions..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             aria-label="Search sessions"
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--cast-accent-legacy)]/50 focus-visible:ring-1 focus-visible:ring-[var(--cast-accent-legacy)] transition-colors"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--system-panel)] border border-[var(--border)] text-sm text-[var(--content-primary)] placeholder:text-[var(--content-muted)] focus:outline-none focus:border-[var(--accent)]/50 focus-visible:ring-1 focus-visible:ring-[var(--accent)] transition-colors"
           />
         </div>
         <select
           value={projectFilter}
           onChange={e => setProjectFilter(e.target.value)}
           aria-label="Filter by project"
-          className="px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--cast-accent-legacy)]/50 focus-visible:ring-1 focus-visible:ring-[var(--cast-accent-legacy)] transition-colors"
+          className="px-3 py-2 rounded-xl bg-[var(--system-panel)] border border-[var(--border)] text-sm text-[var(--content-primary)] focus:outline-none focus:border-[var(--accent)]/50 focus-visible:ring-1 focus-visible:ring-[var(--accent)] transition-colors"
         >
           <option value="">All projects</option>
           {projects.map(p => (
@@ -294,7 +294,7 @@ export default function SessionsView() {
 
       {/* Error state */}
       {error && (
-        <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--error)]/30 px-5 py-4 text-sm text-[var(--error)]">
+        <div className="rounded-xl bg-[var(--system-panel)] border border-[var(--status-error)]/30 px-5 py-4 text-sm text-[var(--status-error)]">
           Unable to load sessions
         </div>
       )}
@@ -303,14 +303,14 @@ export default function SessionsView() {
       <div className="md:hidden space-y-3">
         {isLoading && (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4 animate-pulse space-y-2">
-              <div className="h-4 w-1/2 rounded bg-[var(--bg-tertiary)]" />
-              <div className="h-3 w-1/3 rounded bg-[var(--bg-tertiary)]" />
+            <div key={i} className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-4 animate-pulse space-y-2">
+              <div className="h-4 w-1/2 rounded bg-[var(--system-elevated)]" />
+              <div className="h-3 w-1/3 rounded bg-[var(--system-elevated)]" />
             </div>
           ))
         )}
         {!isLoading && filtered.length === 0 && (
-          <div className="px-4 py-12 text-center text-[var(--text-muted)]">
+          <div className="px-4 py-12 text-center text-[var(--content-muted)]">
             {searchQuery || projectFilter ? 'No matching sessions' : 'No sessions found'}
           </div>
         )}
@@ -331,11 +331,11 @@ export default function SessionsView() {
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/sessions/${session.projectEncoded}/${session.id}`) }}
               aria-label={`Session for ${extractProjectName(session.projectPath)}, started ${timeAgo(session.startedAt)}`}
-              className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl p-4 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
+              className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-4 cursor-pointer hover:bg-[var(--system-elevated)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="font-semibold text-[var(--text-primary)] text-sm truncate">
+                  <div className="font-semibold text-[var(--content-primary)] text-sm truncate">
                     {extractProjectName(session.projectPath)}
                   </div>
                   {compactedSessionIds.has(session.id) && (
@@ -350,16 +350,16 @@ export default function SessionsView() {
                     onClick={(e) => handleDelete(e, session)}
                     disabled={deletingId === session.id}
                     aria-label={`Delete session ${session.id.slice(0, 8)}`}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--content-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--content-secondary)]">
                 <span>{timeAgo(session.startedAt)}</span>
                 {session.durationMs != null && <span>{formatDuration(session.durationMs)}</span>}
-                <span className="text-[var(--cast-accent-legacy)] font-medium">{tokens > 0 ? formatTokens(tokens) : '--'} tokens</span>
+                <span className="text-[var(--accent)] font-medium">{tokens > 0 ? formatTokens(tokens) : '--'} tokens</span>
                 <span>{cost > 0 ? formatCost(cost) : '--'}</span>
               </div>
             </div>
@@ -368,15 +368,15 @@ export default function SessionsView() {
       </div>
 
       {/* Desktop table — shown at md+ */}
-      <div className="hidden md:block bg-[var(--bg-secondary)] rounded-xl overflow-hidden border border-[var(--border)]">
+      <div className="hidden md:block bg-[var(--system-panel)] rounded-xl overflow-hidden border border-[var(--border)]">
         {/* Scrollable wrapper for narrow viewports */}
         <div className="overflow-x-auto">
         {/* Sticky header row */}
-        <div className="grid grid-cols-9 border-b border-[var(--border)] bg-[var(--bg-secondary)] min-w-[860px]">
+        <div className="grid grid-cols-9 border-b border-[var(--border)] bg-[var(--system-panel)] min-w-[860px]">
           {COL_HEADERS.map(({ label, align }) => (
             <div
               key={label}
-              className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] ${align}`}
+              className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--content-muted)] ${align}`}
             >
               {label}
             </div>
@@ -396,7 +396,7 @@ export default function SessionsView() {
 
           {/* Empty state */}
           {!isLoading && filtered.length === 0 && (
-            <div className="px-4 py-12 text-center text-[var(--text-muted)]">
+            <div className="px-4 py-12 text-center text-[var(--content-muted)]">
               {searchQuery || projectFilter ? 'No matching sessions' : 'No sessions found'}
             </div>
           )}
@@ -428,7 +428,7 @@ export default function SessionsView() {
                     tabIndex={0}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/sessions/${session.projectEncoded}/${session.id}`) }}
                     aria-label={`Session: ${extractProjectName(session.projectPath)}, ${timeAgo(session.startedAt)}`}
-                    className="grid grid-cols-9 border-b border-[var(--border)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
+                    className="grid grid-cols-9 border-b border-[var(--border)] hover:bg-[var(--system-elevated)] transition-colors cursor-pointer text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)] focus-visible:outline-none"
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -438,7 +438,7 @@ export default function SessionsView() {
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    <div className="px-4 py-3 font-semibold text-[var(--text-primary)] flex items-center gap-2 min-w-0">
+                    <div className="px-4 py-3 font-semibold text-[var(--content-primary)] flex items-center gap-2 min-w-0">
                       <span className="truncate">{extractProjectName(session.projectPath)}</span>
                       {compactedSessionIds.has(session.id) && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 shrink-0">
@@ -446,22 +446,22 @@ export default function SessionsView() {
                         </span>
                       )}
                     </div>
-                    <div className="px-4 py-3 text-[var(--text-secondary)] truncate">
+                    <div className="px-4 py-3 text-[var(--content-secondary)] truncate">
                       {timeAgo(session.startedAt)}
                     </div>
-                    <div className="px-4 py-3 text-[var(--text-secondary)] truncate">
+                    <div className="px-4 py-3 text-[var(--content-secondary)] truncate">
                       {session.durationMs != null ? formatDuration(session.durationMs) : '--'}
                     </div>
-                    <div className="px-4 py-3 text-right text-[var(--text-secondary)] tabular-nums">
+                    <div className="px-4 py-3 text-right text-[var(--content-secondary)] tabular-nums">
                       {session.messageCount}
                     </div>
-                    <div className="px-4 py-3 text-right text-[var(--text-secondary)] tabular-nums">
+                    <div className="px-4 py-3 text-right text-[var(--content-secondary)] tabular-nums">
                       {session.toolCallCount}
                     </div>
-                    <div className="px-4 py-3 text-right text-[var(--cast-accent-legacy)] tabular-nums font-medium">
+                    <div className="px-4 py-3 text-right text-[var(--accent)] tabular-nums font-medium">
                       {tokens > 0 ? formatTokens(tokens) : '--'}
                     </div>
-                    <div className="px-4 py-3 text-right text-[var(--text-secondary)] tabular-nums">
+                    <div className="px-4 py-3 text-right text-[var(--content-secondary)] tabular-nums">
                       {cost > 0 ? formatCost(cost) : '--'}
                     </div>
                     <div className="px-4 py-3">
@@ -472,7 +472,7 @@ export default function SessionsView() {
                         onClick={(e) => handleDelete(e, session)}
                         disabled={deletingId === session.id}
                         aria-label={`Delete session ${session.id.slice(0, 8)}`}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--cast-accent-legacy)] focus-visible:outline-none"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--content-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
