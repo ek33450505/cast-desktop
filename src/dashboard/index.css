@@ -77,6 +77,57 @@
   --cast-badge-opus: var(--chart-4);     /* #fbbf24 — gold */
 }
 
+/* ─── Dawn appearance overrides for legacy tokens (2026-05-13) ────────────────
+ * Stages 3-6 will progressively migrate components off these legacy names onto
+ * the new --system-* / --content-* token families. Until that's done, this
+ * block makes every legacy --text-*, --bg-*, --cast-*, and shadcn alias token
+ * appearance-aware so the app is fully usable in dawn TODAY.
+ * Source of truth for hex values: dawn block in src/dashboard/styles/tokens.css.
+ * ────────────────────────────────────────────────────────────────────────── */
+[data-appearance="dawn"] {
+  /* Legacy --text-* tokens */
+  --text-primary:           #1A211E;
+  --text-secondary:         #475048;
+  --text-muted:             #737B72;
+
+  /* Legacy --bg-* tokens (sage-grey family — matches new --system-* values) */
+  --bg-primary:             #F0F2EE;
+  --bg-secondary:           #E9EDE7;
+  --bg-tertiary:            #DDE2D9;
+
+  /* Legacy chrome / border / glass */
+  --border:                 rgba(26, 33, 30, 0.10);
+  --glass:                  rgba(26, 33, 30, 0.04);
+  --glass-border:           rgba(26, 33, 30, 0.08);
+
+  /* shadcn aliases — derived from legacy in dawn */
+  --background:             #F0F2EE;
+  --foreground:             #1A211E;
+  --card:                   #E9EDE7;
+  --card-foreground:        #1A211E;
+  --popover:                #FFFFFF;
+  --popover-foreground:     #1A211E;
+  --secondary:              #DDE2D9;
+  --secondary-foreground:   #475048;
+  --muted:                  #DDE2D9;
+  --muted-foreground:       #737B72;
+  --input:                  #DDE2D9;
+
+  /* Cast shell tokens — dawn versions */
+  --cast-rail-bg:           #E9EDE7;
+  --cast-rail-border:       rgba(26, 33, 30, 0.10);
+  --cast-center-bg:         #F0F2EE;
+  --cast-top-bar-bg:        #E9EDE7;
+  --cast-overlay-backdrop:  rgba(255, 255, 255, 0.40);
+
+  /* Sidebar (shadcn) */
+  --sidebar:                       #E9EDE7;
+  --sidebar-foreground:            #1A211E;
+  --sidebar-border:                rgba(26, 33, 30, 0.10);
+  --sidebar-accent:                rgba(212, 142, 26, 0.08);
+  --sidebar-accent-foreground:     #8C5E0B;
+}
+
 @keyframes previewModalIn {
   from { opacity: 0; transform: scale(0.97) translateY(4px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }

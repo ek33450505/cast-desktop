@@ -23,13 +23,16 @@
 
 | Token | Dawn | Dusk | Notes |
 |---|---|---|---|
-| `--system-canvas` | `#E8ECF1` | `#19211D` | Root background, behind everything |
-| `--system-chrome` | `#DDE3EA` | `#13191A` | Top bar, status strip — reads as "above" canvas |
-| `--system-panel` | `#E2E7ED` | `#1E2823` | Left / right rails, docked surfaces |
-| `--system-pane` | `#EEF1F5` | `#161E1C` | Terminal pane content (dusk deep enough for ANSI, warmer than near-black) |
-| `--system-elevated` | `#F2F5F9` | `#26332E` | Opaque base for modals / sheets / popovers / palette |
+| `--system-canvas` | `#F0F2EE` | `#19211D` | Root background, behind everything |
+| `--system-chrome` | `#E2E6E0` | `#111614` | Top bar, status strip — reads as "above" canvas |
+| `--system-panel` | `#E9EDE7` | `#232D28` | Left / right rails, docked surfaces |
+| `--system-pane` | `#F7F9F6` | `#1D2622` | Terminal / editor pane (dusk: lighter than canvas — correct elevation) |
+| `--system-elevated` | `#FFFFFF` | `#2D3B35` | Opaque base for modals / sheets / popovers / palette |
 
-> **Dusk revision 2026-05-13:** original dusk values were `#0E1614 / #0A100F / #121B18 / #0B1311 / #1A2421` — felt too near-black on first live QA. Lifted ~5 luminance steps and warmed the green undertone to read as "dusk in the forest" rather than "black." Contrast on `--content-primary` (`#E6E8E2`) still 12+:1.
+> **Revision 2026-05-13 (Gemini design feedback):**
+> - **Dawn shifted from cool-slate to sage-grey** for brand cohesion with the dusk forest. `#E8ECF1` → `#F0F2EE`, etc. Warmer base lets the amber accent sit naturally instead of clashing with cool blue.
+> - **Dusk elevation logic fixed.** Previous `--system-pane` (`#161E1C`) was DARKER than canvas (`#19211D`) — backwards. Pane is now `#1D2622` (lighter than canvas), reading as "above" the canvas plane like every other elevated surface.
+> - **All dawn legacy `--text-*` / `--bg-*` / `--cast-*` tokens got dawn override blocks in `src/dashboard/index.css`** — single-file unlock that makes every un-migrated component dawn-correct without waiting for per-stage migration.
 
 ### 1.2 Stroke
 
@@ -60,7 +63,7 @@
 | `--accent-pressed` | `#A66C0A` | `#D49621` | Active / pressed |
 | `--accent-muted` | `#F4E4C4` | `#3F311A` | Soft fill — selected row, chip |
 | `--accent-glow` | `rgba(212,142,26,0.25)` | `rgba(230,165,50,0.35)` | Outer halo for emphasis (sparingly) |
-| `--accent-text` | `#9E6A0E` | `#F0B441` | When accent must be the text color (links, etc.) — passes 4.5:1 |
+| `--accent-text` | `#8C5E0B` | `#F0B441` | When accent must be the text color (links, etc.) — passes 4.5:1 (dawn deepened 2026-05-13 for stricter AA on sage canvas) |
 
 > Two accent tokens exist for two use cases: `--accent` is for fills with
 > `--content-on-accent` text on top. `--accent-text` is for accent-as-text

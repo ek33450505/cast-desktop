@@ -28,30 +28,37 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
   useEffect(() => {
     if (!terminal.supported || !containerRef.current || !tab) return
 
+    // Read appearance at terminal init time. xterm's theme is a frozen JS
+    // object — it does not react to CSS var changes. Appearance toggles
+    // mid-session won't update existing terminals; new tabs pick up the
+    // current appearance correctly. Stage 5+ will wire a proper reactive
+    // theme that updates on appearance change.
+    const isDawn = document.documentElement.getAttribute('data-appearance') === 'dawn'
+
     const xterm = new Terminal({
       fontFamily: '"SF Mono", Menlo, Monaco, "Courier New", monospace',
       fontSize: 13,
       theme: {
-        background: '#070A0F',
-        foreground: '#E6E8EE',
-        cursor: '#00FFC2',
-        cursorAccent: '#070A0F',
-        black: '#1A1E26',
-        red: '#FF5F6D',
-        green: '#00FFC2',
-        yellow: '#FFD166',
-        blue: '#5BC0F8',
-        magenta: '#C084FC',
-        cyan: '#00E5CC',
-        white: '#E6E8EE',
-        brightBlack: '#3D4455',
-        brightRed: '#FF7A84',
-        brightGreen: '#33FFD4',
-        brightYellow: '#FFE08A',
-        brightBlue: '#7DCFFF',
+        background: isDawn ? '#F7F9F6' : '#1D2622',
+        foreground: isDawn ? '#1A211E' : '#E6E8E2',
+        cursor:    '#E6A532',
+        cursorAccent: isDawn ? '#F7F9F6' : '#1D2622',
+        black:     isDawn ? '#1A211E' : '#1A1E26',
+        red:       isDawn ? '#C42F1E' : '#E64837',
+        green:     isDawn ? '#1F8B4C' : '#3FA968',
+        yellow:    isDawn ? '#D86B0F' : '#F09543',
+        blue:      isDawn ? '#2065BD' : '#4E91D6',
+        magenta:   '#C084FC',
+        cyan:      isDawn ? '#0E7C7B' : '#33EBDC',
+        white:     isDawn ? '#475048' : '#E6E8E2',
+        brightBlack:   isDawn ? '#737B72' : '#3D4455',
+        brightRed:     isDawn ? '#E64837' : '#FF7A84',
+        brightGreen:   isDawn ? '#3FA968' : '#5FCB85',
+        brightYellow:  isDawn ? '#E6A532' : '#F0B441',
+        brightBlue:    isDawn ? '#4E91D6' : '#7DCFFF',
         brightMagenta: '#D4A8FF',
-        brightCyan: '#33EBDC',
-        brightWhite: '#FFFFFF',
+        brightCyan:    isDawn ? '#33A9A8' : '#7DEBE8',
+        brightWhite:   isDawn ? '#1A211E' : '#FFFFFF',
       },
       cursorBlink: true,
       cursorStyle: 'block',

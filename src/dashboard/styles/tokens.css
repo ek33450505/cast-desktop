@@ -8,17 +8,17 @@
   /* ─── Dusk (default appearance) ─────────────────────────────────────── */
   /* System surfaces */
   --system-canvas:           #19211D;
-  --system-chrome:           #13191A;
-  --system-panel:            #1E2823;
-  --system-pane:             #161E1C;
-  --system-elevated:         #26332E;
+  --system-chrome:           #111614;
+  --system-panel:            #232D28;
+  --system-pane:             #1D2622;
+  --system-elevated:         #2D3B35;
   --system-vibrancy-base:    rgba(25, 33, 29, 0.72);
   --system-vibrancy-overlay: rgba(255, 255, 255, 0.02);
   --system-vibrancy-blur:    blur(12px) saturate(140%);
 
   /* Stroke */
-  --stroke-subtle:           #1F2A26;
-  --stroke-regular:          #2D3A35;
+  --stroke-subtle:           #25312C;
+  --stroke-regular:          #36453F;
   --stroke-strong:           #43534D;
   --stroke-focus:            #E6A532;
 
@@ -60,27 +60,27 @@
 [data-appearance="dawn"] {
   /* ─── Dawn appearance overrides ─────────────────────────────────────── */
   /* System surfaces */
-  --system-canvas:           #E8ECF1;
-  --system-chrome:           #DDE3EA;
-  --system-panel:            #E2E7ED;
-  --system-pane:             #EEF1F5;
-  --system-elevated:         #F2F5F9;
-  --system-vibrancy-base:    rgba(232, 236, 241, 0.65);
+  --system-canvas:           #F0F2EE;
+  --system-chrome:           #E2E6E0;
+  --system-panel:            #E9EDE7;
+  --system-pane:             #F7F9F6;
+  --system-elevated:         #FFFFFF;
+  --system-vibrancy-base:    rgba(240, 242, 238, 0.65);
   --system-vibrancy-overlay: rgba(255, 255, 255, 0.04);
   --system-vibrancy-blur:    blur(12px) saturate(140%);
 
   /* Stroke */
-  --stroke-subtle:           #D0D6DD;
-  --stroke-regular:          #B0B8C2;
-  --stroke-strong:           #8A93A0;
+  --stroke-subtle:           #D8DDD5;
+  --stroke-regular:          #BCC3B9;
+  --stroke-strong:           #8A938A;
   --stroke-focus:            #C48B1A;
 
   /* Content */
-  --content-primary:         #1A2333;
-  --content-secondary:       #475063;
-  --content-muted:           #737B8C;
-  --content-disabled:        #A4ADBA;
-  --content-on-accent:       #1A2333;
+  --content-primary:         #1A211E;
+  --content-secondary:       #475048;
+  --content-muted:           #737B72;
+  --content-disabled:        #A4ADA1;
+  --content-on-accent:       #1A211E;
   --content-on-status-fill:  #FFFFFF;
 
   /* Accent */
@@ -89,7 +89,7 @@
   --accent-pressed:          #A66C0A;
   --accent-muted:            #F4E4C4;
   --accent-glow:             rgba(212, 142, 26, 0.25);
-  --accent-text:             #9E6A0E;
+  --accent-text:             #8C5E0B;
 
   /* Status */
   --status-success:          #1F8B4C;
