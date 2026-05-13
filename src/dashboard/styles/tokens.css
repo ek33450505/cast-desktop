@@ -1,0 +1,118 @@
+/* ─── Cast Design Token System — Stage 1 ───────────────────────────────────
+ * Source of truth: docs/design/palette-dawn-dusk.md §4
+ * Dusk is the default appearance (:root). Dawn overrides via data-appearance.
+ * Legacy --cast-* tokens in index.css coexist through Stage 7.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ─── Dusk (default appearance) ─────────────────────────────────────── */
+  /* System surfaces */
+  --system-canvas:           #0E1614;
+  --system-chrome:           #0A100F;
+  --system-panel:            #121B18;
+  --system-pane:             #0B1311;
+  --system-elevated:         #1A2421;
+  --system-vibrancy-base:    rgba(14, 22, 20, 0.70);
+  --system-vibrancy-overlay: rgba(255, 255, 255, 0.02);
+  --system-vibrancy-blur:    blur(12px) saturate(140%);
+
+  /* Stroke */
+  --stroke-subtle:           #1F2A26;
+  --stroke-regular:          #2D3A35;
+  --stroke-strong:           #43534D;
+  --stroke-focus:            #E6A532;
+
+  /* Content */
+  --content-primary:         #E6E8E2;
+  --content-secondary:       #A8ADA6;
+  --content-muted:           #737A75;
+  --content-disabled:        #4D544F;
+  --content-on-accent:       #0E1614;
+  --content-on-status-fill:  #FFFFFF;
+
+  /* Accent */
+  --accent:                  #E6A532;
+  --accent-hover:            #F0B441;
+  --accent-pressed:          #D49621;
+  --accent-muted:            #3F311A;
+  --accent-glow:             rgba(230, 165, 50, 0.35);
+  --accent-text:             #F0B441;
+
+  /* Status */
+  --status-success:          #3FA968;
+  --status-success-muted:    #1B2F23;
+  --status-warning:          #F09543;
+  --status-warning-muted:    #3A2316;
+  --status-error:            #E64837;
+  --status-error-muted:      #391B19;
+  --status-info:             #4E91D6;
+  --status-info-muted:       #162739;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 0 rgba(255, 255, 255, 0.02);
+  --shadow-2: 0 6px 16px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-3: 0 24px 48px rgba(0, 0, 0, 0.55), 0 4px 8px rgba(0, 0, 0, 0.35);
+
+  /* Color-scheme hint for browser-rendered controls (scrollbars, form ui) */
+  color-scheme: dark;
+}
+
+[data-appearance="dawn"] {
+  /* ─── Dawn appearance overrides ─────────────────────────────────────── */
+  /* System surfaces */
+  --system-canvas:           #E8ECF1;
+  --system-chrome:           #DDE3EA;
+  --system-panel:            #E2E7ED;
+  --system-pane:             #EEF1F5;
+  --system-elevated:         #F2F5F9;
+  --system-vibrancy-base:    rgba(232, 236, 241, 0.65);
+  --system-vibrancy-overlay: rgba(255, 255, 255, 0.04);
+  --system-vibrancy-blur:    blur(12px) saturate(140%);
+
+  /* Stroke */
+  --stroke-subtle:           #D0D6DD;
+  --stroke-regular:          #B0B8C2;
+  --stroke-strong:           #8A93A0;
+  --stroke-focus:            #C48B1A;
+
+  /* Content */
+  --content-primary:         #1A2333;
+  --content-secondary:       #475063;
+  --content-muted:           #737B8C;
+  --content-disabled:        #A4ADBA;
+  --content-on-accent:       #1A2333;
+  --content-on-status-fill:  #FFFFFF;
+
+  /* Accent */
+  --accent:                  #D48E1A;
+  --accent-hover:            #C07F12;
+  --accent-pressed:          #A66C0A;
+  --accent-muted:            #F4E4C4;
+  --accent-glow:             rgba(212, 142, 26, 0.25);
+  --accent-text:             #9E6A0E;
+
+  /* Status */
+  --status-success:          #1F8B4C;
+  --status-success-muted:    #D7F0DF;
+  --status-warning:          #D86B0F;
+  --status-warning-muted:    #F8DEC5;
+  --status-error:            #C42F1E;
+  --status-error-muted:      #F5DAD7;
+  --status-info:             #2065BD;
+  --status-info-muted:       #D4E3F4;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(20, 30, 50, 0.04), 0 1px 0 rgba(20, 30, 50, 0.02);
+  --shadow-2: 0 6px 16px rgba(20, 30, 50, 0.10), 0 1px 3px rgba(20, 30, 50, 0.06);
+  --shadow-3: 0 24px 48px rgba(20, 30, 50, 0.16), 0 4px 8px rgba(20, 30, 50, 0.08);
+
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

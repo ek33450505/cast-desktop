@@ -1,4 +1,5 @@
 import { PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Settings } from 'lucide-react'
+import AppearanceToggle from './AppearanceToggle'
 
 interface TopBarProps {
   leftRailOpen: boolean
@@ -66,6 +67,8 @@ export default function TopBar({
             ? <PanelRightClose className="w-4 h-4" aria-hidden="true" />
             : <PanelRightOpen className="w-4 h-4" aria-hidden="true" />}
         </button>
+
+        <AppearanceToggle />
 
         <button
           type="button"
