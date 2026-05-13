@@ -68,10 +68,10 @@ function EmptyState() {
     >
       <Bot
         className="w-6 h-6"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: 'var(--content-muted)' }}
         aria-hidden="true"
       />
-      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+      <p className="text-xs" style={{ color: 'var(--content-muted)' }}>
         No active agents
       </p>
     </div>
@@ -107,7 +107,7 @@ function AgentRow({ agent, nowMs, onClick }: AgentRowProps) {
       <td className="py-1.5 pr-2 align-top">
         <span
           className="text-xs font-semibold truncate block max-w-[80px]"
-          style={{ color: 'var(--text-primary)' }}
+          style={{ color: 'var(--content-primary)' }}
           title={agent.name}
         >
           {agent.name}
@@ -133,7 +133,7 @@ function AgentRow({ agent, nowMs, onClick }: AgentRowProps) {
       <td className="py-1.5 pr-2 align-top">
         <span
           className="text-[10px] font-mono"
-          style={{ color: 'var(--text-muted)' }}
+          style={{ color: 'var(--content-muted)' }}
           aria-live="off"
         >
           {formatElapsed(agent.startedAt, nowMs)}
@@ -144,7 +144,7 @@ function AgentRow({ agent, nowMs, onClick }: AgentRowProps) {
       <td className="py-1.5 align-top">
         <span
           className="text-[10px] truncate block max-w-[90px]"
-          style={{ color: 'var(--text-secondary)' }}
+          style={{ color: 'var(--content-secondary)' }}
           title={agent.prompt}
         >
           {agent.prompt || '—'}
@@ -211,7 +211,7 @@ export default function LiveAgentsPanel() {
           <div
             key={i}
             className="h-4 rounded animate-pulse"
-            style={{ background: 'var(--bg-tertiary)', opacity: 0.6 }}
+            style={{ background: 'var(--system-elevated)', opacity: 0.6 }}
           />
         ))}
       </div>

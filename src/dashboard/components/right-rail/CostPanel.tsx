@@ -90,13 +90,13 @@ export default function CostPanel() {
       <div className="flex flex-col gap-0.5">
         <span
           className="text-xl font-semibold font-mono tabular-nums"
-          style={{ color: 'var(--cast-accent-legacy)' }}
+          style={{ color: 'var(--accent)' }}
           aria-live="polite"
           aria-label={`Session cost: ${formatCurrency(total)}`}
         >
           {formatCurrency(total)}
         </span>
-        <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+        <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--content-muted)' }}>
           session total
         </span>
       </div>
@@ -104,23 +104,23 @@ export default function CostPanel() {
       {/* Burn rate + projection */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--content-muted)' }}>
             burn rate
           </span>
           <span
             className="text-xs font-mono tabular-nums"
-            style={{ color: 'var(--text-secondary)' }}
+            style={{ color: 'var(--content-secondary)' }}
           >
             {formatBurnRate(burnRate)}<span className="text-[10px]">/min</span>
           </span>
         </div>
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--content-muted)' }}>
             4h projection
           </span>
           <span
             className="text-xs font-mono tabular-nums"
-            style={{ color: 'var(--text-secondary)' }}
+            style={{ color: 'var(--content-secondary)' }}
           >
             {formatCurrency(projection)}
           </span>
@@ -173,14 +173,14 @@ function BudgetGauge({ percent, totalUsd, budgetUsd, animate }: BudgetGaugeProps
       >
         <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
         <RadialBar
-          background={{ fill: 'var(--bg-tertiary)' }}
+          background={{ fill: 'var(--system-elevated)' }}
           dataKey="value"
           angleAxisId={0}
-          fill="var(--cast-accent)"
+          fill="var(--accent)"
           isAnimationActive={animate}
         />
       </RadialBarChart>
-      <p className="text-center text-[10px]" style={{ color: 'var(--text-muted)', marginTop: '-8px' }}>
+      <p className="text-center text-[10px]" style={{ color: 'var(--content-muted)', marginTop: '-8px' }}>
         {Math.round(percent * 100)}% of budget
       </p>
     </div>
