@@ -13,6 +13,7 @@ import {
   FileText,
   Search,
   X,
+  Code2,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 
@@ -24,6 +25,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Terminal', path: '/', icon: Home },
+  { label: 'Open Editor', path: '/editor', icon: Code2 },
   { label: 'Sessions', path: '/sessions', icon: History },
   { label: 'Analytics', path: '/analytics', icon: BarChart2 },
   { label: 'Agents', path: '/agents', icon: Users },
