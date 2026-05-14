@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+export type TabColor = 'chart-2' | 'chart-3' | 'chart-4'
+
 export interface Tab {
   id: string
   ptyId: string | null
@@ -10,6 +12,8 @@ export interface Tab {
   // When true, the resolved display title always uses `title` (even if the tab
   // later becomes bound to a session). Future wave: persist to localStorage.
   userRenamed: boolean
+  // color: optional left-border accent color token. undefined = no color accent.
+  color?: TabColor
 }
 
 interface TerminalState {
@@ -25,6 +29,8 @@ interface TerminalState {
   updateTabTitle: (id: string, title: string, userRenamed?: boolean) => void
   // setAutoTitle: internal auto-title update, never flips userRenamed.
   setAutoTitle: (id: string, title: string) => void
+  // setTabColor: sets the left-border accent color token. Pass undefined to clear.
+  setTabColor: (id: string, color: TabColor | undefined) => void
 }
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
@@ -84,6 +90,12 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         // Never overwrite a user-renamed tab with an auto-title
         t.id === id && !t.userRenamed ? { ...t, title } : t,
       ),
+    }))
+  },
+
+  setTabColor: (id: string, color: TabColor | undefined) => {
+    set((state) => ({
+      tabs: state.tabs.map((t) => (t.id === id ? { ...t, color } : t)),
     }))
   },
 }))

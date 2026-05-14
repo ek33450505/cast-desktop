@@ -392,6 +392,124 @@ describe('TerminalTabs', () => {
     })
   })
 
+  describe('tab coloring — Wave 6', () => {
+    it('... button is present in the DOM with aria-label="Tab options"', () => {
+      useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const moreBtn = screen.getByRole('button', { name: 'Tab options' })
+      expect(moreBtn).toBeTruthy()
+    })
+
+    it('clicking ... button opens context menu', () => {
+      useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const moreBtn = screen.getByRole('button', { name: 'Tab options' })
+      fireEvent.click(moreBtn)
+      expect(screen.getByRole('menu')).toBeTruthy()
+    })
+
+    it('pressing Enter on ... button opens context menu', () => {
+      useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const moreBtn = screen.getByRole('button', { name: 'Tab options' })
+      fireEvent.keyDown(moreBtn, { key: 'Enter' })
+      expect(screen.getByRole('menu')).toBeTruthy()
+    })
+
+    it('context menu shows color swatches with correct aria-labels', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: None' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Steel' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Teal' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Violet' })).toBeTruthy()
+    })
+
+    it('clicking Steel swatch calls setTabColor with "chart-2"', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+
+      const steelSwatch = screen.getByRole('menuitemradio', { name: 'Set tab color: Steel' })
+      fireEvent.click(steelSwatch)
+
+      const updated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
+      expect(updated?.color).toBe('chart-2')
+    })
+
+    it('clicking Teal swatch sets color to "chart-3"', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Teal' }))
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.color).toBe('chart-3')
+    })
+
+    it('clicking Violet swatch sets color to "chart-4"', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Violet' }))
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.color).toBe('chart-4')
+    })
+
+    it('clicking None swatch clears color to undefined', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setTabColor(tab.id, 'chart-2')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: None' }))
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.color).toBeUndefined()
+    })
+
+    it('tab with color renders left-border style containing the token variable', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setTabColor(tab.id, 'chart-2')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      expect(tabEl).toBeTruthy()
+      expect(tabEl!.style.borderLeft).toContain('var(--chart-2)')
+    })
+
+    it('tab without color has no borderLeft style', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      expect(tabEl).toBeTruthy()
+      expect(tabEl!.style.borderLeft).toBe('')
+    })
+
+    it('color persists after re-render (store update reflects in DOM)', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      const { rerender } = render(<TerminalTabs />)
+      useTerminalStore.getState().setTabColor(tab.id, 'chart-3')
+      rerender(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      expect(tabEl!.style.borderLeft).toContain('var(--chart-3)')
+    })
+
+    it('clicking color swatch closes the context menu', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
+      fireEvent.contextMenu(tabEl!)
+      expect(screen.getByRole('menu')).toBeTruthy()
+
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Steel' }))
+      expect(screen.queryByRole('menu')).toBeNull()
+    })
+  })
+
   it('shows empty state with "No terminal sessions" when no tabs', async () => {
     // Patch addTab to be a no-op so bootstrap doesn't escape the empty state
     const originalAddTab = useTerminalStore.getState().addTab
