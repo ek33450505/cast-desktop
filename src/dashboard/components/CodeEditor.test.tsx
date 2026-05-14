@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { CodeEditor } from './CodeEditor'
 import { useEditorStore } from '../../stores/editorStore'
 
 // CodeMirror creates canvas / DOM that jsdom can't fully support.
 // Stub the EditorView to avoid canvas errors while still testing
 // that CodeEditor renders the correct container and states.
+let capturedUpdateListener: ((update: { docChanged: boolean; state: { doc: { toString: () => string } } }) => void) | null = null
+
 vi.mock('@codemirror/view', async (importOriginal) => {
   const original = await importOriginal<typeof import('@codemirror/view')>()
 
@@ -18,11 +20,16 @@ vi.mock('@codemirror/view', async (importOriginal) => {
     dispatch() {}
     destroy() {}
     get state() {
-      return { doc: { length: 0 } }
+      return { doc: { length: 0, toString: () => '' } }
     }
     static theme() { return [] }
     static baseTheme() { return [] }
-    static updateListener = { of: () => [] }
+    static updateListener = {
+      of: (cb: (update: { docChanged: boolean; state: { doc: { toString: () => string } } }) => void) => {
+        capturedUpdateListener = cb
+        return []
+      },
+    }
     static domEventHandlers = { of: () => [] }
     static contentAttributes = { of: () => [] }
     static editorAttributes = { of: () => [] }
@@ -36,7 +43,14 @@ vi.mock('@codemirror/view', async (importOriginal) => {
 })
 
 beforeEach(() => {
-  useEditorStore.setState({ openFiles: [], activeFilePath: null, bottomDockExpanded: false })
+  capturedUpdateListener = null
+  useEditorStore.setState({
+    openFiles: [],
+    activeFilePath: null,
+    bottomDockExpanded: false,
+    dirty: new Set<string>(),
+    originalContent: new Map<string, string>(),
+  })
 })
 
 describe('CodeEditor', () => {
@@ -57,13 +71,13 @@ describe('CodeEditor', () => {
     expect(editor).toHaveAttribute('data-cm-mounted', 'true')
   })
 
-  it('has correct aria-label when file is open', () => {
+  it('has correct aria-label that includes (editable) when file is open', () => {
     useEditorStore.setState({
       openFiles: [{ path: '/foo/readme.md', content: '# Hello', language: 'markdown' }],
       activeFilePath: '/foo/readme.md',
     })
     render(<CodeEditor />)
-    expect(screen.getByRole('region', { name: /editor — readme\.md/i })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /editor — readme\.md.*editable/i })).toBeInTheDocument()
   })
 
   it('does not throw when switching between files', () => {
@@ -77,5 +91,47 @@ describe('CodeEditor', () => {
     const { rerender } = render(<CodeEditor />)
     useEditorStore.setState({ activeFilePath: '/foo/b.json' })
     expect(() => rerender(<CodeEditor />)).not.toThrow()
+  })
+
+  it('onChange fires updateContent when doc changes', () => {
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/a.ts', content: 'original', language: 'javascript' }],
+      activeFilePath: '/foo/a.ts',
+      originalContent: new Map([['/foo/a.ts', 'original']]),
+    })
+    render(<CodeEditor />)
+
+    // Simulate a CodeMirror document change via the captured listener
+    act(() => {
+      capturedUpdateListener?.({
+        docChanged: true,
+        state: { doc: { toString: () => 'edited content' } },
+      })
+    })
+
+    // Content should be updated and dirty flag set
+    const s = useEditorStore.getState()
+    const file = s.openFiles.find((f) => f.path === '/foo/a.ts')
+    expect(file?.content).toBe('edited content')
+    expect(s.dirty.has('/foo/a.ts')).toBe(true)
+  })
+
+  it('onChange does not call updateContent when docChanged is false', () => {
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/a.ts', content: 'original', language: 'javascript' }],
+      activeFilePath: '/foo/a.ts',
+      originalContent: new Map([['/foo/a.ts', 'original']]),
+    })
+    render(<CodeEditor />)
+
+    act(() => {
+      capturedUpdateListener?.({
+        docChanged: false,
+        state: { doc: { toString: () => 'unchanged' } },
+      })
+    })
+
+    // dirty should not be set
+    expect(useEditorStore.getState().dirty.has('/foo/a.ts')).toBe(false)
   })
 })

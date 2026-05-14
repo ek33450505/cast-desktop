@@ -24,33 +24,49 @@ function getLanguageExtension(language: EditorLanguage) {
 }
 
 // ── CodeEditor ─────────────────────────────────────────────────────────────────
-// CodeMirror 6 read-only viewer. Replaces editor state when the active file
-// changes. Language extension is picked by file extension (via editorStore).
+// CodeMirror 6 editor. Editable — changes propagate to editorStore via
+// updateContent which computes dirty state.
 // Theme: oneDark for now (theme integration is post-MVP).
 
 export function CodeEditor() {
   const activeFilePath = useEditorStore((s) => s.activeFilePath)
   const openFiles = useEditorStore((s) => s.openFiles)
+  const updateContent = useEditorStore((s) => s.updateContent)
   const activeFile = openFiles.find((f) => f.path === activeFilePath) ?? null
 
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const languageCompartment = useRef(new Compartment())
+  // Ref to always point at the current path/callback without recreating the view
+  const activePathRef = useRef<string | null>(activeFilePath)
+  const updateContentRef = useRef(updateContent)
+
+  // Keep refs in sync
+  activePathRef.current = activeFilePath
+  updateContentRef.current = updateContent
 
   // ── Create EditorView on mount ──────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current) return
 
+    const onChange = EditorView.updateListener.of((update) => {
+      if (!update.docChanged) return
+      const path = activePathRef.current
+      if (!path) return
+      updateContentRef.current(path, update.state.doc.toString())
+    })
+
     const view = new EditorView({
       state: EditorState.create({
         doc: '',
         extensions: [
-          EditorState.readOnly.of(true),
+          // Editable (writable) — IDE-2 write layer
           lineNumbers(),
           highlightActiveLineGutter(),
           languageCompartment.current.of([]),
           oneDark,
           keymap.of(defaultKeymap),
+          onChange,
           EditorView.theme({
             '&': { height: '100%' },
             '.cm-scroller': { overflow: 'auto', fontFamily: '"SF Mono", Menlo, Monaco, monospace', fontSize: '13px' },
@@ -82,12 +98,23 @@ export function CodeEditor() {
       return
     }
 
-    view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: activeFile.content },
-      effects: languageCompartment.current.reconfigure(
-        getLanguageExtension(activeFile.language),
-      ),
-    })
+    // Only replace content if it differs (avoids clearing user edits on store update)
+    const currentDoc = view.state.doc.toString()
+    if (currentDoc !== activeFile.content) {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: activeFile.content },
+        effects: languageCompartment.current.reconfigure(
+          getLanguageExtension(activeFile.language),
+        ),
+      })
+    } else {
+      // Language may still need updating (e.g. file switch to same content)
+      view.dispatch({
+        effects: languageCompartment.current.reconfigure(
+          getLanguageExtension(activeFile.language),
+        ),
+      })
+    }
   }, [activeFile])
 
   if (!activeFile) {
@@ -114,7 +141,7 @@ export function CodeEditor() {
     <div
       ref={containerRef}
       role="region"
-      aria-label={`Editor — ${activeFile.path.split('/').pop() ?? activeFile.path}`}
+      aria-label={`Editor — ${activeFile.path.split('/').pop() ?? activeFile.path} (editable)`}
       data-testid="code-editor"
       style={{
         flex: 1,
