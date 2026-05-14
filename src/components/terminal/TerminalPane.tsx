@@ -13,6 +13,39 @@ import { useAppearance, type Appearance } from '../../hooks/useAppearance'
 import { createPtyWriteBatcher } from './ptyWriteBatcher'
 import type { PtyWriteBatcher } from './ptyWriteBatcher'
 
+// ── Font size constants & helpers ──────────────────────────────────────────────
+const FONT_SIZE_KEY = 'cast-terminal-font-size'
+const FONT_SIZE_DEFAULT = 13
+const FONT_SIZE_MIN = 8
+const FONT_SIZE_MAX = 32
+
+function clampFontSize(size: number): number {
+  return Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, size))
+}
+
+function readFontSize(): number {
+  const stored = localStorage.getItem(FONT_SIZE_KEY)
+  if (!stored) return FONT_SIZE_DEFAULT
+  const parsed = parseInt(stored, 10)
+  return isNaN(parsed) ? FONT_SIZE_DEFAULT : clampFontSize(parsed)
+}
+
+function writeFontSize(size: number): number {
+  const clamped = clampFontSize(size)
+  localStorage.setItem(FONT_SIZE_KEY, String(clamped))
+  return clamped
+}
+
+// ── Public handle type ─────────────────────────────────────────────────────────
+export interface TerminalPaneHandle {
+  search: (query: string, opts?: { findNext?: boolean; caseSensitive?: boolean }) => void
+  clearSearch: () => void
+  clear: () => void
+  increaseFontSize: () => void
+  decreaseFontSize: () => void
+  resetFontSize: () => void
+}
+
 /** Pure function — safe to call any time appearance changes */
 export function buildTerminalTheme(appearance: Appearance): ITheme {
   const isDawn = appearance === 'dawn'
@@ -47,15 +80,18 @@ interface PtyOutputPayload {
 
 interface TerminalPaneProps {
   tabId: string
+  onReady?: (handle: TerminalPaneHandle | null) => void
 }
 
-export function TerminalPane({ tabId }: TerminalPaneProps) {
+export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
   const terminal = useTerminal()
   const tab = useTerminalStore((s) => s.tabs.find((t) => t.id === tabId))
   const setTabPtyId = useTerminalStore((s) => s.setTabPtyId)
   const setTabPaneId = useTerminalStore((s) => s.setTabPaneId)
   const containerRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
+  const searchAddonRef = useRef<SearchAddon | null>(null)
+  const fontSizeRef = useRef<number>(FONT_SIZE_DEFAULT)
   const { appearance } = useAppearance()
 
   // Reactive theme update — runs whenever appearance changes WITHOUT recreating
@@ -79,9 +115,12 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
   useEffect(() => {
     if (!terminal.supported || !containerRef.current || !tab) return
 
+    const initialFontSize = readFontSize()
+    fontSizeRef.current = initialFontSize
+
     const xterm = new Terminal({
       fontFamily: '"SF Mono", Menlo, Monaco, "Courier New", monospace',
-      fontSize: 13,
+      fontSize: initialFontSize,
       theme: buildTerminalTheme(appearance),
       cursorBlink: true,
       cursorStyle: 'block',
@@ -91,6 +130,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
 
     const fitAddon = new FitAddon()
     const searchAddon = new SearchAddon()
+    searchAddonRef.current = searchAddon
     const webLinksAddon = new WebLinksAddon()
 
     xterm.loadAddon(fitAddon)
@@ -101,6 +141,45 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     // at open() time; we mirror it here so the pane shows the correct color before
     // the appearance effect fires on a theme switch.
     containerRef.current.style.background = buildTerminalTheme(appearance).background ?? ''
+
+    // Build and expose the imperative handle to the parent (TerminalTabs).
+    // The parent stores this in a Map keyed by tabId so it can forward
+    // search/clear/font-size commands to the currently active pane.
+    const handle: TerminalPaneHandle = {
+      search: (query, opts) => {
+        if (!searchAddonRef.current) return
+        if (opts?.findNext === false) {
+          searchAddonRef.current.findPrevious(query, { caseSensitive: opts?.caseSensitive ?? false })
+        } else {
+          searchAddonRef.current.findNext(query, { caseSensitive: opts?.caseSensitive ?? false })
+        }
+      },
+      clearSearch: () => {
+        searchAddonRef.current?.clearDecorations()
+      },
+      clear: () => {
+        xtermRef.current?.clear()
+      },
+      increaseFontSize: () => {
+        if (!xtermRef.current) return
+        const newSize = writeFontSize(fontSizeRef.current + 1)
+        fontSizeRef.current = newSize
+        xtermRef.current.options.fontSize = newSize
+      },
+      decreaseFontSize: () => {
+        if (!xtermRef.current) return
+        const newSize = writeFontSize(fontSizeRef.current - 1)
+        fontSizeRef.current = newSize
+        xtermRef.current.options.fontSize = newSize
+      },
+      resetFontSize: () => {
+        if (!xtermRef.current) return
+        const newSize = writeFontSize(FONT_SIZE_DEFAULT)
+        fontSizeRef.current = newSize
+        xtermRef.current.options.fontSize = newSize
+      },
+    }
+    onReady?.(handle)
 
     let unlistenFn: (() => void) | null = null
     let resizeObserver: ResizeObserver | null = null
@@ -211,6 +290,9 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
       resizeObserver?.disconnect()
       xterm.dispose()
       xtermRef.current = null
+      searchAddonRef.current = null
+      // Notify parent that this pane's handle is gone
+      onReady?.(null)
       // Do NOT kill the PTY — store owns session lifecycle
     }
     // Only re-mount when tabId changes

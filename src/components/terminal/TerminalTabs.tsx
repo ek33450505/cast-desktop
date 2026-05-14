@@ -1,8 +1,10 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { useReducedMotion } from 'framer-motion'
+import { useReducedMotion, AnimatePresence } from 'framer-motion'
 import { useTerminalStore, Tab, TabColor } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
+import type { TerminalPaneHandle } from './TerminalPane'
+import { TerminalSearchOverlay } from './TerminalSearchOverlay'
 import { usePaneBinding } from '../../hooks/usePaneBinding'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -510,6 +512,17 @@ export function TerminalTabs() {
   const shouldReduceMotion = useReducedMotion()
   const hasBootstrapped = useRef(false)
 
+  // ── Search overlay state ─────────────────────────────────────────────────────
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [matchCount, setMatchCount] = useState<{ current: number; total: number } | null>(null)
+
+  // ── Pane handles map — keyed by tabId ───────────────────────────────────────
+  const paneHandlesRef = useRef<Map<string, TerminalPaneHandle>>(new Map())
+
+  const getActiveHandle = useCallback((): TerminalPaneHandle | undefined => {
+    return activeTabId ? paneHandlesRef.current.get(activeTabId) : undefined
+  }, [activeTabId])
+
   // Bootstrap: auto-create the first tab on initial mount only.
   // We use a ref so re-renders (e.g. after a user closes all tabs) don't
   // re-trigger the bootstrap and silently re-open a tab.
@@ -563,6 +576,80 @@ export function TerminalTabs() {
       }
     },
     [tabs, activeTabId, closeTab],
+  )
+
+  // ⌘F — open search overlay
+  useHotkeys(
+    'mod+f',
+    (e) => {
+      e.preventDefault()
+      setSearchOpen(true)
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
+  )
+
+  // ⌘K — clear terminal (only when xterm has focus; App.tsx owns palette ⌘K)
+  useHotkeys(
+    'mod+k',
+    (e) => {
+      const active = document.activeElement
+      const isTermFocused = active?.closest('.xterm') !== null
+      if (!isTermFocused) return
+      e.preventDefault()
+      getActiveHandle()?.clear()
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
+  )
+
+  // ⌘= / ⌘- / ⌘0 — font size
+  useHotkeys(
+    'mod+=',
+    (e) => {
+      e.preventDefault()
+      getActiveHandle()?.increaseFontSize()
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
+  )
+
+  useHotkeys(
+    'mod+-',
+    (e) => {
+      e.preventDefault()
+      getActiveHandle()?.decreaseFontSize()
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
+  )
+
+  useHotkeys(
+    'mod+0',
+    (e) => {
+      e.preventDefault()
+      getActiveHandle()?.resetFontSize()
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
+  )
+
+  // ⌘Shift+] / ⌘Shift+[ — cycle tabs
+  useHotkeys(
+    'mod+shift+]',
+    (e) => {
+      e.preventDefault()
+      const idx = tabs.findIndex((t) => t.id === activeTabId)
+      const next = tabs[(idx + 1) % tabs.length]
+      if (next) setActiveTab(next.id)
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
+  )
+
+  useHotkeys(
+    'mod+shift+[',
+    (e) => {
+      e.preventDefault()
+      const idx = tabs.findIndex((t) => t.id === activeTabId)
+      const prev = tabs[(idx - 1 + tabs.length) % tabs.length]
+      if (prev) setActiveTab(prev.id)
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
   )
 
   // ⌘T — new tab
@@ -722,9 +809,43 @@ export function TerminalTabs() {
         role="tabpanel"
         aria-label={`Terminal: ${tabs.find((t) => t.id === activeTabId)?.title ?? ''}`}
         className="flex-1 min-h-0"
-        style={{ overflow: 'hidden' }}
+        style={{ overflow: 'hidden', position: 'relative' }}
       >
-        {activeTabId && <TerminalPane tabId={activeTabId} />}
+        {activeTabId && (
+          <TerminalPane
+            tabId={activeTabId}
+            onReady={(handle) => {
+              if (handle) {
+                paneHandlesRef.current.set(activeTabId, handle)
+              } else {
+                paneHandlesRef.current.delete(activeTabId)
+              }
+            }}
+          />
+        )}
+
+        {/* ── Search overlay ────────────────────────────────────────────── */}
+        <AnimatePresence>
+          {searchOpen && (
+            <TerminalSearchOverlay
+              open={searchOpen}
+              matchCount={matchCount}
+              onClose={() => {
+                getActiveHandle()?.clearSearch()
+                setMatchCount(null)
+                setSearchOpen(false)
+              }}
+              onSearch={(query, direction) => {
+                getActiveHandle()?.search(query, { findNext: direction === 'next', caseSensitive: false })
+                // xterm SearchAddon does not expose match counts in v0.16.0 — leave matchCount null
+              }}
+              onClear={() => {
+                getActiveHandle()?.clearSearch()
+                setMatchCount(null)
+              }}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
