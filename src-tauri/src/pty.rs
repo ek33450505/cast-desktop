@@ -18,6 +18,8 @@ pub fn pty_create(
     shell: String,
     cols: u16,
     rows: u16,
+    cwd: Option<String>,
+    env: Option<std::collections::HashMap<String, String>>,
     app_handle: AppHandle,
     state: State<SessionStore>,
 ) -> Result<String, String> {
@@ -37,6 +39,14 @@ pub fn pty_create(
     let mut cmd = CommandBuilder::new(&shell);
     cmd.env("TERM", "xterm-256color");
     cmd.env("COLORTERM", "truecolor");
+    if let Some(dir) = &cwd {
+        cmd.cwd(dir);
+    }
+    if let Some(env_map) = env {
+        for (k, v) in env_map {
+            cmd.env(k, v);
+        }
+    }
 
     let child = pair
         .slave

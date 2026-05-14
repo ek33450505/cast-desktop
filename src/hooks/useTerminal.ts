@@ -15,7 +15,7 @@ export interface CreateResult {
 
 export interface UseTerminalApi {
   supported: boolean
-  create: (opts: { shell: string; cols: number; rows: number }) => Promise<CreateResult>
+  create: (opts: { shell: string; cols: number; rows: number; cwd?: string }) => Promise<CreateResult>
   write: (ptyId: string, data: string) => Promise<void>
   resize: (ptyId: string, cols: number, rows: number) => Promise<void>
   kill: (ptyId: string) => Promise<void>
@@ -34,7 +34,7 @@ export function useTerminal(): UseTerminalApi {
   if (!supported) {
     return {
       supported: false,
-      create: () => {
+      create: (_opts) => {
         const paneId = crypto.randomUUID()
         return Promise.resolve({ ptyId: null, paneId })
       },
@@ -47,12 +47,13 @@ export function useTerminal(): UseTerminalApi {
 
   return {
     supported: true,
-    create: async ({ shell, cols, rows }) => {
+    create: async ({ shell, cols, rows, cwd }) => {
       const paneId = crypto.randomUUID()
       const ptyId = await invoke<string>('pty_create', {
         shell,
         cols,
         rows,
+        cwd: cwd ?? null,
         env: { CAST_DESKTOP_PANE_ID: paneId },
       })
       return { ptyId, paneId }
