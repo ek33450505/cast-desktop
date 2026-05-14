@@ -27,21 +27,27 @@ function basename(p: string): string {
  * Quotes unquoted scalar values that contain colons, which would otherwise
  * cause gray-matter (and the underlying js-yaml parser) to fail.
  * Example: `description: A note: with colon` → `description: "A note: with colon"`
+ *
  * Block scalars ("> |") and already-quoted values are left untouched.
+ * Indented continuation lines (block scalar bodies) are skipped — they are
+ * YAML content, not key-value pairs, and must not be quoted.
  */
 export function normalizeFrontmatter(content: string): string {
-  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
+  const fmMatch = content.match(/^(---\n)([\s\S]*?)(\n---)/)
   if (!fmMatch) return content
 
-  const fm = fmMatch[1]
+  const [fullMatch, open, fm, close] = fmMatch
   const fixed = fm.replace(/^([^:\n]+):\s(.+)$/gm, (_match, key: string, value: string) => {
+    // Skip indented lines — these are block scalar continuation lines, not key-value pairs
+    if (key !== key.trimStart()) return _match
     if (!value.includes(':')) return _match
     if (value.startsWith('"') || value.startsWith("'")) return _match
     if (value.startsWith('>') || value.startsWith('|')) return _match
     return `${key}: "${value.replace(/"/g, '\\"')}"`
   })
 
-  return content.replace(fmMatch[1], fixed)
+  if (fixed === fm) return content
+  return content.slice(0, fmMatch.index) + open + fixed + close + content.slice((fmMatch.index ?? 0) + fullMatch.length)
 }
 
 // ── component ─────────────────────────────────────────────────────────────────
@@ -67,7 +73,6 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
         parseError: false,
       }
     } catch {
-      console.warn('[PreviewBody] frontmatter parse failed for:', filePath)
       return { frontmatter: {} as FrontmatterData, bodyContent: content, parseError: true }
     }
   }, [content, isMarkdown])
@@ -110,7 +115,7 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
           <div
             role="alert"
             className="mb-2 text-[10px] px-2 py-1 rounded"
-            style={{ color: 'var(--status-error, #999)', background: 'var(--system-elevated)' }}
+            style={{ color: 'var(--status-error)', background: 'var(--system-elevated)' }}
           >
             Frontmatter could not be parsed. Showing raw content.
           </div>
