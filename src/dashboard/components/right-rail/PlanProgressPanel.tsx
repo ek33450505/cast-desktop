@@ -22,10 +22,8 @@ interface ActivePlanData {
 // ── API ───────────────────────────────────────────────────────────────────────
 
 async function fetchActivePlan(sessionId: string | null): Promise<ActivePlanData> {
-  const url = sessionId
-    ? `/api/plans/active?sessionId=${encodeURIComponent(sessionId)}`
-    : '/api/plans/active'
-  const res = await fetch(url)
+  if (!sessionId) return { planPath: null, title: null, tasks: [] }
+  const res = await fetch(`/api/plans/active?sessionId=${encodeURIComponent(sessionId)}`)
   if (!res.ok) throw new Error(`Failed to fetch active plan: HTTP ${res.status}`)
   return res.json() as Promise<ActivePlanData>
 }
