@@ -1,10 +1,7 @@
 <!-- TODO: docs/cast-desktop-banner.png -->
 
-# Cast Desktop
+# Cast Desktop — CAST v8 Desktop UI
 
-The desktop app for CAST — every signal your agents emit, all in one place.
-
-[![Build Status](https://img.shields.io/badge/build-in_progress-orange)](https://github.com/ek33450505/cast-desktop)
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![Stack](https://img.shields.io/badge/stack-Tauri+React+Express-blue)
@@ -14,43 +11,60 @@ The desktop app for CAST — every signal your agents emit, all in one place.
 
 ---
 
-## What Makes Cast Desktop Different
+## What Ships Today
 
-- **One app for everything CAST records.** Sessions, agents, hooks, memory, plans, token spend, database explorer, terminal — all in one window. No external dashboards, no separate CLI. Everything keyboard-driven.
-
-- **Local-first, no cloud.** Reads directly from your `~/.claude/cast.db` (the CAST SQLite observability database on your machine). No SaaS, no telemetry, no account, no network required.
-
-- **Real terminal, not a toy.** xterm.js + Rust-backed Forge PTY for full shell support, theme-aware rendering, ANSI color, and proper signal handling. The terminal lives in a collapsible drawer right next to your agent analytics.
-
-- **Built on CAST.** Everything the CAST framework already records — agent dispatches, token spend, routing decisions, memory writes, hook audits — now has a visual surface. You're not learning a new tool; you're getting the UI for what CAST already does.
+- **Complete CAST Dashboard** — Activity feed, sessions, agents, analytics, hooks, plans, memory browser, system health, token spend, database explorer, and docs view. All fed by your local `~/.claude/cast.db` (no cloud).
+- **Modern Terminal** — PTY-backed xterm with keyboard shortcuts (Cmd+F search, Cmd+K clear, Cmd+=/-, tab cycling, folder picker), theme-aware rendering, ANSI color, and proper signal handling. Terminal lives in a resizable drawer.
+- **Design Language Locked** — Forest-at-dusk (dark) and sunrise (light) themes applied across UI, with user-first eye comfort as the design north star.
+- **819 Tests** — Full Vitest + React Testing Library coverage for frontend and backend; verified on every commit.
 
 ---
 
-## Current Status
+## Core Features
 
-**Phase 1 — Core Backend & Dashboard Integration** is in progress.
+### Dashboards & Analytics
 
-| Wave | Scope | Status |
-|------|-------|--------|
-| 1 | Tauri 2.10.3 scaffold + vite config | ✓ Complete |
-| 2 | Forge PTY + xterm.js stack imported | ✓ Complete |
-| 3 | Dashboard absorbed (server + UI + types) | ✓ Complete |
-| 4 | Sidecar wiring (Express serves dist + API) | ✓ Complete |
-| 4.5 | Sidecar packaging (binary bundling) | In Progress |
-| 5 | Terminal drawer integration | Planned |
-| 6–8 | Polish, CI, cross-platform | Planned |
+| View | Purpose |
+|------|---------|
+| **Activity** | Real-time log of agent dispatches, tool calls, token spend, routing decisions. Streams via SSE from cast.db watchers. |
+| **Sessions** | Full session list with timestamp, status, agent count, token spend. Drill into session details with isolation per sessionId. |
+| **Analytics** | Agent run history, model tier distribution, cost breakdown by agent, thinking token allocation, success/error rates. |
+| **Agents** | Agent roster with model tier, status, memory pool, and per-agent performance metrics. |
+| **Hooks** | Hook event audit trail (SessionStart, PreToolUse, PostToolUse, PostCompact). Success/failure counts, latency histograms. |
+| **Plans** | Agent Dispatch Manifests (ADM) and orchestration history. View planned agent runs, status, and outcomes. |
+| **Memory** | Agent memory browser with FTS5 search. Filter by agent, type (user/feedback/project/reference), or keyword. Temporal validity tracking. |
+| **System** | CAST health dashboard. cast.db size, hook health, stale memories, cost trends with cast.db pricing data. |
+| **Token Spend** | Daily/weekly cost trends by agent, model tier, and session. Cost optimization recommendations. |
+| **Database** | SQLite browser for cast.db. Inspect rows, view schema, debug queries. |
+| **Docs** | Markdown viewer with frontmatter parsing for CAST documentation. Inline file links, modal previews. |
 
-**What works today:**
-```bash
-npm run dev
-```
-Brings up Vite at `http://localhost:5173` with Express at `http://localhost:3001`. The full dashboard + API surface is functional in a browser. All data reads from `~/.claude/cast.db` (your local CAST database).
+### Terminal Features
 
-**What doesn't yet:**
-- `cargo tauri build` — the packaged desktop bundle. Currently blocked on Wave 4.5 (packaging the Express sidecar with native `better-sqlite3` bindings). We're evaluating solutions (`@vercel/ncc`, `pkg`, alternative bundlers).
-- Terminal drawer — UI placeholder exists; PTY wiring pending Wave 5.
-- Cross-platform — Phase 4 work.
-- Auto-updates — Phase 6+ polish.
+**Keyboard Shortcuts:**
+
+| Shortcut | Action |
+|----------|--------|
+| **Cmd+F** | Open search overlay (find text in terminal buffer) |
+| **Cmd+K** | Clear terminal (when xterm focused) |
+| **Cmd+** (equals) | Increase font size (persists to localStorage) |
+| **Cmd−** (minus) | Decrease font size (persists to localStorage) |
+| **Cmd+0** | Reset to default font size |
+| **Cmd+Shift+]** | Cycle to next terminal tab |
+| **Cmd+Shift+[** | Cycle to previous terminal tab |
+| **Cmd+T** | New tab (opens in home directory) |
+| **Cmd+Shift+T** | New tab with folder picker (Tauri dialog) |
+| **Cmd+W** | Close active tab |
+| **Cmd+D** | Toggle terminal visibility |
+
+**Terminal Capabilities:**
+- Real Forge PTY (portable-pty) for full shell support
+- xterm.js with search, link detection, and texture atlas optimization
+- Tab auto-titles from cwd/cmd/sessionId; inline rename (right-click/double-click)
+- Tab coloring via visual indicator
+- Theme-aware (dusk & dawn) with reactive appearance toggle
+- Bracketed paste confirmation for multi-line clipboard input
+- RAFrame-batched PTY writes for smooth rendering
+- Font size hotkeys with localStorage persistence
 
 ---
 
@@ -58,9 +72,7 @@ Brings up Vite at `http://localhost:5173` with Express at `http://localhost:3001
 
 **Prerequisites:**
 - Node.js 22+
-- Rust toolchain (for Tauri build support)
-- `npm` or `yarn`
-- Optional: `bun` (needed for sidecar packaging experiments)
+- Rust toolchain (for Tauri)
 - CAST installed locally — `cast status` should work in your terminal
 
 **Clone & Install:**
@@ -74,14 +86,21 @@ npm run dev
 ```
 
 **Open the app:**
-- Web mode: `http://localhost:5173` — full dev experience (recommended for Phase 1)
-- Tauri desktop mode: `cargo tauri dev` — currently blocked by Wave 4.5. The sidecar binary spawn in `src-tauri/src/lib.rs` panics until a working sidecar binary is in place. Use `npm run dev` for browser-mode development for now.
+```bash
+# Browser dev mode (recommended for development)
+http://localhost:5173
+
+# Tauri desktop (packaged binary)
+cargo tauri dev
+```
+
+The full dashboard + API surface is functional in both modes. All data reads from `~/.claude/cast.db` (your local CAST database).
 
 ---
 
 ## Architecture
 
-Cast Desktop follows **Option C: Single In-Process Sidecar**. One Express 5 backend runs inside the Tauri app and serves both the built SPA (`dist/`) and REST API endpoints (`/api/*`). The Tauri webview points at `http://localhost:3001/` in production; Vite dev mode proxies `/api` to Express running on a separate process.
+Cast Desktop follows **Option C: Single In-Process Sidecar**. One Express 5 backend runs inside the Tauri app and serves both the built SPA and REST API endpoints.
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -110,41 +129,72 @@ Cast Desktop follows **Option C: Single In-Process Sidecar**. One Express 5 back
   ~/.claude/cast.db (SQLite, local-only)
 ```
 
-**Frontend:** React 19, Vite 6, TypeScript, Tailwind CSS v4, shadcn/ui components, TanStack Query v5, Recharts, Framer Motion, xterm.js, cmdk, react-resizable-panels.
+**Frontend:** React 19, Vite 6, TypeScript, Tailwind CSS v4, shadcn/ui, TanStack Query v5, Recharts, Framer Motion, xterm.js, cmdk, react-resizable-panels.
 
-**Backend (in-app):** Express 5, better-sqlite3 (SQLite driver), chokidar (file watchers for real-time DB changes).
+**Backend:** Express 5, better-sqlite3, chokidar, Tauri 2.10.3.
 
-**Port:** Hardcoded to 3001 for Phase 1 (dynamic port selection is a Phase 3 polish item).
+**Tauri Plugins:** dialog (for folder picker), log.
 
 ---
 
-## Features
+## Project Structure
 
-### Dashboards & Analytics
+```
+cast-desktop/
+  src/
+    components/
+      terminal/               ← Terminal UI (TerminalPane, TerminalTabs, etc.)
+      CommandPalette.tsx      ← Global Cmd+K palette
+    dashboard/
+      views/                  ← Dashboard pages (ActivityView, SessionsView, etc.)
+      api/                    ← TanStack Query hooks
+      components/             ← Dashboard-specific UI
+      state/                  ← Zustand stores
+      types/                  ← Type definitions
+      utils/                  ← Helpers
+      App.tsx                 ← Router root
+    hooks/                    ← useTerminal, useAppearance, etc.
+    stores/                   ← Zustand terminal + appearance state
+    themes/                   ← Theme definitions (dusk, dawn)
+  server/
+    __tests__/                ← API and utility tests
+    routes/                   ← Express API endpoints
+    parsers/                  ← Frontmatter parser, data transformers
+    watchers/                 ← SSE stream watchers for cast.db
+    constants.ts              ← PORT, CAST_DB path
+    index.ts                  ← Express entry
+  src-tauri/
+    src/                      ← Rust (PTY, signal handling)
+    tauri.conf.json
+    Cargo.toml
+  package.json
+  vite.config.ts
+```
 
-**Activity Feed** — Real-time log of agent dispatches, tool calls, token spend, and routing decisions. Streams via Server-Sent Events (SSE) from cast.db watchers.
+---
 
-**Sessions** — Full list of Claude Code sessions with timestamp, status, agent count, and token spend. Click to drill into session details.
+## Development
 
-**Agent Analytics** — Agent run history, model tier distribution, cost breakdown by agent, thinking token allocation, success/error rates.
+```bash
+npm run dev              # Vite :5173 + Express :3001 (concurrent)
+npm run server:dev      # Express only (tsx watch)
+npm run build           # TypeScript compile + Vite build
+npm run build:app       # Full Tauri app build
+npm test                # Vitest
+npm test:watch          # Vitest watch mode
+```
 
-**Hooks** — Hook event audit trail (SessionStart, PreToolUse, PostToolUse, PostCompact). Success/failure counts, latency histograms.
+---
 
-**Plans** — Agent Dispatch Manifests (ADM) and orchestration history. View planned agent runs, status, and outcomes.
+## Roadmap
 
-**Memory** — Agent memory browser with FTS5 search. Filter by agent, type (user/feedback/project/reference), or keyword. Temporal validity tracking.
-
-**System Overview** — CAST health dashboard. cast.db size, hook health, stale memories, outdated dependencies (via cast.db logs).
-
-**Token Spend** — Daily/weekly cost trends by agent, model tier, and session. Cost optimization recommendations.
-
-**Database Explorer** — Full SQLite table browser. Query cast.db schema, inspect rows, export CSV (Phase 2+).
-
-### Terminal
-
-**Embedded Shell** — Real PTY-backed terminal (xterm.js + Rust Forge) in a resizable drawer. Run shell commands, observe file system changes, trigger agent dispatches from CLI.
-
-**Theme Support** — Terminal respects system dark/light mode and CAST theme settings.
+| Phase | Goals | Status |
+|-------|-------|--------|
+| **Phase 3.5** | Broken button audit (Sessions delete, POST routes for editability) | ✓ Complete |
+| **Phase 4 (Slice 1)** | Terminal modernization (Cmd+F, Cmd+K clear, font hotkeys, tab cycling, folder picker) | ✓ Complete |
+| **Phase 4 (Slice 2)** | Native macOS menu bar, file editor, in-app agent run UI | In Progress |
+| **Phase 5** | Federal a11y audit, mobile responsive, file upload/edit capability | Planned |
+| **Phase 6** | Cross-platform (Linux, Windows) | Planned |
 
 ---
 
@@ -166,128 +216,13 @@ Cast Desktop is one piece of the broader CAST ecosystem. All are open-source and
 
 ---
 
-## Roadmap
+## Testing
 
-| Phase | Goals | ETA |
-|-------|-------|-----|
-| **Phase 1** | Backend + dashboard absorption (in progress) | Q2 2026 |
-| **Phase 2** | Voice MVP (push-to-talk, real-time transcription) | Q3 2026 |
-| **Phase 3** | Polish (dynamic port, Tauri native menus, keyboard shortcuts) | Q3 2026 |
-| **Phase 4** | Cross-platform (Linux, Windows) | Q4 2026 |
-| **Phase 5** | Sidecar packaging hardening (if binary bundling remains complex) | Q4 2026 |
-
-**Phase 1 blockers:** Resolving Wave 4.5 packaging. The challenge: bundling the Express sidecar with native `better-sqlite3` bindings into a self-contained executable. Current investigation: `@vercel/ncc` + `esbuild`, `pkg`, and alternative compression schemes.
-
----
-
-## Development
-
-### Scripts
+**61 test files with 819 test cases** across frontend dashboards, terminal components, server routes, and utilities. Verified on every commit with Vitest + React Testing Library.
 
 ```bash
-npm run dev              # Vite :5173 + Express :3001 (concurrent)
-npm run server:dev      # Express only (tsx watch)
-npm run build           # TypeScript compile + Vite build
-npm run build:app       # Full Tauri app build (requires Wave 4.5 resolution)
-npm run test            # Vitest
-npm run test:watch      # Vitest --watch
-```
-
-### Project Structure
-
-```
-cast-desktop/
-  src/
-    components/           ← Terminal UI: TerminalPane.tsx, Flame.tsx
-    dashboard/            ← Absorbed dashboard (Wave 3)
-      api/                ← TanStack Query hooks (useSessions, useAgents, etc.)
-      assets/
-      components/         ← Dashboard-specific UI components
-      lib/
-      state/              ← Zustand stores
-      types/              ← Type re-exports
-      utils/              ← Helpers (modelBadge, agentCategories, etc.)
-      views/              ← View components (HomeView, SessionsView, AnalyticsView, etc.)
-      App.tsx             ← React Router root
-      main.tsx            ← Entry point
-    hooks/                ← Forge-side React hooks (useTerminal, etc.)
-    themes/               ← 6 themes (forge-dark, dracula, solarized-dark, etc.)
-    types/                ← Canonical shared types (ipc.ts, index.ts)
-  server/
-    __tests__/            ← Vitest specs
-    parsers/
-    routes/
-    utils/
-    watchers/
-    constants.ts          ← PORT, CAST_DB path, etc.
-    index.ts              ← Express entry point
-    package.json          ← Server-side deps (Express 5, better-sqlite3, chokidar, tsx)
-  src-tauri/              ← Tauri config + Rust code
-    src/                  ← Rust (lib.rs, main.rs, session.rs, pty/, etc.)
-    tauri.conf.json
-    Cargo.toml
-  dist/                   ← Vite build output (gitignored)
-  package.json
-  tsconfig.json
-  vite.config.ts
-  index.html              ← Vite entry
-```
-
-### Adding a Dashboard
-
-To add a new view or dashboard:
-
-1. Create `src/dashboard/views/MyView.tsx` — your React component
-2. Add a lazy-loaded route in `src/dashboard/App.tsx` — use the React Router v6 lazy import pattern (see existing routes for the pattern)
-3. If the view needs data, add a TanStack Query hook in `src/dashboard/api/useMyData.ts` — model after `useSessions.ts` or similar
-4. If the data needs a new API route, add `server/routes/my-route.ts` and mount it in `server/routes/index.ts`
-
-Example hook:
-```typescript
-// src/dashboard/api/useMyData.ts
-import { useQuery } from '@tanstack/react-query'
-
-async function fetchMyData(): Promise<MyData[]> {
-  const res = await fetch('/api/my-data')
-  if (!res.ok) throw new Error('Failed to fetch my data')
-  return res.json()
-}
-
-export const useMyData = () =>
-  useQuery({
-    queryKey: ['my-data'],
-    queryFn: fetchMyData,
-  })
-```
-
-Example view:
-```typescript
-// src/dashboard/views/MyView.tsx
-import { useMyData } from '../api/useMyData'
-
-export default function MyView() {
-  const { data, isLoading } = useMyData()
-  if (isLoading) return <div>Loading...</div>
-  return <div>{/* render data */}</div>
-}
-```
-
-### Modifying the Database
-
-All data reads from `~/.claude/cast.db`. To add a new query:
-
-```typescript
-// server/routes/my-route.ts
-import Database from 'better-sqlite3'
-import os from 'os'
-import path from 'path'
-
-const dbPath = path.join(os.homedir(), '.claude', 'cast.db')
-const db = new Database(dbPath)
-
-export function getMyData() {
-  return db.prepare(`SELECT * FROM my_table LIMIT 100`).all()
-}
+npm test          # Run all tests
+npm test:watch    # Watch mode
 ```
 
 ---
@@ -296,15 +231,12 @@ export function getMyData() {
 
 We welcome contributions from frontend developers, Tauri enthusiasts, and folks interested in observability UIs.
 
-**Good first issues:** Terminal drawer integration (Wave 5), database explorer enhancements, new dashboard pages, keyboard shortcut documentation.
+**Good first issues:** Keyboard shortcut documentation, database explorer enhancements, new dashboard pages, a11y improvements.
 
 **Development help:**
-- Not sure how to start? Read [CONTRIBUTING.md](CONTRIBUTING.md) (TBD).
-- Questions? Open an [issue](https://github.com/ek33450505/cast-desktop/issues).
+- Not sure how to start? Open an [issue](https://github.com/ek33450505/cast-desktop/issues).
 - Found a bug? File it with reproduction steps.
 - Want to add a feature? Check if an issue exists first; if not, open a discussion.
-
-This is an open-source project — community involvement is what keeps it alive. All contributions are welcome, from code to documentation to bug reports.
 
 ---
 
@@ -326,6 +258,6 @@ MIT — see [LICENSE](LICENSE).
 
 ## Related Reading
 
-- **[CAST v8 Master Plan](https://github.com/ek33450505/claude-agent-team/blob/main/research/cast-v8-master-plan.md)** — Multi-year roadmap including Cast Desktop phases
 - **[CAST Architecture](https://github.com/ek33450505/claude-agent-team/blob/main/docs/architecture/ARCHITECTURE.md)** — Deep dive into hook enforcement, swarm composition, audit trails
-- **[Token Optimization](https://github.com/ek33450505/claude-agent-team/blob/main/docs/TOKEN-OPTIMIZATION.md)** — Cost reduction via model tiering, local routing, and response budgets
+- **[CAST Token Optimization](https://github.com/ek33450505/claude-agent-team/blob/main/docs/TOKEN-OPTIMIZATION.md)** — Cost reduction via model tiering, local routing, and response budgets
+- **[Cast Desktop Design Language](docs/design-language.md)** — Theme system, component tokens, accessibility (TBD)

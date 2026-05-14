@@ -1,4 +1,4 @@
-import { Terminal, Bot, Blocks, Command, Hash } from 'lucide-react'
+import { Terminal, Bot, Blocks, Command, Hash, Keyboard } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -71,6 +71,21 @@ const HOOK_DIRECTIVES = [
   { directive: '[CAST-REVIEW]',         description: 'Auto-dispatch code-reviewer after changes' },
   { directive: '[CAST-CHAIN]',          description: 'Dispatch listed agents sequentially' },
   { directive: '[CAST-DISPATCH-GROUP]', description: 'Auto-generate ADM and execute with orchestrator' },
+]
+
+const TERMINAL_KEYBINDS = [
+  { binding: '⌘K',       scope: 'Terminal (focused)', description: 'Clear terminal buffer. Only fires when xterm has focus — does not intercept command-palette ⌘K.' },
+  { binding: '⌘F',       scope: 'Terminal',           description: 'Open find-in-buffer search overlay.' },
+  { binding: '⌘=',       scope: 'Terminal',           description: 'Increase font size (persists to localStorage).' },
+  { binding: '⌘−',       scope: 'Terminal',           description: 'Decrease font size (persists to localStorage).' },
+  { binding: '⌘0',       scope: 'Terminal',           description: 'Reset font size to default (persists to localStorage).' },
+  { binding: '⌘T',       scope: 'Terminal',           description: 'New tab, starting in ~.' },
+  { binding: '⌘⇧T',     scope: 'Terminal',           description: 'New tab — opens folder picker to choose a working directory.' },
+  { binding: '⌘W',       scope: 'Terminal',           description: 'Close the active tab.' },
+  { binding: '⌘⇧]',     scope: 'Terminal',           description: 'Switch to next terminal tab.' },
+  { binding: '⌘⇧[',     scope: 'Terminal',           description: 'Switch to previous terminal tab.' },
+  { binding: '⌘V',       scope: 'Terminal',           description: 'Paste. Multi-line clipboard content shows a confirmation banner before sending.' },
+  { binding: '⌘K',       scope: 'App (global)',       description: 'Open command palette. Requires focus to be outside the terminal.' },
 ]
 
 // ── Sub-components ─────────────────────────────────────────────────────────
@@ -326,6 +341,40 @@ function HookDirectivesSection() {
   )
 }
 
+function TerminalKeybindsSection() {
+  return (
+    <div className="bento-card p-6">
+      <SectionHeader icon={Keyboard} title="Terminal Keybinds" count={TERMINAL_KEYBINDS.length} />
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[var(--border)]">
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Binding</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Scope</th>
+              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Description</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--border)]">
+            {TERMINAL_KEYBINDS.map((row, i) => (
+              <tr key={i} className="hover:bg-[var(--system-elevated)] transition-colors">
+                <td className="py-2 pr-6">
+                  <span className="text-xs font-mono text-[var(--accent)]">{row.binding}</span>
+                </td>
+                <td className="py-2 pr-6">
+                  <span className="text-xs text-[var(--content-muted)]">{row.scope}</span>
+                </td>
+                <td className="py-2">
+                  <span className="text-sm text-[var(--content-secondary)]">{row.description}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ── Main View ──────────────────────────────────────────────────────────────
 
 export default function DocsView() {
@@ -344,6 +393,7 @@ export default function DocsView() {
         </div>
 
         <HookDirectivesSection />
+        <TerminalKeybindsSection />
       </div>
     </div>
   )
