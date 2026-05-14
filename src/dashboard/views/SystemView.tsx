@@ -1,20 +1,20 @@
 import {
   Users, Terminal, Zap, History,
-  FileText, Shield, Brain, Send, Clock, RefreshCw,
-  Play, Trash2, Plus, Check, ChevronDown, ChevronRight, GitBranch, DollarSign, AlertTriangle
+  FileText, Shield, Brain, Send, Clock,
+  Play, Trash2, Plus, Check, ChevronRight, GitBranch, DollarSign, AlertTriangle
 } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAgents, useAgent } from '../api/useAgents'
+import { useAgents } from '../api/useAgents'
 import { useSystemHealth } from '../api/useSystem'
 import { useRules, useSkills, useCommands } from '../api/useKnowledge'
 import { useAgentMemory, useProjectMemory } from '../api/useMemory'
-import { usePlans, usePlan } from '../api/usePlans'
+import { usePlans } from '../api/usePlans'
 import { useChainMap, usePolicies, useModelPricing } from '../api/useCastData'
 import { useParryGuard } from '../api/useParryGuard'
 import { useAgentTruncations } from '../api/useAgentTruncations'
 import StatCard, { StatCardSkeleton } from '../components/StatCard'
-import CopyButton from '../components/CopyButton'
+import PreviewModal from '../components/left-rail/PreviewModal'
 
 // ── Tab types ──────────────────────────────────────────────────────────────
 
@@ -34,57 +34,43 @@ const SYSTEM_TABS: { key: SystemTab; label: string; icon: React.ComponentType<{ 
 
 // ── Agents Tab ─────────────────────────────────────────────────────────────
 
-function AgentDetailInline({ name }: { name: string }) {
-  const { data, isLoading } = useAgent(name)
-  if (isLoading) return <div className="p-4 text-xs text-[var(--content-muted)]">Loading...</div>
-  if (!data) return null
-  return (
-    <div className="p-4 bg-[var(--system-elevated)] rounded-lg text-xs space-y-2">
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="font-semibold text-[var(--content-primary)]">{data.name}</span>
-        <span className="text-[var(--content-muted)]">{data.model}</span>
-        {data.color && (
-          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
-        )}
-      </div>
-      <p className="text-[var(--content-secondary)]">{data.description}</p>
-      {data.body && (
-        <details className="mt-2">
-          <summary className="cursor-pointer text-[var(--accent)] hover:underline">View full definition</summary>
-          <pre className="mt-2 p-3 bg-[var(--bg-primary)] rounded text-[10px] overflow-x-auto whitespace-pre-wrap max-h-80">
-            {data.body}
-          </pre>
-        </details>
-      )}
-    </div>
-  )
-}
-
 function AgentsTab() {
   const { data: agents, isLoading } = useAgents()
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading agents...</div>
   if (!agents || agents.length === 0) return <div className="p-6 text-[var(--content-muted)]">No agents found.</div>
 
   return (
-    <div className="space-y-1">
-      {agents.map(agent => (
-        <div key={agent.name} className="border border-[var(--border)] rounded-lg overflow-hidden">
-          <button
-            onClick={() => setExpanded(expanded === agent.name ? null : agent.name)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors"
-          >
-            {expanded === agent.name
-              ? <ChevronDown className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
-              : <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />}
-            <span className="font-medium text-sm text-[var(--content-primary)]">{agent.name}</span>
-            <span className="text-xs text-[var(--content-muted)] ml-auto">{agent.model}</span>
-          </button>
-          {expanded === agent.name && <AgentDetailInline name={agent.name} />}
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="space-y-1">
+        {agents.map(agent => (
+          <div key={agent.name} className="border border-[var(--border)] rounded-lg overflow-hidden">
+            <button
+              aria-label={`Open agent definition: ${agent.name}`}
+              onClick={e => {
+                triggerRef.current = e.currentTarget
+                setSelectedPath(agent.filePath)
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
+            >
+              <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
+              <span className="font-medium text-sm text-[var(--content-primary)]">{agent.name}</span>
+              <span className="text-xs text-[var(--content-muted)] ml-auto">{agent.model}</span>
+            </button>
+          </div>
+        ))}
+      </div>
+      {selectedPath && (
+        <PreviewModal
+          path={selectedPath}
+          source="cast"
+          onClose={() => setSelectedPath(null)}
+          triggerRef={triggerRef as React.RefObject<HTMLElement>}
+        />
+      )}
+    </>
   )
 }
 
@@ -194,44 +180,45 @@ function MemoryTab() {
 
 // ── Plans Tab ──────────────────────────────────────────────────────────────
 
-function PlanDetailInline({ filename }: { filename: string }) {
-  const { data, isLoading } = usePlan(filename)
-  if (isLoading) return <div className="p-4 text-xs text-[var(--content-muted)]">Loading...</div>
-  if (!data) return null
-  return (
-    <pre className="p-4 bg-[var(--system-elevated)] rounded-lg text-[10px] overflow-x-auto whitespace-pre-wrap max-h-96">
-      {data.body}
-    </pre>
-  )
-}
-
 function PlansTab() {
   const { data: plans, isLoading } = usePlans()
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading plans...</div>
   if (!plans || plans.length === 0) return <div className="p-6 text-[var(--content-muted)]">No plans found.</div>
 
   return (
-    <div className="space-y-1">
-      {plans.map(plan => (
-        <div key={plan.filename} className="border border-[var(--border)] rounded-lg overflow-hidden">
-          <button
-            onClick={() => setExpanded(expanded === plan.filename ? null : plan.filename)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors"
-          >
-            {expanded === plan.filename
-              ? <ChevronDown className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
-              : <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />}
-            <div className="min-w-0 flex-1">
-              <span className="font-medium text-sm text-[var(--content-primary)] block truncate">{plan.title || plan.filename}</span>
-              {plan.date && <span className="text-xs text-[var(--content-muted)]">{plan.date}</span>}
-            </div>
-          </button>
-          {expanded === plan.filename && <PlanDetailInline filename={plan.filename} />}
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="space-y-1">
+        {plans.map(plan => (
+          <div key={plan.filename} className="border border-[var(--border)] rounded-lg overflow-hidden">
+            <button
+              aria-label={`Open plan: ${plan.title || plan.filename}`}
+              onClick={e => {
+                triggerRef.current = e.currentTarget
+                setSelectedPath(plan.path)
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
+            >
+              <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="font-medium text-sm text-[var(--content-primary)] block truncate">{plan.title || plan.filename}</span>
+                {plan.date && <span className="text-xs text-[var(--content-muted)]">{plan.date}</span>}
+              </div>
+            </button>
+          </div>
+        ))}
+      </div>
+      {selectedPath && (
+        <PreviewModal
+          path={selectedPath}
+          source="cast"
+          onClose={() => setSelectedPath(null)}
+          triggerRef={triggerRef as React.RefObject<HTMLElement>}
+        />
+      )}
+    </>
   )
 }
 
