@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Command } from 'cmdk'
 import {
   Search, History, Users, Map, Brain, X,
-  Home, Activity, GitBranch, PlayCircle, Coins, BarChart2,
-  Webhook, BookOpen, Shield, Settings, Database, ShieldCheck,
+  Home, Activity, GitBranch, Coins, BarChart2,
+  Settings, ShieldCheck,
 } from 'lucide-react'
 import { useSearch } from '../api/useSearch'
 import { timeAgo } from '../utils/time'
@@ -21,18 +21,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Activity', to: '/activity', icon: Activity },
   { label: 'Agents', to: '/agents', icon: Users },
   { label: 'Dispatch Log', to: '/dispatch-log', icon: GitBranch },
-  { label: 'Plans', to: '/plans', icon: PlayCircle },
   { label: 'Token Spend', to: '/token-spend', icon: Coins },
   { label: 'Analytics', to: '/analytics', icon: BarChart2 },
   { label: 'Sessions', to: '/sessions', icon: History },
-  { label: 'Hook Health', to: '/hooks', icon: Webhook },
   { label: 'Quality Gates', to: '/quality-gates', icon: ShieldCheck },
-  { label: 'Knowledge', to: '/knowledge', icon: BookOpen },
-  { label: 'Rules', to: '/rules', icon: BookOpen },
-  { label: 'Memory', to: '/memory', icon: Brain },
-  { label: 'Privacy', to: '/privacy', icon: Shield },
   { label: 'System', to: '/system', icon: Settings },
-  { label: 'DB Explorer', to: '/db', icon: Database },
 ]
 
 interface CommandPaletteProps {

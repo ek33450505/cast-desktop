@@ -578,6 +578,7 @@ export default function AnalyticsView() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div />
         <div className="flex flex-col items-end gap-1 shrink-0">
+          {import.meta.env.DEV && (
           <button
             onClick={runSeed}
             disabled={seedLoading}
@@ -587,6 +588,7 @@ export default function AnalyticsView() {
             <RefreshCw className={`w-4 h-4 ${seedLoading ? 'animate-spin' : ''}`} />
             {seedLoading ? 'Seeding…' : 'Refresh Data'}
           </button>
+          )}
           <div aria-live="polite" aria-atomic="true" className="text-xs">
             {seedResult && (
               <span className="text-[var(--status-success)]">
