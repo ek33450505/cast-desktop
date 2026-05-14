@@ -11,7 +11,13 @@ vi.mock('react-hotkeys-hook', () => ({
 }))
 
 beforeEach(() => {
-  useEditorStore.setState({ openFiles: [], activeFilePath: null, bottomDockExpanded: false })
+  useEditorStore.setState({
+    openFiles: [],
+    activeFilePath: null,
+    bottomDockExpanded: false,
+    dirty: new Set<string>(),
+    originalContent: new Map<string, string>(),
+  })
 })
 
 describe('EditorTabs', () => {
@@ -92,5 +98,36 @@ describe('EditorTabs', () => {
     })
     render(<EditorTabs />)
     expect(screen.getByRole('tablist', { name: 'Editor tabs' })).toBeInTheDocument()
+  })
+
+  it('shows dirty bullet when file has unsaved changes', () => {
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/a.ts', content: 'a', language: 'javascript' }],
+      activeFilePath: '/foo/a.ts',
+      dirty: new Set(['/foo/a.ts']),
+    })
+    render(<EditorTabs />)
+    expect(screen.getByTestId('dirty-indicator')).toBeInTheDocument()
+  })
+
+  it('does not show dirty bullet when file is clean', () => {
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/a.ts', content: 'a', language: 'javascript' }],
+      activeFilePath: '/foo/a.ts',
+      dirty: new Set<string>(),
+    })
+    render(<EditorTabs />)
+    expect(screen.queryByTestId('dirty-indicator')).toBeNull()
+  })
+
+  it('includes (unsaved) in aria-label when dirty', () => {
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/a.ts', content: 'a', language: 'javascript' }],
+      activeFilePath: '/foo/a.ts',
+      dirty: new Set(['/foo/a.ts']),
+    })
+    render(<EditorTabs />)
+    const tab = screen.getByRole('tab', { name: /a\.ts.*unsaved/i })
+    expect(tab).toBeInTheDocument()
   })
 })
