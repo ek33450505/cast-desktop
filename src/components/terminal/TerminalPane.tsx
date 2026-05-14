@@ -222,7 +222,7 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
         ;(async () => {
           try {
             const shell = await terminal.getDefaultShell()
-            const { ptyId, paneId } = await terminal.create({ shell, cols, rows })
+            const { ptyId, paneId } = await terminal.create({ shell, cols, rows, cwd: tab.cwd || undefined })
 
             if (!isMountedRef.current) {
               if (ptyId) await terminal.kill(ptyId).catch(() => {})
