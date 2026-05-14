@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Terminal } from '@xterm/xterm'
 import type { ITheme } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
@@ -12,6 +12,18 @@ import { useTerminalStore } from '../../stores/terminalStore'
 import { useAppearance, type Appearance } from '../../hooks/useAppearance'
 import { createPtyWriteBatcher } from './ptyWriteBatcher'
 import type { PtyWriteBatcher } from './ptyWriteBatcher'
+import { PasteConfirmBanner } from './PasteConfirmBanner'
+import { FONT_SIZE_DEFAULT, clampFontSize, readFontSize, writeFontSize } from './terminalFontSize'
+
+// ── Public handle type ─────────────────────────────────────────────────────────
+export interface TerminalPaneHandle {
+  search: (query: string, opts?: { findNext?: boolean; caseSensitive?: boolean }) => void
+  clearSearch: () => void
+  clear: () => void
+  increaseFontSize: () => void
+  decreaseFontSize: () => void
+  resetFontSize: () => void
+}
 
 /** Pure function — safe to call any time appearance changes */
 export function buildTerminalTheme(appearance: Appearance): ITheme {
@@ -47,15 +59,27 @@ interface PtyOutputPayload {
 
 interface TerminalPaneProps {
   tabId: string
+  onReady?: (handle: TerminalPaneHandle | null) => void
 }
 
-export function TerminalPane({ tabId }: TerminalPaneProps) {
+export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
   const terminal = useTerminal()
   const tab = useTerminalStore((s) => s.tabs.find((t) => t.id === tabId))
   const setTabPtyId = useTerminalStore((s) => s.setTabPtyId)
   const setTabPaneId = useTerminalStore((s) => s.setTabPaneId)
   const containerRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
+  const searchAddonRef = useRef<SearchAddon | null>(null)
+  const fontSizeRef = useRef<number>(FONT_SIZE_DEFAULT)
+  // ptyIdRef lets the clipboard handler (registered synchronously at mount)
+  // reference the ptyId that is resolved asynchronously after terminal.create().
+  const ptyIdRef = useRef<string | null>(null)
+  // pendingPasteRef holds multi-line clipboard text intercepted by Cmd+V until
+  // the user confirms or cancels via PasteConfirmBanner.
+  const pendingPasteRef = useRef<string | null>(null)
+  const isMountedRef = useRef(true)
+  const [showPasteBanner, setShowPasteBanner] = useState(false)
+  const [pendingLineCount, setPendingLineCount] = useState(0)
   const { appearance } = useAppearance()
 
   // Reactive theme update — runs whenever appearance changes WITHOUT recreating
@@ -79,9 +103,12 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
   useEffect(() => {
     if (!terminal.supported || !containerRef.current || !tab) return
 
+    const initialFontSize = readFontSize()
+    fontSizeRef.current = initialFontSize
+
     const xterm = new Terminal({
       fontFamily: '"SF Mono", Menlo, Monaco, "Courier New", monospace',
-      fontSize: 13,
+      fontSize: initialFontSize,
       theme: buildTerminalTheme(appearance),
       cursorBlink: true,
       cursorStyle: 'block',
@@ -91,6 +118,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
 
     const fitAddon = new FitAddon()
     const searchAddon = new SearchAddon()
+    searchAddonRef.current = searchAddon
     const webLinksAddon = new WebLinksAddon()
 
     xterm.loadAddon(fitAddon)
@@ -102,9 +130,79 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     // the appearance effect fires on a theme switch.
     containerRef.current.style.background = buildTerminalTheme(appearance).background ?? ''
 
+    // Intercept Cmd+V (paste) so we can show a confirmation banner for multi-line
+    // content. Return false to suppress xterm's built-in Cmd+V paste handler.
+    xterm.attachCustomKeyEventHandler((event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'v' && event.type === 'keydown') {
+        void navigator.clipboard.readText().then((text) => {
+          if (!isMountedRef.current || !text) return
+          const lines = text.split('\n')
+          // Only show confirmation when there are genuinely multiple non-empty lines.
+          // A trailing newline alone (lines.length === 2 with last item '') should
+          // still go through the banner check via length > 1.
+          if (lines.length > 1) {
+            pendingPasteRef.current = text
+            setPendingLineCount(lines.length)
+            setShowPasteBanner(true)
+          } else {
+            // Single-line: send immediately without a banner
+            const currentPtyId = ptyIdRef.current
+            if (currentPtyId) {
+              void terminal.write(currentPtyId, text)
+            }
+          }
+        }).catch((err) => {
+          // Clipboard read can fail (permission denied, browser context).
+          // Fall back to letting xterm handle it natively (no-op intercept on error).
+          console.warn('[TerminalPane] clipboard.readText failed', err)
+        })
+        return false  // suppress xterm's default Cmd+V
+      }
+      return true
+    })
+
+    // Build and expose the imperative handle to the parent (TerminalTabs).
+    // The parent stores this in a Map keyed by tabId so it can forward
+    // search/clear/font-size commands to the currently active pane.
+    const handle: TerminalPaneHandle = {
+      search: (query, opts) => {
+        if (!searchAddonRef.current) return
+        if (opts?.findNext === false) {
+          searchAddonRef.current.findPrevious(query, { caseSensitive: opts?.caseSensitive ?? false })
+        } else {
+          searchAddonRef.current.findNext(query, { caseSensitive: opts?.caseSensitive ?? false })
+        }
+      },
+      clearSearch: () => {
+        searchAddonRef.current?.clearDecorations()
+      },
+      clear: () => {
+        xtermRef.current?.clear()
+      },
+      increaseFontSize: () => {
+        if (!xtermRef.current) return
+        const newSize = writeFontSize(fontSizeRef.current + 1)
+        fontSizeRef.current = newSize
+        xtermRef.current.options.fontSize = newSize
+      },
+      decreaseFontSize: () => {
+        if (!xtermRef.current) return
+        const newSize = writeFontSize(fontSizeRef.current - 1)
+        fontSizeRef.current = newSize
+        xtermRef.current.options.fontSize = newSize
+      },
+      resetFontSize: () => {
+        if (!xtermRef.current) return
+        const newSize = writeFontSize(FONT_SIZE_DEFAULT)
+        fontSizeRef.current = newSize
+        xtermRef.current.options.fontSize = newSize
+      },
+    }
+    onReady?.(handle)
+
     let unlistenFn: (() => void) | null = null
     let resizeObserver: ResizeObserver | null = null
-    let isMounted = true
+    isMountedRef.current = true
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
     let batcher: PtyWriteBatcher | null = null
 
@@ -114,10 +212,10 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     // glyph metrics. Without this, the fallback monospace font is measured
     // and cols/rows will be wrong if the declared font loads a moment later.
     void document.fonts.ready.then(() => {
-      if (!isMounted) return
+      if (!isMountedRef.current) return
 
       requestAnimationFrame(() => {
-        if (!isMounted) return
+        if (!isMountedRef.current) return
         fitAddon.fit()
         const { cols, rows } = xterm
 
@@ -126,7 +224,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
             const shell = await terminal.getDefaultShell()
             const { ptyId, paneId } = await terminal.create({ shell, cols, rows })
 
-            if (!isMounted) {
+            if (!isMountedRef.current) {
               if (ptyId) await terminal.kill(ptyId).catch(() => {})
               return
             }
@@ -136,9 +234,13 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
 
             if (!ptyId) return
 
+            // Store resolved ptyId in ref so the Cmd+V clipboard handler
+            // (registered synchronously at mount above) can reference it.
+            ptyIdRef.current = ptyId
+
             // Wire input
             xterm.onData((data) => {
-              if (!isMounted) return
+              if (!isMountedRef.current) return
               void terminal.write(ptyId, data)
             })
 
@@ -151,7 +253,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
               batcher!.push(event.payload.data)
             })
 
-            if (!isMounted) {
+            if (!isMountedRef.current) {
               unlisten()
               return
             }
@@ -171,10 +273,10 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
 
     // ResizeObserver with 150ms debounce (LeftRail toggle animates over 220ms)
     resizeObserver = new ResizeObserver(() => {
-      if (!isMounted) return
+      if (!isMountedRef.current) return
       if (debounceTimer !== null) clearTimeout(debounceTimer)
       debounceTimer = setTimeout(() => {
-        if (!isMounted) return
+        if (!isMountedRef.current) return
         if (
           !containerRef.current ||
           containerRef.current.offsetWidth === 0 ||
@@ -204,18 +306,47 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     resizeObserver.observe(container)
 
     return () => {
-      isMounted = false
+      isMountedRef.current = false
       if (debounceTimer !== null) clearTimeout(debounceTimer)
       batcher?.dispose()
       if (unlistenFn) unlistenFn()
       resizeObserver?.disconnect()
       xterm.dispose()
       xtermRef.current = null
+      searchAddonRef.current = null
+      // Clear paste state on unmount — prevents stale pending paste from
+      // being replayed if the component remounts for the same tabId.
+      ptyIdRef.current = null
+      pendingPasteRef.current = null
+      // Notify parent that this pane's handle is gone
+      onReady?.(null)
       // Do NOT kill the PTY — store owns session lifecycle
     }
     // Only re-mount when tabId changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabId])
+
+  const confirmPaste = () => {
+    const text = pendingPasteRef.current
+    const ptyId = ptyIdRef.current
+    // Clear first so there's no stale reference if write throws
+    pendingPasteRef.current = null
+    setShowPasteBanner(false)
+    setPendingLineCount(0)
+    if (text && ptyId) {
+      void terminal.write(ptyId, text)
+    }
+    // Restore focus to terminal after confirmation
+    if (isMountedRef.current) xtermRef.current?.focus()
+  }
+
+  const cancelPaste = () => {
+    pendingPasteRef.current = null
+    setShowPasteBanner(false)
+    setPendingLineCount(0)
+    // Restore focus to terminal after cancellation
+    if (isMountedRef.current) xtermRef.current?.focus()
+  }
 
   if (!terminal.supported) {
     return (
@@ -255,14 +386,29 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
 
   return (
     <div
-      ref={containerRef}
-      role="application"
-      aria-label="Terminal"
       style={{
+        position: 'relative',
         width: '100%',
         height: '100%',
-        overflow: 'hidden',
       }}
-    />
+    >
+      <div
+        ref={containerRef}
+        role="application"
+        aria-label="Terminal"
+        style={{
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+        }}
+      />
+      {showPasteBanner && (
+        <PasteConfirmBanner
+          lineCount={pendingLineCount}
+          onConfirm={confirmPaste}
+          onCancel={cancelPaste}
+        />
+      )}
+    </div>
   )
 }

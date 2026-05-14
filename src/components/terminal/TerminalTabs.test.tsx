@@ -11,8 +11,15 @@ vi.mock('./TerminalPane', () => ({
   ),
 }))
 
-// Mock framer-motion's useReducedMotion
+// Mock framer-motion — TerminalTabs uses AnimatePresence, motion, and useReducedMotion
 vi.mock('framer-motion', () => ({
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  motion: {
+    div: 'div',
+    span: 'span',
+    ul: 'ul',
+    li: 'li',
+  },
   useReducedMotion: vi.fn(() => false),
 }))
 

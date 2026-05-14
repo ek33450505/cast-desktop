@@ -40,6 +40,7 @@ vi.mock('@xterm/xterm', () => ({
     open: vi.fn(),
     onData: vi.fn(),
     dispose: vi.fn(),
+    attachCustomKeyEventHandler: vi.fn(),
     cols: 80,
     rows: 24,
   })),
