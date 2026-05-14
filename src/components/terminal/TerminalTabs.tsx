@@ -1,11 +1,14 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion, AnimatePresence } from 'framer-motion'
+import { FolderOpen } from 'lucide-react'
 import { useTerminalStore, Tab, TabColor } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
 import type { TerminalPaneHandle } from './TerminalPane'
 import { TerminalSearchOverlay } from './TerminalSearchOverlay'
+import { FolderPickerModal } from './FolderPickerModal'
 import { usePaneBinding } from '../../hooks/usePaneBinding'
+import { useRecentDirs } from '../../hooks/useRecentDirs'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -512,6 +515,19 @@ export function TerminalTabs() {
   const shouldReduceMotion = useReducedMotion()
   const hasBootstrapped = useRef(false)
 
+  // ── Folder picker state ──────────────────────────────────────────────────────
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const { recentDirs, addRecentDir } = useRecentDirs()
+
+  const handleAddTabWithPicker = useCallback(
+    (dir: string) => {
+      addRecentDir(dir)
+      addTab(dir)
+      setPickerOpen(false)
+    },
+    [addRecentDir, addTab],
+  )
+
   // ── Search overlay state ─────────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false)
   const [matchCount, setMatchCount] = useState<{ current: number; total: number } | null>(null)
@@ -652,12 +668,22 @@ export function TerminalTabs() {
     { enableOnFormTags: true, enableOnContentEditable: true },
   )
 
-  // ⌘T — new tab
+  // ⌘T — new tab (fast path: spawns in ~)
   useHotkeys(
     'mod+t',
     (e) => {
       e.preventDefault()
       handleAddTab()
+    },
+    { enableOnFormTags: true, enableOnContentEditable: true },
+  )
+
+  // ⌘⇧T — new tab with folder picker
+  useHotkeys(
+    'mod+shift+t',
+    (e) => {
+      e.preventDefault()
+      setPickerOpen(true)
     },
     { enableOnFormTags: true, enableOnContentEditable: true },
   )
@@ -802,7 +828,56 @@ export function TerminalTabs() {
         >
           +
         </button>
+
+        {/* ── Pick folder button ─────────────────────────────────────── */}
+        <button
+          onClick={() => setPickerOpen(true)}
+          aria-label="New terminal tab in chosen folder"
+          title="New tab — pick folder (⌘⇧T)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 36,
+            height: 36,
+            minWidth: 36,
+            minHeight: 36,
+            border: 'none',
+            background: 'transparent',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            outline: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--text-primary)'
+            e.currentTarget.style.background = 'var(--bg-tertiary)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--text-muted)'
+            e.currentTarget.style.background = 'transparent'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+            e.currentTarget.style.outlineOffset = '-2px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+          }}
+        >
+          <FolderOpen size={14} aria-hidden="true" />
+        </button>
       </div>
+
+      {/* ── Folder picker modal ────────────────────────────────────────────── */}
+      {pickerOpen && (
+        <FolderPickerModal
+          recentDirs={recentDirs}
+          defaultPath={recentDirs[0]}
+          onPick={handleAddTabWithPicker}
+          onCancel={() => setPickerOpen(false)}
+        />
+      )}
 
       {/* ── Active terminal pane ───────────────────────────────────────── */}
       <div

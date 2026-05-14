@@ -10,7 +10,10 @@ export const MAX_RECENT = 10
 export function loadRecentDirs(): string[] {
   try {
     const raw = localStorage.getItem(RECENT_DIRS_KEY)
-    return raw ? (JSON.parse(raw) as string[]) : []
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed) || !parsed.every((e) => typeof e === 'string')) return []
+    return parsed
   } catch {
     return []
   }
