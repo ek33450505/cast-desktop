@@ -79,23 +79,46 @@ function AgentsTab() {
 
 function RulesTab() {
   const { data: rules, isLoading } = useRules()
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
+
   if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading rules...</div>
   if (!rules || rules.length === 0) return <div className="p-6 text-[var(--content-muted)]">No rules found.</div>
 
   return (
-    <div className="space-y-2">
-      {rules.map(rule => (
-        <div key={rule.filename} className="border border-[var(--border)] rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-sm text-[var(--content-primary)]">{rule.filename}</span>
-            <span className="text-xs text-[var(--content-muted)]">{new Date(rule.modifiedAt).toLocaleDateString()}</span>
+    <>
+      <div className="space-y-1">
+        {rules.map(rule => (
+          <div key={rule.filename} className="border border-[var(--border)] rounded-lg overflow-hidden">
+            <button
+              aria-label={`Open rule file: ${rule.filename}`}
+              onClick={e => {
+                triggerRef.current = e.currentTarget
+                setSelectedPath(rule.path)
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
+            >
+              <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="font-mono text-sm text-[var(--content-primary)] block truncate">{rule.filename}</span>
+                {rule.preview && (
+                  <span className="text-xs text-[var(--content-secondary)] line-clamp-1">{rule.preview}</span>
+                )}
+              </div>
+              <span className="text-xs text-[var(--content-muted)] shrink-0">{new Date(rule.modifiedAt).toLocaleDateString()}</span>
+            </button>
           </div>
-          {rule.preview && (
-            <p className="text-xs text-[var(--content-secondary)] mt-1 line-clamp-2">{rule.preview}</p>
-          )}
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      {selectedPath && (
+        <PreviewModal
+          path={selectedPath}
+          source="cast"
+          onClose={() => setSelectedPath(null)}
+          triggerRef={triggerRef as React.RefObject<HTMLElement>}
+        />
+      )}
+    </>
   )
 }
 
@@ -133,7 +156,7 @@ function SkillsTab() {
           {(commands ?? []).map(c => (
             <span
               key={c.name}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--system-elevated)] text-[var(--content-secondary)] border border-[var(--border)] hover:border-[var(--accent)]/30 hover:text-[var(--accent)] transition-colors"
+              className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[var(--system-elevated)] text-[var(--content-secondary)] border border-[var(--border)] cursor-default"
             >
               /{c.name}
             </span>
@@ -146,9 +169,13 @@ function SkillsTab() {
 
 // ── Memory Tab ─────────────────────────────────────────────────────────────
 
+const isPreviewable = (path?: string) => Boolean(path) && !path!.startsWith('cast-db:')
+
 function MemoryTab() {
   const { data: agentMem, isLoading: loadingAgent } = useAgentMemory()
   const { data: projectMem, isLoading: loadingProject } = useProjectMemory()
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
 
   if (loadingAgent || loadingProject) return <div className="p-6 text-[var(--content-muted)]">Loading memory...</div>
 
@@ -160,22 +187,56 @@ function MemoryTab() {
   if (allMemories.length === 0) return <div className="p-6 text-[var(--content-muted)]">No memory files found in agent-memory-local/.</div>
 
   return (
-    <div className="space-y-2">
-      {allMemories.map((mem, i) => (
-        <div key={i} className="border border-[var(--border)] rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Brain className="w-4 h-4 text-[var(--accent)] shrink-0" />
-            <span className="font-mono text-sm text-[var(--content-primary)]">{mem.name}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--system-elevated)] text-[var(--content-muted)]">
-              {mem.source}
-            </span>
+    <>
+      <div className="space-y-1">
+        {allMemories.map((mem, i) => (
+          <div key={i} className="border border-[var(--border)] rounded-lg overflow-hidden">
+            {isPreviewable(mem.path) ? (
+              <button
+                aria-label={`Open memory file: ${mem.name ?? mem.filename ?? mem.agent}`}
+                onClick={e => {
+                  triggerRef.current = e.currentTarget
+                  setSelectedPath(mem.path)
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
+              >
+                <Brain className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="font-mono text-sm text-[var(--content-primary)] block truncate">{mem.name ?? mem.filename ?? mem.agent}</span>
+                  {mem.description && (
+                    <span className="text-xs text-[var(--content-secondary)] line-clamp-1">{mem.description}</span>
+                  )}
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--system-elevated)] text-[var(--content-muted)] shrink-0">
+                  {mem.source}
+                </span>
+              </button>
+            ) : (
+              <div className="w-full flex items-center gap-3 px-4 py-3">
+                <Brain className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="font-mono text-sm text-[var(--content-primary)] block truncate">{mem.name ?? mem.filename ?? mem.agent}</span>
+                  {mem.description && (
+                    <span className="text-xs text-[var(--content-secondary)] line-clamp-1">{mem.description}</span>
+                  )}
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--system-elevated)] text-[var(--content-muted)] shrink-0">
+                  {mem.source}
+                </span>
+              </div>
+            )}
           </div>
-          {mem.description && (
-            <p className="text-xs text-[var(--content-secondary)] mt-1 ml-7">{mem.description}</p>
-          )}
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      {selectedPath && (
+        <PreviewModal
+          path={selectedPath}
+          source="cast"
+          onClose={() => setSelectedPath(null)}
+          triggerRef={triggerRef as React.RefObject<HTMLElement>}
+        />
+      )}
+    </>
   )
 }
 
