@@ -10,6 +10,8 @@ import '@xterm/xterm/css/xterm.css'
 import { useTerminal } from '../../hooks/useTerminal'
 import { useTerminalStore } from '../../stores/terminalStore'
 import { useAppearance, type Appearance } from '../../hooks/useAppearance'
+import { createPtyWriteBatcher } from './ptyWriteBatcher'
+import type { PtyWriteBatcher } from './ptyWriteBatcher'
 
 /** Pure function — safe to call any time appearance changes */
 export function buildTerminalTheme(appearance: Appearance): ITheme {
@@ -104,6 +106,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     let resizeObserver: ResizeObserver | null = null
     let isMounted = true
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    let batcher: PtyWriteBatcher | null = null
 
     const container = containerRef.current
 
@@ -139,9 +142,13 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
               void terminal.write(ptyId, data)
             })
 
+            // rAF-batched write batcher — coalesces IPC chunks into one xterm.write()
+            // per animation frame, preventing partial-paint bleed under burst output.
+            batcher = createPtyWriteBatcher((data) => xterm.write(data))
+
             // Subscribe to output BEFORE first resize so we catch the prompt redraw
             const unlisten = await listen<PtyOutputPayload>(`pty-output-${ptyId}`, (event) => {
-              xterm.write(event.payload.data)
+              batcher!.push(event.payload.data)
             })
 
             if (!isMounted) {
@@ -175,6 +182,15 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
         ) return
         try {
           fitAddon.fit()
+          // Invalidate renderer glyph cache after every fit — the canvas renderer
+          // caches glyphs keyed on cell dimensions; a resize changes those dimensions,
+          // so stale atlas entries cause garbled glyphs until the cache naturally
+          // evicts. clearTextureAtlas() forces immediate eviction.
+          // Guard: DOM renderer doesn't expose this method; canvas/WebGL addons do.
+          if (typeof xterm.clearTextureAtlas === 'function') {
+            xterm.clearTextureAtlas()
+            xterm.refresh(0, xterm.rows - 1)
+          }
           const { cols, rows } = xterm
           const currentPtyId = useTerminalStore.getState().tabs.find((t) => t.id === tabId)?.ptyId
           if (currentPtyId) {
@@ -190,6 +206,7 @@ export function TerminalPane({ tabId }: TerminalPaneProps) {
     return () => {
       isMounted = false
       if (debounceTimer !== null) clearTimeout(debounceTimer)
+      batcher?.dispose()
       if (unlistenFn) unlistenFn()
       resizeObserver?.disconnect()
       xterm.dispose()
