@@ -26,6 +26,12 @@ interface EditorState {
   dirty: Set<string>
   /** Original content at last open/save, for computing dirty state */
   originalContent: Map<string, string>
+  /**
+   * Tracks external (agent) changes to open files that haven't been applied.
+   * Map of path → new content from disk.
+   * Non-empty entries are shown as a reload banner to the user.
+   */
+  externalChange: Map<string, string>
 
   // Actions
   openFile: (path: string, content: string) => void
@@ -39,6 +45,22 @@ interface EditorState {
   save: (path: string) => Promise<void>
   /** Write to newPath, close old tab, open new one at newPath */
   saveAs: (currentPath: string, newPath: string) => Promise<void>
+  /**
+   * Handle an externally-changed file (e.g. written by an agent).
+   * - If file is clean: silently replace content + originalContent.
+   * - If file is dirty: store in externalChange so the banner can render.
+   */
+  handleExternalChange: (path: string, newContent: string) => void
+  /**
+   * Accept the pending external change — replaces editor content and clears
+   * the dirty + externalChange state for this path. Called by "Reload" button.
+   */
+  acceptExternalChange: (path: string) => void
+  /**
+   * Dismiss the external change banner without reloading — the user keeps
+   * their local edits. Called by "Keep mine" button.
+   */
+  dismissExternalChange: (path: string) => void
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -47,6 +69,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   bottomDockExpanded: false,
   dirty: new Set<string>(),
   originalContent: new Map<string, string>(),
+  externalChange: new Map<string, string>(),
 
   openFile: (path: string, content: string) => {
     const existing = get().openFiles.find((f) => f.path === path)
@@ -161,6 +184,62 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         dirty: nextDirty,
         originalContent: nextOriginal,
       }
+    })
+  },
+
+  handleExternalChange: (path: string, newContent: string) => {
+    set((state) => {
+      const isOpen = state.openFiles.some((f) => f.path === path)
+      if (!isOpen) return state // Ignore changes for files not open in editor
+
+      if (!state.dirty.has(path)) {
+        // File is clean — silently reload
+        const nextFiles = state.openFiles.map((f) =>
+          f.path === path ? { ...f, content: newContent } : f,
+        )
+        const nextOriginal = new Map(state.originalContent)
+        nextOriginal.set(path, newContent)
+        // Clear any pending external change banner
+        const nextExternal = new Map(state.externalChange)
+        nextExternal.delete(path)
+        return { openFiles: nextFiles, originalContent: nextOriginal, externalChange: nextExternal }
+      } else {
+        // File is dirty — show banner asking user to reload
+        const nextExternal = new Map(state.externalChange)
+        nextExternal.set(path, newContent)
+        return { externalChange: nextExternal }
+      }
+    })
+  },
+
+  acceptExternalChange: (path: string) => {
+    set((state) => {
+      const newContent = state.externalChange.get(path)
+      if (newContent === undefined) return state
+
+      const nextFiles = state.openFiles.map((f) =>
+        f.path === path ? { ...f, content: newContent } : f,
+      )
+      const nextDirty = new Set(state.dirty)
+      nextDirty.delete(path)
+      const nextOriginal = new Map(state.originalContent)
+      nextOriginal.set(path, newContent)
+      const nextExternal = new Map(state.externalChange)
+      nextExternal.delete(path)
+      return {
+        openFiles: nextFiles,
+        dirty: nextDirty,
+        originalContent: nextOriginal,
+        externalChange: nextExternal,
+      }
+    })
+  },
+
+  dismissExternalChange: (path: string) => {
+    set((state) => {
+      const nextExternal = new Map(state.externalChange)
+      nextExternal.delete(path)
+      return { externalChange: nextExternal }
     })
   },
 }))

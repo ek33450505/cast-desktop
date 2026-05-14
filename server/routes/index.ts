@@ -45,6 +45,7 @@ import { castFsRouter } from './castFs.js'
 import { projectFsRouter } from './projectFs.js'
 import { paneBindingsRouter } from './paneBindings.js'
 import { sessionCostRouter } from './sessionCost.js'
+import { filesRouter } from './files.js'
 
 export const router = Router()
 
@@ -123,6 +124,8 @@ router.use('/project-fs', projectFsRouter)
 router.use('/pane-bindings', paneBindingsRouter)
 // Wave 2.7 — Session cost panel (SSE + polling)
 router.use('/session-cost', sessionCostRouter)
+// IDE-3 — Agent-aware file touch history + plan-pending files
+router.use('/files', filesRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {
