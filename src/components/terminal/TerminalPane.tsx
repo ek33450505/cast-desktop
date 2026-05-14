@@ -13,29 +13,7 @@ import { useAppearance, type Appearance } from '../../hooks/useAppearance'
 import { createPtyWriteBatcher } from './ptyWriteBatcher'
 import type { PtyWriteBatcher } from './ptyWriteBatcher'
 import { PasteConfirmBanner } from './PasteConfirmBanner'
-
-// ── Font size constants & helpers ──────────────────────────────────────────────
-const FONT_SIZE_KEY = 'cast-terminal-font-size'
-const FONT_SIZE_DEFAULT = 13
-const FONT_SIZE_MIN = 8
-const FONT_SIZE_MAX = 32
-
-function clampFontSize(size: number): number {
-  return Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, size))
-}
-
-function readFontSize(): number {
-  const stored = localStorage.getItem(FONT_SIZE_KEY)
-  if (!stored) return FONT_SIZE_DEFAULT
-  const parsed = parseInt(stored, 10)
-  return isNaN(parsed) ? FONT_SIZE_DEFAULT : clampFontSize(parsed)
-}
-
-function writeFontSize(size: number): number {
-  const clamped = clampFontSize(size)
-  localStorage.setItem(FONT_SIZE_KEY, String(clamped))
-  return clamped
-}
+import { FONT_SIZE_DEFAULT, clampFontSize, readFontSize, writeFontSize } from './terminalFontSize'
 
 // ── Public handle type ─────────────────────────────────────────────────────────
 export interface TerminalPaneHandle {
