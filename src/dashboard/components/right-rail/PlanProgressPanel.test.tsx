@@ -147,6 +147,17 @@ describe('PlanProgressPanel', () => {
   })
 
   describe('Task list rendering', () => {
+    // All task-rendering tests require a bound sessionId — the null guard short-circuits
+    // before fetching when sessionId is null (canonical pattern from Wave 3.5).
+    beforeEach(() => {
+      mockUsePaneBinding.mockReturnValue({
+        sessionId: 'sess-test-123',
+        projectPath: '/tmp',
+        endedAt: null,
+        bound: true,
+      })
+    })
+
     it('renders task list when tasks are present', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
@@ -246,6 +257,12 @@ describe('PlanProgressPanel', () => {
 
   describe('Accessibility', () => {
     it('task list has role=list', async () => {
+      mockUsePaneBinding.mockReturnValue({
+        sessionId: 'sess-test-123',
+        projectPath: '/tmp',
+        endedAt: null,
+        bound: true,
+      })
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -263,6 +280,12 @@ describe('PlanProgressPanel', () => {
     })
 
     it('task list has aria-live=polite', async () => {
+      mockUsePaneBinding.mockReturnValue({
+        sessionId: 'sess-test-123',
+        projectPath: '/tmp',
+        endedAt: null,
+        bound: true,
+      })
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -289,6 +312,40 @@ describe('PlanProgressPanel', () => {
 
       const emptyContainer = await screen.findByLabelText('No active plan')
       expect(emptyContainer).toBeInTheDocument()
+    })
+  })
+
+  describe('Session isolation null guard', () => {
+    it('does not call fetch when sessionId is null (client-side null guard)', async () => {
+      mockUsePaneBinding.mockReturnValue({
+        sessionId: null,
+        projectPath: null,
+        endedAt: null,
+        bound: false,
+      })
+
+      renderPanel()
+
+      // Wait a tick for React Query to settle
+      await new Promise(resolve => setTimeout(resolve, 50))
+
+      // fetch must NOT have been called — the null guard short-circuits before any network call
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('renders empty state without fetching when sessionId is null', async () => {
+      mockUsePaneBinding.mockReturnValue({
+        sessionId: null,
+        projectPath: null,
+        endedAt: null,
+        bound: false,
+      })
+
+      renderPanel()
+
+      const emptyText = await screen.findByText('No active plan')
+      expect(emptyText).toBeInTheDocument()
+      expect(mockFetch).not.toHaveBeenCalled()
     })
   })
 

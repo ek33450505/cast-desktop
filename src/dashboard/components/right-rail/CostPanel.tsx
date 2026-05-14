@@ -17,10 +17,8 @@ interface SessionCostData {
 // ── API ───────────────────────────────────────────────────────────────────────
 
 async function fetchSessionCost(sessionId: string | null): Promise<SessionCostData> {
-  const url = sessionId
-    ? `/api/session-cost?sessionId=${encodeURIComponent(sessionId)}`
-    : '/api/session-cost'
-  const res = await fetch(url)
+  if (!sessionId) return { totalUsd: 0, burnRatePerMin: 0, projectedFourHourUsd: 0, budgetUsd: null }
+  const res = await fetch(`/api/session-cost?sessionId=${encodeURIComponent(sessionId)}`)
   if (!res.ok) throw new Error(`Failed to fetch session cost: HTTP ${res.status}`)
   return res.json() as Promise<SessionCostData>
 }

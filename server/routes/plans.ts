@@ -57,44 +57,41 @@ export function parsePlanTasks(content: string): PlanTask[] {
 }
 
 /**
- * Find the newest plan file in PLANS_DIR by mtime.
- * Optionally checks cast.db agent_runs for a plan_path column first.
+ * Find the active plan path for a given session via cast.db agent_runs.
+ *
+ * Returns null when:
+ * - sessionId is absent or null (unbound pane — no global fallback by design)
+ * - sessionId is present but no matching DB row exists (session has no plan)
+ * - DB lookup fails
+ *
+ * The previous mtime-based filesystem fallback has been intentionally removed.
+ * It caused unbound terminal panes to display the most-recently-touched plan
+ * from any Claude session on the machine (cross-session bleed). The /plans page
+ * lists all plans explicitly and does not depend on this fallback.
  */
 function findActivePlanPath(sessionId?: string | null): string | null {
-  // Try DB lookup if sessionId provided
-  if (sessionId) {
-    try {
-      const db = getCastDb()
-      if (db) {
-        // Check if plan_path column exists
-        const cols = db.prepare("PRAGMA table_info(agent_runs)").all() as { name: string }[]
-        const hasPlanPath = cols.some(c => c.name === 'plan_path')
-        if (hasPlanPath) {
-          const row = db.prepare(
-            'SELECT plan_path FROM agent_runs WHERE session_id = ? AND plan_path IS NOT NULL ORDER BY started_at DESC LIMIT 1'
-          ).get(sessionId) as { plan_path: string } | undefined
-          if (row?.plan_path && fs.existsSync(row.plan_path)) {
-            return row.plan_path
-          }
+  if (!sessionId) return null
+
+  try {
+    const db = getCastDb()
+    if (db) {
+      // Check if plan_path column exists
+      const cols = db.prepare("PRAGMA table_info(agent_runs)").all() as { name: string }[]
+      const hasPlanPath = cols.some(c => c.name === 'plan_path')
+      if (hasPlanPath) {
+        const row = db.prepare(
+          'SELECT plan_path FROM agent_runs WHERE session_id = ? AND plan_path IS NOT NULL ORDER BY started_at DESC LIMIT 1'
+        ).get(sessionId) as { plan_path: string } | undefined
+        if (row?.plan_path && fs.existsSync(row.plan_path)) {
+          return row.plan_path
         }
       }
-    } catch {
-      // DB lookup failed — fall through to filesystem
     }
+  } catch {
+    // DB lookup failed — return null (no fallback)
   }
 
-  // Fallback: newest .md in PLANS_DIR
-  if (!fs.existsSync(PLANS_DIR)) return null
-  const files = fs.readdirSync(PLANS_DIR)
-    .filter(f => f.endsWith('.md'))
-    .map(f => {
-      const full = path.join(PLANS_DIR, f)
-      const stat = fs.statSync(full)
-      return { full, mtime: stat.mtimeMs }
-    })
-    .sort((a, b) => b.mtime - a.mtime)
-
-  return files[0]?.full ?? null
+  return null
 }
 
 // ── GET / ─────────────────────────────────────────────────────────────────────

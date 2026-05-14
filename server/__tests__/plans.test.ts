@@ -6,9 +6,10 @@
  * 2. parsePlanTasks — fallback to ### Task N: headers when no checkboxes
  * 3. parsePlanTasks — returns [] when no tasks found
  * 4. parsePlanTasks — prefers checkboxes over headers when both present
- * 5. GET /active — existing routes still respond (regression guard)
- * 6. GET / — plan list route not broken
- * 7. GET /:filename — 404 for nonexistent file
+ * 5. GET /active — no sessionId param → planPath null (no global fallback)
+ * 6. GET /active — nonexistent sessionId param → planPath null
+ * 7. GET / — plan list route not broken
+ * 8. GET /:filename — 404 for nonexistent file
  */
 
 import { describe, it, expect, vi } from 'vitest'
@@ -108,13 +109,42 @@ describe('parsePlanTasks', () => {
   })
 })
 
-// ── GET /active endpoint — smoke test (uses real PLANS_DIR) ──────────────────
-// We mount the router against the real plansRouter and just verify response
-// shape. We can't easily redirect PLANS_DIR in an ESM test, so we accept that
-// the response may contain real plan data. We only assert shape, not content.
+// ── GET /active endpoint — session isolation tests ────────────────────────────
+// The mtime fallback was removed in Wave 3.5. When no sessionId is present,
+// or when sessionId is present but has no matching DB row, the endpoint must
+// return planPath: null — never a plan from a different session or a global
+// filesystem scan.
 
-describe('GET /active — smoke test', () => {
-  it('returns a 200 with expected shape { planPath, title, tasks }', async () => {
+describe('GET /active — session isolation', () => {
+  it('returns planPath=null when no sessionId param is provided', async () => {
+    const app = express()
+    app.use('/plans', plansRouter)
+
+    const res = await request(app).get('/plans/active')
+
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty('planPath', null)
+    expect(res.body).toHaveProperty('title', null)
+    expect(res.body).toHaveProperty('tasks')
+    expect(Array.isArray(res.body.tasks)).toBe(true)
+    expect(res.body.tasks).toHaveLength(0)
+  })
+
+  it('returns planPath=null when sessionId has no matching DB row', async () => {
+    // A nonexistent sessionId must NOT fall through to a global mtime scan
+    const app = express()
+    app.use('/plans', plansRouter)
+
+    const res = await request(app).get('/plans/active?sessionId=nonexistent-session-xyz-12345')
+
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty('planPath', null)
+    expect(res.body).toHaveProperty('title', null)
+    expect(Array.isArray(res.body.tasks)).toBe(true)
+    expect(res.body.tasks).toHaveLength(0)
+  })
+
+  it('returns expected shape { planPath, title, tasks } for all outcomes', async () => {
     const app = express()
     app.use('/plans', plansRouter)
 
@@ -125,31 +155,6 @@ describe('GET /active — smoke test', () => {
     expect(res.body).toHaveProperty('title')
     expect(res.body).toHaveProperty('tasks')
     expect(Array.isArray(res.body.tasks)).toBe(true)
-  })
-
-  it('accepts sessionId query param without error', async () => {
-    const app = express()
-    app.use('/plans', plansRouter)
-
-    const res = await request(app).get('/plans/active?sessionId=test-session-abc')
-
-    expect(res.status).toBe(200)
-    expect(res.body).toHaveProperty('tasks')
-    expect(Array.isArray(res.body.tasks)).toBe(true)
-  })
-
-  it('returns planPath=null when no plans found (empty fallback)', async () => {
-    // If there ARE plan files, planPath will be a string — this just ensures
-    // the null branch shape is correct by verifying the type contract.
-    const app = express()
-    app.use('/plans', plansRouter)
-
-    const res = await request(app).get('/plans/active')
-
-    // Either null or a string path — never undefined
-    expect(
-      res.body.planPath === null || typeof res.body.planPath === 'string'
-    ).toBe(true)
   })
 })
 

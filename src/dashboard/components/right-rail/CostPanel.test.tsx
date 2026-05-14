@@ -186,4 +186,23 @@ describe('CostPanel', () => {
     // This test now just verifies the component renders without creating a direct EventSource
     expect(typeof window.EventSource).toBe('undefined')
   })
+
+  it('does not call fetch when sessionId is null (client-side null guard)', async () => {
+    // sessionId is null (unbound pane) — fetchSessionCost must return zeroed data
+    // immediately without hitting the network
+    mockUsePaneBinding.mockReturnValue({
+      sessionId: null,
+      projectPath: null,
+      endedAt: null,
+      bound: false,
+    })
+
+    renderPanel()
+
+    // Wait a tick for React Query to settle
+    await new Promise(resolve => setTimeout(resolve, 50))
+
+    // fetch must NOT have been called — the null guard short-circuits before any network call
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
 })
