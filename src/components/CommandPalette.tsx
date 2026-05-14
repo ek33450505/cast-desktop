@@ -10,14 +10,7 @@ import {
   Layers,
   ScrollText,
   Settings,
-  Database,
-  Webhook,
-  Map,
-  Brain,
   FileText,
-  Palette,
-  Wrench,
-  Info,
   Search,
   X,
 } from 'lucide-react'
@@ -37,15 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Swarm', path: '/swarm', icon: Layers },
   { label: 'Work Log', path: '/work-log', icon: ScrollText },
   { label: 'System', path: '/system', icon: Settings },
-  { label: 'DB Explorer', path: '/db', icon: Database },
-  { label: 'Hooks', path: '/hooks', icon: Webhook },
-  { label: 'Plans', path: '/plans', icon: Map },
-  { label: 'Memory', path: '/memory', icon: Brain },
   { label: 'Docs', path: '/docs', icon: FileText },
-  { label: 'Settings', path: '/settings', icon: Settings },
-  { label: 'Themes', path: '/themes', icon: Palette },
-  { label: 'Skills', path: '/skills', icon: Wrench },
-  { label: 'About', path: '/about', icon: Info },
 ]
 
 export interface CommandPaletteProps {
