@@ -19,6 +19,7 @@ import { debugRouter } from './debug.js'
 import { agentsLiveRouter } from './agentsLive.js'
 import { controlRouter } from './control.js'
 import { tokenSpendRouter } from './tokenSpend.js'
+import { costSummaryRouter } from './costSummary.js'
 import { agentRunsRouter, activeAgentsRouter, sessionAgentsRouter, worktreesRouter, liveAgentsRouter } from './agentRuns.js'
 import { taskQueueRouter } from './taskQueue.js'
 import { agentMemoriesDbRouter } from './agentMemoriesDb.js'
@@ -76,6 +77,7 @@ router.use('/debug', debugRouter)
 // USED BY: src/components/ControlPanel/DispatchModal.tsx + SystemView.tsx (dispatch panel)
 router.use('/control', controlRouter)
 router.use('/cast/token-spend', tokenSpendRouter)
+router.use('/cast/cost-summary', costSummaryRouter)
 router.use('/cast/active-agents', activeAgentsRouter)
 router.use('/cast/agent-runs', agentRunsRouter)
 router.use('/cast/session-agents', sessionAgentsRouter)
