@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import {
   Bot,
@@ -47,6 +47,7 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
   const shouldReduceMotion = useReducedMotion()
   const [selected, setSelected] = useState<SelectedPreview | null>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
+  const [pendingSection, setPendingSection] = useState<SectionId | null>(null)
 
   function handlePreview(target: PreviewTarget, triggerEl?: HTMLElement) {
     triggerRef.current = triggerEl ?? null
@@ -62,11 +63,23 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
     triggerRef.current = null
   }
 
+  // Clear pendingSection after the rail finishes opening so that re-clicking
+  // the same icon re-fires the scroll/open behavior.
+  useEffect(() => {
+    if (open && pendingSection !== null) {
+      const timer = setTimeout(() => setPendingSection(null), 400)
+      return () => clearTimeout(timer)
+    }
+  }, [open, pendingSection])
+
   function handleIconClick(id: string) {
     if (!open) {
       onExpand()
     }
-    void id
+    // 'project' is not a CastFsTree SectionId — it's handled by ProjectFsTree
+    if (id !== 'project') {
+      setPendingSection(id as SectionId)
+    }
   }
 
   const transition = shouldReduceMotion
@@ -91,7 +104,7 @@ export default function LeftRail({ open, onExpand }: LeftRailProps) {
               className="flex-1 overflow-y-auto overflow-x-hidden"
             >
               <div className="py-1">
-                <CastFsTree onPreview={handlePreview} />
+                <CastFsTree onPreview={handlePreview} initialOpenSection={pendingSection ?? undefined} />
               </div>
             </motion.div>
           ) : (

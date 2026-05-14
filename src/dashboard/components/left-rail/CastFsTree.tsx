@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useLayoutEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEvent } from '../../../lib/SseManager'
 import type { LiveEvent } from '../../../types'
@@ -52,6 +52,7 @@ export interface PreviewTarget {
 
 interface CastFsTreeProps {
   onPreview: (target: PreviewTarget, triggerEl?: HTMLElement) => void
+  initialOpenSection?: SectionId
 }
 
 // ── section config ────────────────────────────────────────────────────────────
@@ -143,9 +144,10 @@ interface SectionProps {
   onPreview: (target: PreviewTarget, triggerEl?: HTMLElement) => void
   expanded: boolean
   onToggle: () => void
+  headerRef?: React.RefCallback<HTMLButtonElement>
 }
 
-function Section({ config, onPreview, expanded, onToggle }: SectionProps) {
+function Section({ config, onPreview, expanded, onToggle, headerRef }: SectionProps) {
   const { id, label, Icon } = config
   const { data, isLoading } = useCastFs(id)
   const items = data ?? []
@@ -155,6 +157,7 @@ function Section({ config, onPreview, expanded, onToggle }: SectionProps) {
     <div>
       <button
         type="button"
+        ref={headerRef}
         onClick={onToggle}
         aria-expanded={expanded}
         aria-controls={`castfs-section-${id}`}
@@ -268,8 +271,16 @@ function readPersistedRoots(): { cast: boolean; project: boolean } {
   return { cast: true, project: true }
 }
 
-export default function CastFsTree({ onPreview }: CastFsTreeProps) {
-  const [expandedSections, setExpandedSections] = useState<SectionId[]>(readPersistedSections)
+export default function CastFsTree({ onPreview, initialOpenSection }: CastFsTreeProps) {
+  const sectionHeaderRefs = useRef<Partial<Record<SectionId, HTMLButtonElement | null>>>({})
+
+  const [expandedSections, setExpandedSections] = useState<SectionId[]>(() => {
+    const persisted = readPersistedSections()
+    if (initialOpenSection && !persisted.includes(initialOpenSection)) {
+      return [...persisted, initialOpenSection]
+    }
+    return persisted
+  })
   const [rootExpanded, setRootExpanded] = useState(readPersistedRoots)
 
   const { data: projectRoot } = useQuery({
@@ -280,6 +291,35 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
   const projectName = projectRoot?.name ?? 'Project'
 
   useCastFsStream()
+
+  // Scroll to the target section whenever initialOpenSection changes.
+  // useLayoutEffect fires synchronously after DOM mutations — ideal for scroll targeting.
+  // Respects prefers-reduced-motion: smooth when motion is OK, instant otherwise.
+  useLayoutEffect(() => {
+    if (!initialOpenSection) return
+    // Ensure the Cast root is visible (open it if it's collapsed)
+    setRootExpanded(prev => {
+      if (!prev.cast) {
+        const next = { ...prev, cast: true }
+        try { localStorage.setItem('cast-fs-root-expanded', JSON.stringify(next)) } catch { /* ignore */ }
+        return next
+      }
+      return prev
+    })
+    // Ensure this section is open
+    setExpandedSections(prev => {
+      if (prev.includes(initialOpenSection)) return prev
+      const next = [...prev, initialOpenSection]
+      try { localStorage.setItem('cast-fs-expanded-sections', JSON.stringify(next)) } catch { /* ignore */ }
+      return next
+    })
+    // Scroll the section header into view
+    const el = sectionHeaderRefs.current[initialOpenSection]
+    if (el) {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' })
+    }
+  }, [initialOpenSection])
 
   function toggleSection(id: SectionId) {
     setExpandedSections(prev => {
@@ -326,6 +366,7 @@ export default function CastFsTree({ onPreview }: CastFsTreeProps) {
               onPreview={onPreview}
               expanded={expandedSections.includes(config.id)}
               onToggle={() => toggleSection(config.id)}
+              headerRef={(el) => { sectionHeaderRefs.current[config.id] = el }}
             />
           ))}
         </div>
