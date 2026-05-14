@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion } from 'framer-motion'
-import { useTerminalStore, Tab } from '../../stores/terminalStore'
+import { useTerminalStore, Tab, TabColor } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
 import { usePaneBinding } from '../../hooks/usePaneBinding'
 
@@ -55,7 +55,8 @@ function useResolvedTitle(tab: Tab): string {
 }
 
 // ── TabItem ───────────────────────────────────────────────────────────────────
-// Renders a single tab with rename UX (double-click, right-click context menu).
+// Renders a single tab with rename UX (double-click, right-click context menu)
+// and color picker UX (right-click or ... button → color swatches).
 
 interface TabItemProps {
   tab: Tab
@@ -66,13 +67,30 @@ interface TabItemProps {
   onKeyDown: (e: React.KeyboardEvent) => void
 }
 
+// ── Tab color swatch data ────────────────────────────────────────────────────
+
+interface ColorOption {
+  label: string
+  token: TabColor | undefined
+  ariaLabel: string
+}
+
+const COLOR_OPTIONS: ColorOption[] = [
+  { label: 'None', token: undefined, ariaLabel: 'Set tab color: None' },
+  { label: 'Steel', token: 'chart-2', ariaLabel: 'Set tab color: Steel' },
+  { label: 'Teal', token: 'chart-3', ariaLabel: 'Set tab color: Teal' },
+  { label: 'Violet', token: 'chart-4', ariaLabel: 'Set tab color: Violet' },
+]
+
 function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKeyDown }: TabItemProps) {
   const updateTabTitle = useTerminalStore((s) => s.updateTabTitle)
+  const setTabColor = useTerminalStore((s) => s.setTabColor)
   const resolvedTitle = useResolvedTitle(tab)
 
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const [isTabHovered, setIsTabHovered] = useState(false)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const tabButtonRef = useRef<HTMLDivElement>(null)
@@ -105,14 +123,43 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
     }
   }, [isRenaming])
 
+  const openContextMenuAt = useCallback((x: number, y: number) => {
+    setContextMenu({ x, y })
+  }, [])
+
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
-    setContextMenu({ x: e.clientX, y: e.clientY })
-  }, [])
+    openContextMenuAt(e.clientX, e.clientY)
+  }, [openContextMenuAt])
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(null)
   }, [])
+
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
+
+  const handleMoreButtonClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (contextMenu) {
+      closeContextMenu()
+    } else {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      openContextMenuAt(rect.left, rect.bottom + 2)
+    }
+  }, [contextMenu, closeContextMenu, openContextMenuAt])
+
+  const handleMoreButtonKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      e.stopPropagation()
+      if (contextMenu) {
+        closeContextMenu()
+      } else {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        openContextMenuAt(rect.left, rect.bottom + 2)
+      }
+    }
+  }, [contextMenu, closeContextMenu, openContextMenuAt])
 
   // Close context menu on outside click
   useEffect(() => {
@@ -122,8 +169,22 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
     return () => document.removeEventListener('mousedown', handler)
   }, [contextMenu, closeContextMenu])
 
+  const menuItemStyle: React.CSSProperties = {
+    padding: '6px 12px',
+    fontSize: '0.8125rem',
+    color: 'var(--text-primary)',
+    cursor: 'pointer',
+  }
+
+  // Computed opacity for ... button: visible when tab is hovered, focused, or menu is open
+  const moreButtonOpacity = isTabHovered || contextMenu !== null ? 1 : 0
+
   return (
-    <div style={{ position: 'relative', flexShrink: 0 }}>
+    <div
+      style={{ position: 'relative', flexShrink: 0 }}
+      onMouseEnter={() => setIsTabHovered(true)}
+      onMouseLeave={() => setIsTabHovered(false)}
+    >
       <div
         ref={tabButtonRef}
         role="tab"
@@ -144,17 +205,19 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
           }
           onKeyDown(e)
         }}
-        title={resolvedTitle}
+        title="Double-click to rename, right-click for options"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          padding: '0 10px',
+          paddingLeft: tab.color ? 7 : 10,
+          paddingRight: 10,
           height: 36,
           cursor: 'pointer',
           fontSize: '0.8125rem',
           color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
           background: isActive ? 'var(--cast-center-bg)' : 'transparent',
+          borderLeft: tab.color ? `3px solid var(--${tab.color})` : undefined,
           borderBottom: isActive
             ? '2px solid var(--cast-accent)'
             : '2px solid transparent',
@@ -217,6 +280,54 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
           )}
         </span>
 
+        {/* More (···) button — hover/focus only, keyboard-reachable entry for context menu */}
+        <button
+          ref={moreButtonRef}
+          aria-label="Tab options"
+          aria-haspopup="menu"
+          aria-expanded={contextMenu !== null}
+          onClick={handleMoreButtonClick}
+          onKeyDown={handleMoreButtonKeyDown}
+          tabIndex={0}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 18,
+            height: 18,
+            minWidth: 18,
+            minHeight: 18,
+            padding: 0,
+            border: 'none',
+            borderRadius: 3,
+            background: 'transparent',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            lineHeight: 1,
+            opacity: moreButtonOpacity,
+            transition: shouldReduceMotion ? 'none' : 'opacity 0.1s ease',
+            outline: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--bg-tertiary)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+          }}
+          onFocus={(e) => {
+            setIsTabHovered(true)
+            e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+            e.currentTarget.style.outlineOffset = '-2px'
+          }}
+          onBlur={(e) => {
+            setIsTabHovered(false)
+            e.currentTarget.style.outline = 'none'
+          }}
+        >
+          ···
+        </button>
+
         {/* Close button */}
         <button
           aria-label={`Close ${resolvedTitle}`}
@@ -255,7 +366,7 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
         </button>
       </div>
 
-      {/* Context menu */}
+      {/* Context menu — shared between right-click and ... button */}
       {contextMenu && (
         <ul
           role="menu"
@@ -271,7 +382,7 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
             margin: 0,
             listStyle: 'none',
             zIndex: 1000,
-            minWidth: 120,
+            minWidth: 140,
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           }}
           onKeyDown={(e) => {
@@ -281,6 +392,7 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
             }
           }}
         >
+          {/* Rename action */}
           <li
             role="menuitem"
             tabIndex={0}
@@ -296,12 +408,7 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
                 startRename()
               }
             }}
-            style={{
-              padding: '6px 12px',
-              fontSize: '0.8125rem',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-            }}
+            style={menuItemStyle}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.background = 'var(--bg-tertiary)'
             }}
@@ -310,6 +417,74 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
             }}
           >
             Rename
+          </li>
+
+          {/* Separator */}
+          <li
+            role="separator"
+            style={{
+              height: 1,
+              background: 'var(--cast-rail-border)',
+              margin: '4px 0',
+            }}
+          />
+
+          {/* Color section label */}
+          <li
+            role="presentation"
+            style={{
+              padding: '2px 12px 4px',
+              fontSize: '0.6875rem',
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              userSelect: 'none',
+            }}
+          >
+            Color
+          </li>
+
+          {/* Color swatches */}
+          <li
+            role="presentation"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 12px 8px',
+            }}
+          >
+            {COLOR_OPTIONS.map((opt) => (
+              <button
+                key={opt.label}
+                role="menuitemradio"
+                aria-checked={tab.color === opt.token}
+                aria-label={opt.ariaLabel}
+                title={opt.label}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setTabColor(tab.id, opt.token)
+                  closeContextMenu()
+                }}
+                style={{
+                  width: 18,
+                  height: 18,
+                  minWidth: 18,
+                  minHeight: 18,
+                  borderRadius: 4,
+                  border: tab.color === opt.token
+                    ? '2px solid var(--text-primary)'
+                    : '2px solid var(--cast-rail-border)',
+                  background: opt.token ? `var(--${opt.token})` : 'transparent',
+                  cursor: 'pointer',
+                  padding: 0,
+                  // "None" swatch: show a diagonal strikethrough via gradient
+                  backgroundImage: opt.token
+                    ? undefined
+                    : 'linear-gradient(135deg, transparent 40%, var(--text-muted) 40%, var(--text-muted) 60%, transparent 60%)',
+                }}
+              />
+            ))}
           </li>
         </ul>
       )}
