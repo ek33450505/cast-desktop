@@ -1,5 +1,52 @@
 import { PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Settings } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import AppearanceToggle from './AppearanceToggle'
+
+// ── HeaderClock ───────────────────────────────────────────────────────────────
+
+function formatClock(date: Date): { display: string; iso: string } {
+  const display = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
+  return { display, iso: date.toISOString() }
+}
+
+function HeaderClock() {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    // Align to the next whole minute, then tick every 60 s
+    const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds()
+    let interval: ReturnType<typeof setInterval> | null = null
+
+    const timeout = setTimeout(() => {
+      setNow(new Date())
+      interval = setInterval(() => setNow(new Date()), 60_000)
+    }, msUntilNextMinute)
+
+    return () => {
+      clearTimeout(timeout)
+      if (interval !== null) clearInterval(interval)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const { display, iso } = formatClock(now)
+
+  return (
+    <time
+      dateTime={iso}
+      aria-label="Current time and date"
+      className="text-xs tabular-nums select-none px-2 text-[var(--text-muted)]"
+    >
+      {display}
+    </time>
+  )
+}
 
 interface TopBarProps {
   leftRailOpen: boolean
@@ -30,6 +77,7 @@ export default function TopBar({
         <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight select-none">
           cast-desktop
         </span>
+        <HeaderClock />
       </div>
 
       {/* Right side: ⌘K trigger + rail toggles + settings */}
