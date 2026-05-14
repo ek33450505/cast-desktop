@@ -11,6 +11,7 @@ import { useRules, useSkills, useCommands } from '../api/useKnowledge'
 import { useAgentMemory, useProjectMemory } from '../api/useMemory'
 import { usePlans, usePlan } from '../api/usePlans'
 import { useChainMap, usePolicies, useModelPricing } from '../api/useCastData'
+import { useCostSummary } from '../api/useCostSummary'
 import { useParryGuard } from '../api/useParryGuard'
 import { useAgentTruncations } from '../api/useAgentTruncations'
 import StatCard, { StatCardSkeleton } from '../components/StatCard'
@@ -506,47 +507,212 @@ function PoliciesTab() {
 
 // ── Pricing Tab ───────────────────────────────────────────────────────────
 
+function fmt(n: number, decimals = 4): string {
+  return n.toFixed(decimals)
+}
+
+function fmtDate(iso: string): string {
+  if (!iso) return '—'
+  try { return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }) }
+  catch { return iso.slice(0, 10) }
+}
+
 function PricingTab() {
-  const { data: pricing, isLoading } = useModelPricing()
-
-  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading pricing...</div>
-  if (!pricing || Object.keys(pricing).length === 0) {
-    return <div className="p-6 text-[var(--content-muted)]">No pricing data. Place model-pricing.json in ~/.claude/config/.</div>
-  }
-
-  // Try to render as a table if it's a Record<model, {input, output}>
-  const models = Object.entries(pricing)
+  const { data: pricing, isLoading: pricingLoading } = useModelPricing()
+  const { data: cost, isLoading: costLoading, isError: costError } = useCostSummary(30)
 
   return (
-    <div>
-      <p className="text-xs text-[var(--content-muted)] mb-4">Token pricing from config/model-pricing.json ($/1M tokens)</p>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Model</th>
-              <th className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Input ($/1M)</th>
-              <th className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Output ($/1M)</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border)]">
-            {models.map(([model, rates]) => {
-              const r = rates as Record<string, number> | number
-              const inputRate = typeof r === 'object' ? (r.input ?? r.input_per_1m ?? '--') : '--'
-              const outputRate = typeof r === 'object' ? (r.output ?? r.output_per_1m ?? '--') : '--'
-              return (
-                <tr key={model} className="hover:bg-[var(--system-elevated)] transition-colors">
-                  <td className="py-2 pr-6">
-                    <span className="text-xs font-mono text-[var(--content-primary)]">{model}</span>
-                  </td>
-                  <td className="py-2 pr-6 text-right text-[var(--content-secondary)] tabular-nums">${String(inputRate)}</td>
-                  <td className="py-2 text-right text-[var(--accent)] tabular-nums">${String(outputRate)}</td>
+    <div className="space-y-8">
+
+      {/* ── Real cost activity section ───────────────────────────────── */}
+      <section aria-labelledby="cost-activity-heading">
+        <h3
+          id="cost-activity-heading"
+          className="text-sm font-semibold text-[var(--content-primary)] mb-1 flex items-center gap-2"
+        >
+          <DollarSign className="w-4 h-4 text-[var(--accent)]" aria-hidden="true" />
+          Cost Activity — last 30 days
+        </h3>
+        <p className="text-xs text-[var(--content-muted)] mb-4">
+          Derived from JSONL session files. Same source as the token-spend page.
+        </p>
+
+        {costLoading && (
+          <div className="p-6 text-[var(--content-muted)] text-sm" role="status" aria-live="polite">
+            Loading cost data…
+          </div>
+        )}
+
+        {costError && !costLoading && (
+          <div
+            className="p-4 rounded-lg bg-[var(--status-error)]/10 text-[var(--status-error)] text-sm"
+            role="alert"
+          >
+            Failed to load cost data. Check that the server is running.
+          </div>
+        )}
+
+        {!costLoading && !costError && cost && (
+          <>
+            {cost.totals.sessionCount === 0 ? (
+              <div className="p-6 text-[var(--content-muted)] text-sm">
+                No session data found for the last {cost.windowDays} days.
+              </div>
+            ) : (
+              <div className="space-y-6">
+
+                {/* Summary stat row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Total spend', value: `$${fmt(cost.totals.costUsd, 4)}` },
+                    { label: 'Sessions', value: String(cost.totals.sessionCount) },
+                    { label: 'Input tokens', value: cost.totals.inputTokens.toLocaleString() },
+                    { label: 'Output tokens', value: cost.totals.outputTokens.toLocaleString() },
+                  ].map(stat => (
+                    <div
+                      key={stat.label}
+                      className="bg-[var(--system-elevated)] rounded-lg px-4 py-3"
+                    >
+                      <div className="text-xs text-[var(--content-muted)] mb-1">{stat.label}</div>
+                      <div className="text-sm font-semibold text-[var(--content-primary)] tabular-nums">{stat.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Per-model breakdown */}
+                {cost.byModel.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-[var(--content-secondary)] uppercase tracking-wider mb-3">
+                      By model
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm" aria-label="Cost breakdown by model">
+                        <thead>
+                          <tr className="border-b border-[var(--border)]">
+                            <th scope="col" className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Model</th>
+                            <th scope="col" className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Sessions</th>
+                            <th scope="col" className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Cost (USD)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--border)]">
+                          {cost.byModel.map(row => (
+                            <tr key={row.model} className="hover:bg-[var(--system-elevated)] transition-colors">
+                              <td className="py-2 pr-6">
+                                <span className="text-xs font-mono text-[var(--content-primary)]">{row.model}</span>
+                              </td>
+                              <td className="py-2 pr-6 text-right text-[var(--content-secondary)] tabular-nums">{row.sessionCount}</td>
+                              <td className="py-2 text-right text-[var(--accent)] tabular-nums">${fmt(row.costUsd, 4)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Top sessions by cost */}
+                {cost.topSessions.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-[var(--content-secondary)] uppercase tracking-wider mb-3">
+                      Top sessions by cost
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm" aria-label="Top sessions by cost">
+                        <thead>
+                          <tr className="border-b border-[var(--border)]">
+                            <th scope="col" className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-4">Session</th>
+                            <th scope="col" className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-4">Project</th>
+                            <th scope="col" className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-4">Date</th>
+                            <th scope="col" className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Model</th>
+                            <th scope="col" className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Cost (USD)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--border)]">
+                          {cost.topSessions.map(s => (
+                            <tr key={s.id} className="hover:bg-[var(--system-elevated)] transition-colors">
+                              <td className="py-2 pr-4">
+                                <span className="text-xs font-mono text-[var(--content-muted)]" title={s.id}>
+                                  {s.id.slice(0, 8)}…
+                                </span>
+                              </td>
+                              <td className="py-2 pr-4">
+                                <span className="text-xs text-[var(--content-secondary)] truncate max-w-[140px] block" title={s.project}>
+                                  {s.project || '—'}
+                                </span>
+                              </td>
+                              <td className="py-2 pr-4 text-xs text-[var(--content-muted)] tabular-nums">{fmtDate(s.startedAt)}</td>
+                              <td className="py-2 pr-6">
+                                <span className="text-xs font-mono text-[var(--content-secondary)]">{s.model}</span>
+                              </td>
+                              <td className="py-2 text-right text-[var(--accent)] tabular-nums text-xs">${fmt(s.costUsd, 4)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* ── Rate card section ────────────────────────────────────────── */}
+      <section aria-labelledby="rate-card-heading">
+        <h3
+          id="rate-card-heading"
+          className="text-xs font-semibold text-[var(--content-secondary)] uppercase tracking-wider mb-3"
+        >
+          Rate card
+        </h3>
+        <p className="text-xs text-[var(--content-muted)] mb-4">
+          Token pricing from config/model-pricing.json ($/1M tokens)
+        </p>
+
+        {pricingLoading && (
+          <div className="p-6 text-[var(--content-muted)] text-sm" role="status" aria-live="polite">
+            Loading rate card…
+          </div>
+        )}
+
+        {!pricingLoading && (!pricing || Object.keys(pricing).length === 0) && (
+          <div className="p-4 text-[var(--content-muted)] text-sm">
+            No pricing data. Place model-pricing.json in ~/.claude/config/.
+          </div>
+        )}
+
+        {!pricingLoading && pricing && Object.keys(pricing).length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" aria-label="Model rate card">
+              <thead>
+                <tr className="border-b border-[var(--border)]">
+                  <th scope="col" className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Model</th>
+                  <th scope="col" className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Input ($/1M)</th>
+                  <th scope="col" className="text-right pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Output ($/1M)</th>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {Object.entries(pricing).map(([model, rates]) => {
+                  const r = rates as Record<string, number> | number
+                  const inputRate = typeof r === 'object' ? (r.input ?? r.input_per_1m ?? '--') : '--'
+                  const outputRate = typeof r === 'object' ? (r.output ?? r.output_per_1m ?? '--') : '--'
+                  return (
+                    <tr key={model} className="hover:bg-[var(--system-elevated)] transition-colors">
+                      <td className="py-2 pr-6">
+                        <span className="text-xs font-mono text-[var(--content-primary)]">{model}</span>
+                      </td>
+                      <td className="py-2 pr-6 text-right text-[var(--content-secondary)] tabular-nums">${String(inputRate)}</td>
+                      <td className="py-2 text-right text-[var(--accent)] tabular-nums">${String(outputRate)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
     </div>
   )
 }
