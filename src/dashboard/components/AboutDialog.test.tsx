@@ -56,8 +56,8 @@ describe('AboutDialog', () => {
     render(<AboutDialog onClose={vi.fn()} />)
     const link = screen.getByRole('link', { name: /open cast desktop on github/i })
     expect(link).toHaveAttribute('href', 'https://github.com/ek33450505/cast-desktop')
-    expect(link).toHaveAttribute('target', '_blank')
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    // No target="_blank" — Tauri webview swallows it; click is intercepted
+    // and routed through the shell plugin instead.
   })
 
   it('dialog is labelled by the heading', () => {

@@ -165,16 +165,22 @@ export default function App() {
   // (scattered across ShellLayout, EditorShellLayout, TerminalTabs, etc.) can
   // respond without each needing their own Tauri listener.
   useEffect(() => {
+    // cancelled flag — React strict-mode double-mounts the effect.
+    // The listen() promise resolves AFTER cleanup runs on the first mount,
+    // so without this guard the first listener leaks → menu fires twice.
+    let cancelled = false
     let unlisten: (() => void) | null = null
 
     listen<string>('cast:menu', (event) => {
       const action = event.payload
       window.dispatchEvent(new CustomEvent(`cast:${action}`))
     }).then((fn) => {
-      unlisten = fn
+      if (cancelled) fn()
+      else unlisten = fn
     })
 
     return () => {
+      cancelled = true
       unlisten?.()
     }
   }, [])

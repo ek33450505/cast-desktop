@@ -15,6 +15,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useReducedMotion } from 'framer-motion'
+import { open as openExternal } from '@tauri-apps/plugin-shell'
 import { APP_VERSION, REPO_URL } from '../lib/version'
 
 // ── WordmarkSVG (dusk variant, inline) ────────────────────────────────────────
@@ -218,13 +219,18 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
             <span>MIT License · macOS</span>
             <a
               href={REPO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open Cast Desktop on GitHub (opens in new tab)"
+              onClick={(e) => {
+                // Tauri webview swallows target="_blank"; route through the
+                // shell plugin to open in the system default browser.
+                e.preventDefault()
+                openExternal(REPO_URL).catch(() => { /* noop */ })
+              }}
+              aria-label="Open Cast Desktop on GitHub (opens in default browser)"
               style={{
                 color: 'var(--cast-accent, #E6A532)',
                 textDecoration: 'none',
                 outline: 'none',
+                cursor: 'pointer',
               }}
               onFocus={(e) => {
                 e.currentTarget.style.outline = '2px solid var(--cast-accent, #E6A532)'
