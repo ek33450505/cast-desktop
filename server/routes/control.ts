@@ -82,13 +82,21 @@ controlRouter.post('/dispatch', (req, res) => {
     const logDir = path.join(os.homedir(), '.claude', 'cast', 'dispatch-logs')
     fs.mkdirSync(logDir, { recursive: true })
     const logPath = path.join(logDir, `${id}.log`)
-    const logStream = fs.createWriteStream(logPath, { flags: 'a' })
+
+    // openSync gives us a real fd immediately. createWriteStream is lazy —
+    // its .fd is null until the stream emits 'open', and passing the unopened
+    // stream to spawn() crashes with "argument 'stdio' is invalid · fd: null".
+    const logFd = fs.openSync(logPath, 'a')
 
     const child = spawn(
       claudeBin,
       ['--print', '-p', prompt.trim(), '--model', resolvedModel],
-      { detached: true, stdio: ['ignore', logStream, logStream] }
+      { detached: true, stdio: ['ignore', logFd, logFd] }
     )
+
+    // The child inherits its own copy of the fd; we close ours so the file
+    // closes properly when the child exits (otherwise we leak fds per dispatch).
+    fs.closeSync(logFd)
 
     const taskPayload = JSON.stringify({
       prompt: prompt.trim(),
@@ -106,7 +114,7 @@ controlRouter.post('/dispatch', (req, res) => {
     db.close()
 
     child.on('exit', (code) => {
-      logStream.end()
+      // fd was closed in the parent after spawn; child closes its own copy on exit.
       const exitStatus = code === 0 ? 'done' : 'failed'
       try {
         const writeDb = getCastDbWritable()

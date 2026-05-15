@@ -60,9 +60,9 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
   const fileName = basename(filePath)
   const isMarkdown = fileName.endsWith('.md')
 
-  const { frontmatter, bodyContent, parseError } = useMemo(() => {
+  const { frontmatter, bodyContent } = useMemo(() => {
     if (!isMarkdown || !content) {
-      return { frontmatter: {} as FrontmatterData, bodyContent: content, parseError: false }
+      return { frontmatter: {} as FrontmatterData, bodyContent: content }
     }
     try {
       const normalized = normalizeFrontmatter(content)
@@ -70,10 +70,11 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
       return {
         frontmatter: parsed.data as FrontmatterData,
         bodyContent: parsed.content,
-        parseError: false,
       }
     } catch {
-      return { frontmatter: {} as FrontmatterData, bodyContent: content, parseError: true }
+      // Parsing failed — render the full document (incl. frontmatter) as markdown.
+      // No error banner: raw frontmatter will appear as code/text, which is fine.
+      return { frontmatter: {} as FrontmatterData, bodyContent: content }
     }
   }, [content, isMarkdown])
 
@@ -111,16 +112,7 @@ export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
 
       {/* Content */}
       <div className="p-3">
-        {parseError && (
-          <div
-            role="alert"
-            className="mb-2 text-[10px] px-2 py-1 rounded"
-            style={{ color: 'var(--status-error)', background: 'var(--system-elevated)' }}
-          >
-            Frontmatter could not be parsed. Showing raw content.
-          </div>
-        )}
-        {isMarkdown && !parseError ? (
+        {isMarkdown ? (
           <div className="prose-cast text-sm text-[var(--content-secondary)] leading-relaxed">
             <ReactMarkdown
               components={{

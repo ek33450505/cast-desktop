@@ -76,7 +76,7 @@ describe('buildTerminalTheme', () => {
 
   it('dusk background is the dusk pane color', () => {
     const dusk = buildTerminalTheme('dusk')
-    expect(dusk.background).toBe('#1D2622')
+    expect(dusk.background).toBe('#181B1A')
   })
 
   it('cursor color is the same amber in both appearances', () => {

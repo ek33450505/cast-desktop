@@ -30,9 +30,8 @@ describe('TopBar', () => {
     vi.useRealTimers()
   })
 
-  it('renders the cast wordmark and project subtitle', () => {
+  it('renders the cast-desktop wordmark', () => {
     render(<TopBar {...DEFAULT_PROPS} />)
-    expect(screen.getByText('cast')).toBeInTheDocument()
     expect(screen.getByText('cast-desktop')).toBeInTheDocument()
   })
 

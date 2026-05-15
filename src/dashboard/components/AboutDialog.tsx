@@ -1,16 +1,14 @@
 /**
- * AboutDialog — Phase B brand stub.
+ * AboutDialog — floating dropdown popover anchored near top-center.
  *
- * Opened by listening for `window.dispatchEvent(new Event('cast:open-about'))`.
- * Phase C's native menu bar "Cast → About" will fire this event.
- * There is intentionally no UI surface to open it yet.
+ * Opened by `window.dispatchEvent(new Event('cast:open-about'))`.
+ * No full-screen backdrop — it renders as a compact dropdown that appears
+ * below the topbar. Click-outside, Escape, and focus-trap are all wired.
  *
  * A11y:
  * - role="dialog" + aria-modal="true" + aria-labelledby
  * - Focus trap: Tab / Shift+Tab cycle within the dialog
- * - Escape closes
- *
- * Pattern-matched from DispatchModal.tsx.
+ * - Escape closes; click-outside closes
  */
 
 import { useEffect, useRef } from 'react'
@@ -105,60 +103,64 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Click-outside: close when clicking the transparent overlay
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose()
   }
 
-  // ── Styles — pattern-matched from DispatchModal ────────────────────────────
+  // ── Styles ──────────────────────────────────────────────────────────────────
 
-  const backdropStyle: React.CSSProperties = {
+  // Transparent click-catcher that fills the viewport; no dark backdrop.
+  const overlayStyle: React.CSSProperties = {
     position: 'fixed',
     inset: 0,
     zIndex: 3000,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'rgba(0, 0, 0, 0.55)',
-    animation: shouldReduceMotion ? 'none' : 'cast-fade-in 0.1s ease',
   }
 
-  const dialogStyle: React.CSSProperties = {
-    background: 'var(--cast-center-bg)',
-    border: '1px solid var(--cast-rail-border)',
-    borderRadius: 10,
-    padding: '28px 32px',
-    minWidth: 320,
-    maxWidth: 420,
-    width: '90vw',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+  const dropdownStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 48,           // sits just below the topbar
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 3001,
+    background: 'var(--system-elevated)',
+    border: '1px solid var(--stroke-regular)',
+    borderRadius: 12,
+    padding: '20px 24px',
+    width: 300,
+    boxShadow: 'var(--shadow-3)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 16,
+    gap: 12,
     outline: 'none',
-    animation: shouldReduceMotion ? 'none' : 'cast-slide-up 0.1s ease',
+    animation: shouldReduceMotion ? 'none' : 'cast-about-drop 0.12s ease',
   }
 
   return (
     <>
       <style>{`
-        @keyframes cast-fade-in { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes cast-slide-up { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes cast-about-drop {
+          from { opacity: 0; transform: translateX(-50%) translateY(-6px) }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0) }
+        }
       `}</style>
 
+      {/* Transparent overlay for click-outside */}
       <div
-        style={backdropStyle}
-        onClick={handleBackdropClick}
+        style={overlayStyle}
+        onClick={handleOverlayClick}
         data-testid="about-backdrop"
+      />
+
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={headingId}
+        tabIndex={-1}
+        style={dropdownStyle}
+        data-testid="about-dialog"
       >
-        <div
-          ref={dialogRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={headingId}
-          tabIndex={-1}
-          style={dialogStyle}
-          data-testid="about-dialog"
-        >
           {/* Wordmark */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 8px' }}>
             <WordmarkSVG />
@@ -267,8 +269,8 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
               Close
             </button>
           </div>
-        </div>
       </div>
     </>
   )
 }
+

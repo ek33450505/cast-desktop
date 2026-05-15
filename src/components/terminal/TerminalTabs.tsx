@@ -227,9 +227,13 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
           fontSize: '0.8125rem',
           color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
           background: tab.color
-            ? `color-mix(in srgb, var(--${tab.color}) ${isActive ? 14 : 9}%, var(--cast-center-bg))`
+            ? `color-mix(in srgb, var(--${tab.color}) ${isActive ? 32 : 22}%, var(--cast-center-bg))`
             : (isActive ? 'var(--cast-center-bg)' : 'transparent'),
-          borderLeft: tab.color ? `4px solid var(--${tab.color})` : undefined,
+          // Explicit 'none' (not undefined) so React reliably removes the
+          // previous border-left when color is cleared. Width bumped to 6px
+          // — the previous 4px was visually getting lost against the new
+          // neutral-dark chrome.
+          borderLeft: tab.color ? `6px solid var(--${tab.color})` : 'none',
           borderBottom: isActive
             ? '2px solid var(--cast-accent)'
             : '2px solid transparent',

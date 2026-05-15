@@ -6,20 +6,20 @@
 
 :root {
   /* ─── Dusk (default appearance) ─────────────────────────────────────── */
-  /* System surfaces */
-  --system-canvas:           #19211D;
-  --system-chrome:           #111614;
-  --system-panel:            #232D28;
-  --system-pane:             #1D2622;
-  --system-elevated:         #2D3B35;
-  --system-vibrancy-base:    rgba(25, 33, 29, 0.72);
+  /* System surfaces — less green, more black; retains a faint forest warmth */
+  --system-canvas:           #16191A;
+  --system-chrome:           #0E1011;
+  --system-panel:            #1C2120;
+  --system-pane:             #181B1A;
+  --system-elevated:         #272C2A;
+  --system-vibrancy-base:    rgba(22, 25, 26, 0.72);
   --system-vibrancy-overlay: rgba(255, 255, 255, 0.02);
   --system-vibrancy-blur:    blur(12px) saturate(140%);
 
   /* Stroke */
-  --stroke-subtle:           #25312C;
-  --stroke-regular:          #36453F;
-  --stroke-strong:           #43534D;
+  --stroke-subtle:           #222628;
+  --stroke-regular:          #313638;
+  --stroke-strong:           #3E4446;
   --stroke-focus:            #E6A532;
 
   /* Content */

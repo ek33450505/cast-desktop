@@ -1,10 +1,9 @@
 import { Router } from 'express'
-import { exec, execFile } from 'child_process'
+import { execFile } from 'child_process'
 import { promisify } from 'util'
 import os from 'os'
 import path from 'path'
 
-const execAsync = promisify(exec)
 const execFileAsync = promisify(execFile)
 
 export const castdControlRouter = Router()
@@ -48,16 +47,17 @@ function parseCronCommand(cmd: string): string[] {
 
 // GET /api/castd/status — read crontab and return CAST-related entries
 castdControlRouter.get('/status', async (_req, res) => {
-  try {
-    const { stdout } = await execAsync('crontab -l 2>/dev/null || true')
-    const all = stdout.split('\n').filter(Boolean)
-    const castLines = all.filter(l =>
-      l.toLowerCase().includes('cast') || l.includes('.claude/scripts')
-    )
-    res.json({ entries: castLines, count: castLines.length })
-  } catch (err) {
-    res.json({ entries: [], count: 0, error: String(err) })
-  }
+  // Use execFile (no shell) — when Express runs as a Tauri sidecar binary,
+  // exec()'s shell layer can hit EBADF on parent stdio that isn't a TTY.
+  // execFile spawns crontab directly with its own pipes.
+  const stdout = await execFileAsync('crontab', ['-l'])
+    .then((r) => r.stdout)
+    .catch(() => '') // exits 1 when user has no crontab — treat as empty
+  const all = stdout.split('\n').filter(Boolean)
+  const castLines = all.filter((l) =>
+    l.toLowerCase().includes('cast') || l.includes('.claude/scripts'),
+  )
+  res.json({ entries: castLines, count: castLines.length })
 })
 
 // POST /api/castd/cron — add a new CAST-MANAGED cron entry
@@ -84,7 +84,9 @@ castdControlRouter.post('/cron', async (req, res) => {
     // Append "# CAST-MANAGED" marker so it can be identified later
     const newEntry = `${schedule.trim()} ${command.trim()} # CAST-MANAGED`
     // Read existing crontab, append, write back
-    const { stdout } = await execAsync('crontab -l 2>/dev/null || true')
+    const stdout = await execFileAsync('crontab', ['-l'])
+      .then((r) => r.stdout)
+      .catch(() => '')
     const updated = stdout.trimEnd() + '\n' + newEntry + '\n'
     await execFileAsync('bash', ['-c', `echo ${JSON.stringify(updated)} | crontab -`])
     res.json({ ok: true, entry: newEntry })
@@ -99,7 +101,9 @@ castdControlRouter.delete('/cron', async (req, res) => {
   try {
     const { entry } = req.body as { entry?: string }
     if (!entry) return res.status(400).json({ error: 'entry required' })
-    const { stdout } = await execAsync('crontab -l 2>/dev/null || true')
+    const stdout = await execFileAsync('crontab', ['-l'])
+      .then((r) => r.stdout)
+      .catch(() => '')
     const filtered = stdout.split('\n').filter(l => l.trim() !== entry.trim()).join('\n')
     await execFileAsync('bash', ['-c', `echo ${JSON.stringify(filtered)} | crontab -`])
     res.json({ ok: true })
