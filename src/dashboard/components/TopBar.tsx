@@ -1,4 +1,4 @@
-import { PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Settings } from 'lucide-react'
+import { PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import AppearanceToggle from './AppearanceToggle'
 
@@ -20,7 +20,6 @@ function HeaderClock() {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
-    // Align to the next whole minute, then tick every 60 s
     const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds()
     let interval: ReturnType<typeof setInterval> | null = null
 
@@ -41,7 +40,7 @@ function HeaderClock() {
     <time
       dateTime={iso}
       aria-label="Current time and date"
-      className="text-xs tabular-nums select-none px-2 text-[var(--text-muted)]"
+      className="text-xs tabular-nums select-none text-[var(--text-muted)]"
     >
       {display}
     </time>
@@ -65,39 +64,69 @@ export default function TopBar({
 }: TopBarProps) {
   return (
     <header
-      className="flex items-center justify-between px-3 shrink-0"
+      className="flex items-center justify-between shrink-0"
       style={{
         height: '48px',
         background: 'var(--system-chrome)',
         borderBottom: '1px solid var(--stroke-subtle)',
+        paddingLeft: '16px',
+        paddingRight: '8px',
       }}
     >
-      {/* Left side: project name */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight select-none">
+      {/* ── Left: cast wordmark + project + date ─────────────────────────── */}
+      <div className="flex items-baseline gap-3">
+        <span
+          className="text-base font-semibold tracking-tight select-none"
+          style={{
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          cast
+        </span>
+        <span
+          className="text-xs select-none"
+          style={{ color: 'var(--text-muted)' }}
+          aria-hidden="true"
+        >
+          ·
+        </span>
+        <span
+          className="text-xs select-none"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           cast-desktop
+        </span>
+        <span
+          className="text-xs select-none"
+          style={{ color: 'var(--text-muted)' }}
+          aria-hidden="true"
+        >
+          ·
         </span>
         <HeaderClock />
       </div>
 
-      {/* Right side: ⌘K trigger + rail toggles + settings */}
+      {/* ── Right: search + rail toggles + appearance ────────────────────── */}
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={onOpenPalette}
           aria-label="Open command palette (⌘K)"
-          className="flex items-center justify-center gap-1.5 px-2.5 rounded-md text-xs text-[var(--text-muted)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
-          style={{ height: '44px', minHeight: '44px' }}
+          title="Command palette (⌘K)"
+          className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
+          style={{ width: '36px', height: '36px' }}
         >
-          <span className="font-mono">⌘K</span>
+          <Search className="w-4 h-4" aria-hidden="true" />
         </button>
 
         <button
           type="button"
           onClick={onToggleLeft}
           aria-label={leftRailOpen ? 'Collapse left rail (⌘B)' : 'Expand left rail (⌘B)'}
+          title={leftRailOpen ? 'Collapse left rail (⌘B)' : 'Expand left rail (⌘B)'}
           className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
-          style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
+          style={{ width: '36px', height: '36px' }}
         >
           {leftRailOpen
             ? <PanelLeftClose className="w-4 h-4" aria-hidden="true" />
@@ -108,8 +137,9 @@ export default function TopBar({
           type="button"
           onClick={onToggleRight}
           aria-label={rightRailOpen ? 'Collapse right rail (⌘⌥B)' : 'Expand right rail (⌘⌥B)'}
+          title={rightRailOpen ? 'Collapse right rail (⌘⌥B)' : 'Expand right rail (⌘⌥B)'}
           className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
-          style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
+          style={{ width: '36px', height: '36px' }}
         >
           {rightRailOpen
             ? <PanelRightClose className="w-4 h-4" aria-hidden="true" />
@@ -117,15 +147,6 @@ export default function TopBar({
         </button>
 
         <AppearanceToggle />
-
-        <button
-          type="button"
-          aria-label="Settings (stub)"
-          className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
-          style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
-        >
-          <Settings className="w-4 h-4" aria-hidden="true" />
-        </button>
       </div>
     </header>
   )

@@ -372,30 +372,13 @@ export default function CastFsTree({ onPreview, initialOpenSection }: CastFsTree
         </div>
       )}
 
-      {/* ── Project root header ── */}
-      <button
-        type="button"
-        onClick={() => toggleRoot('project')}
-        aria-expanded={rootExpanded.project}
-        aria-label={`${projectName} section`}
-        className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-left border-t border-[var(--stroke-regular)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
-        style={{ minHeight: '44px' }}
-      >
-        {rootExpanded.project
-          ? <ChevronDown className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
-          : <ChevronRight className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
-        }
-        <FolderOpen className="w-3.5 h-3.5 text-[var(--content-muted)] flex-shrink-0" aria-hidden="true" />
-        <span className="text-xs font-semibold uppercase tracking-widest text-[var(--content-primary)] flex-1 select-none truncate">
-          {projectName}
-        </span>
-      </button>
-
-      {rootExpanded.project && (
-        <div>
-          <ProjectFsTree onPreview={onPreview} />
-        </div>
-      )}
+      {/*
+       * Project file tree intentionally removed from the home left rail —
+       * file browsing now lives in /editor (ProjectFileTree). The home left
+       * rail is Cast nav only (Agents, Plans, Memory, Hooks, MCP, etc).
+       * If we ever want a "Recent files" panel in the home rail, that's a
+       * different surface than a full project tree.
+       */}
     </div>
   )
 }
