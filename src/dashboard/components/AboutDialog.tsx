@@ -15,6 +15,7 @@ import { useEffect, useRef } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { open as openExternal } from '@tauri-apps/plugin-shell'
 import { APP_VERSION, REPO_URL } from '../lib/version'
+import { AppIconSVG } from './AppIcon'
 
 // ── WordmarkSVG (dusk variant, inline) ────────────────────────────────────────
 // Inlined so the dialog has no runtime asset dependency at the stub stage.
@@ -161,8 +162,9 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         style={dropdownStyle}
         data-testid="about-dialog"
       >
-          {/* Wordmark */}
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 8px' }}>
+          {/* App icon + wordmark group */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <AppIconSVG size={56} aria-hidden="true" />
             <WordmarkSVG />
           </div>
 

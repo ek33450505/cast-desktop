@@ -1,6 +1,7 @@
 import { PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import AppearanceToggle from './AppearanceToggle'
+import { AppIconSVG } from './AppIcon'
 
 // ── HeaderClock ───────────────────────────────────────────────────────────────
 
@@ -72,8 +73,9 @@ export default function TopBar({
         paddingRight: '8px',
       }}
     >
-      {/* ── Left: product wordmark + clock ────────────────────────────────── */}
-      <div className="flex items-baseline gap-3">
+      {/* ── Left: app icon + product wordmark + clock ───────────────────── */}
+      <div className="flex items-center gap-3">
+        <AppIconSVG size={18} aria-hidden="true" />
         <span
           className="text-sm font-semibold tracking-tight select-none"
           style={{

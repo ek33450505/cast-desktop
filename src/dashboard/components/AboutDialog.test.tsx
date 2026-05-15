@@ -13,6 +13,12 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { AboutDialog } from './AboutDialog'
 
+vi.mock('./AppIcon', () => ({
+  AppIconSVG: ({ size, ...props }: { size: number; [k: string]: unknown }) => (
+    <svg data-testid="app-icon-svg" width={size} height={size} {...props} />
+  ),
+}))
+
 vi.mock('framer-motion', () => ({
   useReducedMotion: () => true,
 }))
@@ -67,5 +73,10 @@ describe('AboutDialog', () => {
     expect(labelId).toBeTruthy()
     const heading = document.getElementById(labelId!)
     expect(heading).toBeTruthy()
+  })
+
+  it('renders the AppIcon SVG above the wordmark', () => {
+    render(<AboutDialog onClose={vi.fn()} />)
+    expect(screen.getByTestId('app-icon-svg')).toBeInTheDocument()
   })
 })
