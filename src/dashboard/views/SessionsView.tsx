@@ -1,12 +1,10 @@
 import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Trash2, Radio, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Search, Radio, AlertTriangle, CheckCircle } from 'lucide-react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useQueryClient } from '@tanstack/react-query'
 import { useSessions } from '../api/useSessions'
 import { timeAgo, formatDuration } from '../utils/time'
 import { estimateCost, formatTokens, formatCost } from '../utils/costEstimate'
-import type { Session } from '../types'
 import { useRoutingEventsByType } from '../api/useRoutingEventsByType'
 import { useHookEventsStream } from '../api/useHookEvents'
 import type { HookEvent } from '../api/useHookEvents'
@@ -169,12 +167,10 @@ const COL_HEADERS = [
 
 export default function SessionsView() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { data: sessions, isLoading, error } = useSessions(undefined, 500)
   const parentRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [projectFilter, setProjectFilter] = useState<string>('')
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const { data: compactedEvents } = useRoutingEventsByType('context_compacted', 500)
   const compactedSessionIds = useMemo(() => {
@@ -186,22 +182,6 @@ export default function SessionsView() {
     }
     return ids
   }, [compactedEvents])
-
-  async function handleDelete(e: React.MouseEvent, session: Session) {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!window.confirm(`Delete session ${session.id.slice(0, 8)}…? This cannot be undone.`)) return
-    setDeletingId(session.id)
-    try {
-      const res = await fetch(`/api/sessions/${session.projectEncoded}/${session.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Delete failed')
-      queryClient.invalidateQueries({ queryKey: ['sessions'] })
-    } catch {
-      alert('Failed to delete session')
-    } finally {
-      setDeletingId(null)
-    }
-  }
 
   const sorted = useMemo(() => {
     if (!sessions) return []
@@ -346,14 +326,6 @@ export default function SessionsView() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <ModelBadge model={session.model} />
-                  <button
-                    onClick={(e) => handleDelete(e, session)}
-                    disabled={deletingId === session.id}
-                    aria-label={`Delete session ${session.id.slice(0, 8)}`}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--content-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--content-secondary)]">
@@ -466,16 +438,6 @@ export default function SessionsView() {
                     </div>
                     <div className="px-4 py-3">
                       <ModelBadge model={session.model} />
-                    </div>
-                    <div className="px-4 py-3 flex items-center justify-end">
-                      <button
-                        onClick={(e) => handleDelete(e, session)}
-                        disabled={deletingId === session.id}
-                        aria-label={`Delete session ${session.id.slice(0, 8)}`}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--content-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                   </div>
                 )
