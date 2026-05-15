@@ -14,6 +14,7 @@ beforeEach(() => {
     bottomDockExpanded: false,
     dirty: new Set<string>(),
     originalContent: new Map<string, string>(),
+    externalChange: new Map<string, string>(),
   })
   vi.clearAllMocks()
 })

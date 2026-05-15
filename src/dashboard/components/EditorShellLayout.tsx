@@ -15,9 +15,10 @@
  * react-resizable-panels is already in package.json per stack-context.md.
  */
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import { TerminalTabs } from '../../components/terminal/TerminalTabs'
 import { ProjectFileTree } from './ProjectFileTree'
@@ -25,6 +26,7 @@ import { EditorTabs } from './EditorTabs'
 import { CodeEditor } from './CodeEditor'
 import { useEditorStore } from '../../stores/editorStore'
 import { useTerminalStore } from '../../stores/terminalStore'
+import { useFileWatch } from '../hooks/useFileWatch'
 
 // ── EditorShellLayout ─────────────────────────────────────────────────────────
 
@@ -32,9 +34,19 @@ export function EditorShellLayout() {
   const bottomDockExpanded = useEditorStore((s) => s.bottomDockExpanded)
   const setBottomDockExpanded = useEditorStore((s) => s.setBottomDockExpanded)
   const openFile = useEditorStore((s) => s.openFile)
+  const openFiles = useEditorStore((s) => s.openFiles)
   const activeFilePath = useEditorStore((s) => s.activeFilePath)
+  const dirty = useEditorStore((s) => s.dirty)
+  const externalChange = useEditorStore((s) => s.externalChange)
+  const handleExternalChange = useEditorStore((s) => s.handleExternalChange)
+  const acceptExternalChange = useEditorStore((s) => s.acceptExternalChange)
+  const dismissExternalChange = useEditorStore((s) => s.dismissExternalChange)
   const save = useEditorStore((s) => s.save)
   const saveAs = useEditorStore((s) => s.saveAs)
+  const shouldReduceMotion = useReducedMotion()
+
+  // Stable list of open paths for useFileWatch
+  const openPaths = useMemo(() => openFiles.map((f) => f.path), [openFiles])
 
   // Route-change guard for dirty files is TODO(IDE-3) — react-router-dom's
   // useBlocker requires a DataRouter (createBrowserRouter); the app currently
@@ -46,6 +58,25 @@ export function EditorShellLayout() {
   const tabs = useTerminalStore((s) => s.tabs)
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const rootPath = activeTab?.cwd || '~'
+
+  // ── IDE-3: External file watch ───────────────────────────────────────────────
+  const handleExternalFileChange = useCallback(
+    async (changedPath: string) => {
+      try {
+        const { readTextFile } = await import('@tauri-apps/plugin-fs')
+        const newContent = await readTextFile(changedPath)
+        handleExternalChange(changedPath, newContent)
+      } catch (err) {
+        console.warn('[EditorShellLayout] external change read failed', changedPath, err)
+      }
+    },
+    [handleExternalChange],
+  )
+
+  useFileWatch({
+    paths: openPaths,
+    onChange: handleExternalFileChange,
+  })
 
   const handleOpenFile = useCallback(
     async (path: string) => {
@@ -187,6 +218,72 @@ export function EditorShellLayout() {
               }}
             >
               <EditorTabs />
+
+              {/* ── IDE-3: External-change banner ── */}
+              {activeFilePath && externalChange.has(activeFilePath) && (
+                <div
+                  role={dirty.has(activeFilePath) ? 'alert' : 'status'}
+                  aria-live={dirty.has(activeFilePath) ? 'assertive' : 'polite'}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '6px 12px',
+                    background: 'rgba(0,255,194,0.08)',
+                    borderBottom: '1px solid rgba(0,255,194,0.25)',
+                    flexShrink: 0,
+                    fontSize: '0.8125rem',
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  <span style={{ flex: 1 }}>
+                    Agent updated this file externally.
+                  </span>
+                  <button
+                    aria-label="Reload file with agent changes, discarding local edits"
+                    onClick={() => acceptExternalChange(activeFilePath)}
+                    style={{
+                      padding: '2px 10px',
+                      border: '1px solid var(--cast-accent, #00FFC2)',
+                      borderRadius: 4,
+                      background: 'transparent',
+                      color: 'var(--cast-accent, #00FFC2)',
+                      cursor: 'pointer',
+                      fontSize: '0.8125rem',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+                      e.currentTarget.style.outlineOffset = '-2px'
+                    }}
+                    onBlur={(e) => { e.currentTarget.style.outline = 'none' }}
+                  >
+                    Reload
+                  </button>
+                  <button
+                    aria-label="Keep my local edits, dismiss the agent update"
+                    onClick={() => dismissExternalChange(activeFilePath)}
+                    style={{
+                      padding: '2px 10px',
+                      border: '1px solid var(--cast-rail-border)',
+                      borderRadius: 4,
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      fontSize: '0.8125rem',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+                      e.currentTarget.style.outlineOffset = '-2px'
+                    }}
+                    onBlur={(e) => { e.currentTarget.style.outline = 'none' }}
+                  >
+                    Keep mine
+                  </button>
+                </div>
+              )}
+
               <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <CodeEditor />
               </div>
@@ -279,7 +376,7 @@ export function EditorShellLayout() {
             style={{
               height: bottomDockExpanded ? '30vh' : 0,
               overflow: 'hidden',
-              transition: 'height 0.2s ease',
+              transition: shouldReduceMotion ? 'none' : 'height 0.2s ease',
             }}
           >
             {bottomDockExpanded && <TerminalTabs />}

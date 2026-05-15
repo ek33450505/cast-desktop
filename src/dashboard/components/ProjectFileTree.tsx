@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronRight, ChevronDown, File, Folder, FolderOpen } from 'lucide-react'
+import { usePlanPendingFiles } from '../hooks/usePlanPendingFiles'
 
 // ── Tauri fs integration ───────────────────────────────────────────────────────
 // readDir is wrapped in a try/catch so the component degrades gracefully in
@@ -48,9 +49,11 @@ interface TreeItemProps {
   onOpenFile: (path: string) => void
   isSelected: boolean
   onSelect: (path: string) => void
+  /** Paths that appear in active (non-done) plans */
+  pendingFiles: Set<string>
 }
 
-function TreeItem({ node, level, onOpenFile, isSelected, onSelect }: TreeItemProps) {
+function TreeItem({ node, level, onOpenFile, isSelected, onSelect, pendingFiles }: TreeItemProps) {
   const [expanded, setExpanded] = useState(false)
   const [children, setChildren] = useState<FileTreeNode[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -142,7 +145,13 @@ function TreeItem({ node, level, onOpenFile, isSelected, onSelect }: TreeItemPro
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         tabIndex={0}
-        aria-label={node.isDir ? `${node.name}, folder, ${expanded ? 'expanded' : 'collapsed'}` : node.name}
+        aria-label={
+          node.isDir
+            ? `${node.name}, folder, ${expanded ? 'expanded' : 'collapsed'}`
+            : pendingFiles.has(node.path)
+              ? `${node.name} · plan`
+              : node.name
+        }
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -200,6 +209,24 @@ function TreeItem({ node, level, onOpenFile, isSelected, onSelect }: TreeItemPro
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
           {loading ? `${node.name} …` : node.name}
         </span>
+
+        {/* Plan-pending indicator dot */}
+        {!node.isDir && pendingFiles.has(node.path) && (
+          <span
+            aria-hidden="true"
+            title="Referenced in an active plan"
+            style={{
+              display: 'inline-block',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: 'var(--cast-accent, #00FFC2)',
+              opacity: 0.8,
+              flexShrink: 0,
+              marginLeft: 4,
+            }}
+          />
+        )}
       </button>
 
       {/* Children */}
@@ -213,6 +240,7 @@ function TreeItem({ node, level, onOpenFile, isSelected, onSelect }: TreeItemPro
               onOpenFile={onOpenFile}
               isSelected={isSelected && child.path === node.path}
               onSelect={onSelect}
+              pendingFiles={pendingFiles}
             />
           ))}
         </ul>
@@ -247,6 +275,8 @@ export function ProjectFileTree({ rootPath, onOpenFile }: ProjectFileTreeProps) 
   const [rootChildren, setRootChildren] = useState<FileTreeNode[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  // IDE-3: plan-pending file markers
+  const pendingFiles = usePlanPendingFiles()
 
   useEffect(() => {
     let cancelled = false
@@ -323,6 +353,7 @@ export function ProjectFileTree({ rootPath, onOpenFile }: ProjectFileTreeProps) 
             onOpenFile={onOpenFile}
             isSelected={selectedPath === node.path}
             onSelect={setSelectedPath}
+            pendingFiles={pendingFiles}
           />
         ))}
       </ul>
