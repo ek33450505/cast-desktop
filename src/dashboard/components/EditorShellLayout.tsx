@@ -131,6 +131,27 @@ export function EditorShellLayout() {
     setBottomDockExpanded(!bottomDockExpanded)
   }, [bottomDockExpanded, setBottomDockExpanded])
 
+  // ── cast:open-folder / cast:save-file — native menu (Phase C) ───────────────
+  useEffect(() => {
+    const onOpenFolder = () => handleOpenWorkspace()
+    const onSaveFile = async () => {
+      if (!activeFilePath) return
+      try {
+        await save(activeFilePath)
+        const filename = activeFilePath.split('/').pop() ?? activeFilePath
+        toast.success(`Saved ${filename}`)
+      } catch (err) {
+        toast.error(`Save failed: ${String(err)}`)
+      }
+    }
+    window.addEventListener('cast:open-folder', onOpenFolder)
+    window.addEventListener('cast:save-file', onSaveFile)
+    return () => {
+      window.removeEventListener('cast:open-folder', onOpenFolder)
+      window.removeEventListener('cast:save-file', onSaveFile)
+    }
+  }, [activeFilePath, handleOpenWorkspace, save])
+
   // ── Cmd+S / Cmd+Shift+S / Cmd+Shift+A ───────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -162,19 +183,6 @@ export function EditorShellLayout() {
           toast.error(`Save As failed: ${String(err)}`)
         }
         return
-      }
-
-      // ── Cmd+S — Save ──────────────────────────────────────────────────────
-      if (!e.shiftKey && e.key === 's') {
-        e.preventDefault()
-        if (!activeFilePath) return
-        try {
-          await save(activeFilePath)
-          const filename = activeFilePath.split('/').pop() ?? activeFilePath
-          toast.success(`Saved ${filename}`)
-        } catch (err) {
-          toast.error(`Save failed: ${String(err)}`)
-        }
       }
 
       // ── Cmd+K — Command palette (not bound by ShellLayout here since /editor
