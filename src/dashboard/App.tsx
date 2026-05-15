@@ -6,6 +6,7 @@ import { listen } from '@tauri-apps/api/event'
 
 import { useDbChangeInvalidation } from './api/useDbChangeInvalidation'
 import { AboutDialog } from './components/AboutDialog'
+import { WhatsNewDialog } from './components/WhatsNewDialog'
 import ErrorBoundary from './components/ErrorBoundary'
 import TopBar from './components/TopBar'
 import LeftRail from './components/LeftRail'
@@ -157,6 +158,7 @@ export default function App() {
   useDbChangeInvalidation()
 
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false)
   const { toggle: toggleAppearance } = useAppearance()
 
   // ── Phase C: Tauri menu event bridge ─────────────────────────────────────────
@@ -199,6 +201,13 @@ export default function App() {
     }
   }, [])
 
+  // ── cast:open-whats-new — Phase D Help menu + palette ──────────────────────────
+  useEffect(() => {
+    const handler = () => setWhatsNewOpen(true)
+    window.addEventListener('cast:open-whats-new', handler)
+    return () => window.removeEventListener('cast:open-whats-new', handler)
+  }, [])
+
   // ── cast:toggle-appearance ────────────────────────────────────────────────────
   useEffect(() => {
     const handler = () => toggleAppearance()
@@ -209,6 +218,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
+      {whatsNewOpen && <WhatsNewDialog onClose={() => setWhatsNewOpen(false)} />}
       <Routes>
         {/* ── Editor route — no Cast rails (sibling of ShellLayout) ── */}
         <Route path="/editor" element={<ErrorBoundary><EditorShellLayout /></ErrorBoundary>} />
