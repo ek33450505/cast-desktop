@@ -4,7 +4,7 @@ import { Command } from 'cmdk'
 import {
   Search, History, Users, Map, Brain, X,
   Home, Activity, GitBranch, Coins, BarChart2,
-  Settings, ShieldCheck, Info,
+  Settings, ShieldCheck, Info, Sparkles,
 } from 'lucide-react'
 import { useSearch } from '../api/useSearch'
 import { timeAgo } from '../utils/time'
@@ -151,35 +151,59 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
         {/* Results */}
         <Command.List className="max-h-[50vh] overflow-y-auto">
-          {/* Actions — non-navigation commands (About, etc.) */}
+          {/* Actions — non-navigation commands (About, What's New, etc.) */}
           {(() => {
             const q = query.toLowerCase().trim()
-            const matches = q.length === 0 || 'about cast desktop'.includes(q)
-            if (!matches) return null
+            const ACTIONS = [
+              {
+                key: 'about',
+                value: 'action-about-cast-desktop',
+                label: 'About Cast Desktop',
+                event: 'cast:open-about',
+                icon: Info,
+                searchKeys: 'about cast desktop',
+              },
+              {
+                key: 'whats-new',
+                value: 'action-whats-new',
+                label: "What's New",
+                event: 'cast:open-whats-new',
+                icon: Sparkles,
+                searchKeys: "whats new changelog release notes",
+              },
+            ]
+            const filtered = q.length === 0
+              ? ACTIONS
+              : ACTIONS.filter((a) => a.searchKeys.includes(q))
+            if (filtered.length === 0) return null
             return (
               <Command.Group heading="Actions" className="px-2 py-1">
                 <div className="px-3 py-1">
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Actions</span>
                 </div>
-                <Command.Item
-                  key="action-about"
-                  value="action-about-cast-desktop"
-                  onSelect={() => {
-                    // Fire the dispatch on next microtask so the palette
-                    // unmounts before the About popover mounts — avoids
-                    // any z-index / focus-trap interaction with the closing
-                    // palette backdrop.
-                    onClose()
-                    queueMicrotask(() =>
-                      window.dispatchEvent(new Event('cast:open-about')),
-                    )
-                  }}
-                  className="flex items-center gap-3 px-5 py-2 text-left text-[var(--text-secondary)] transition-colors cursor-default data-[selected=true]:bg-[var(--accent-subtle)] data-[selected=true]:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
-                >
-                  <Info className="w-4 h-4 text-[var(--text-muted)]" />
-                  <span className="text-sm font-medium flex-1">About Cast Desktop</span>
-                  <span className="text-xs text-[var(--text-muted)] shrink-0">action</span>
-                </Command.Item>
+                {filtered.map((a) => {
+                  const Icon = a.icon
+                  return (
+                    <Command.Item
+                      key={`action-${a.key}`}
+                      value={a.value}
+                      onSelect={() => {
+                        // Defer to next microtask so the palette unmounts
+                        // before the popover mounts — avoids z-index /
+                        // focus-trap interaction with the closing backdrop.
+                        onClose()
+                        queueMicrotask(() =>
+                          window.dispatchEvent(new Event(a.event)),
+                        )
+                      }}
+                      className="flex items-center gap-3 px-5 py-2 text-left text-[var(--text-secondary)] transition-colors cursor-default data-[selected=true]:bg-[var(--accent-subtle)] data-[selected=true]:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
+                    >
+                      <Icon className="w-4 h-4 text-[var(--text-muted)]" />
+                      <span className="text-sm font-medium flex-1">{a.label}</span>
+                      <span className="text-xs text-[var(--text-muted)] shrink-0">action</span>
+                    </Command.Item>
+                  )
+                })}
               </Command.Group>
             )
           })()}

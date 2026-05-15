@@ -109,8 +109,13 @@ pub fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 
     // ── Help ──────────────────────────────────────────────────────────────────
     let github = MenuItem::with_id(app, "open-github", "Cast Desktop on GitHub", true, None::<&str>)?;
+    let docs = MenuItem::with_id(app, "open-docs", "Documentation", true, None::<&str>)?;
+    let whats_new = MenuItem::with_id(app, "open-whats-new", "What's New", true, None::<&str>)?;
     let help_about = MenuItem::with_id(app, "help-about", "About Cast Desktop", true, None::<&str>)?;
     let help_menu = SubmenuBuilder::new(app, "Help")
+        .item(&docs)
+        .item(&whats_new)
+        .item(&PredefinedMenuItem::separator(app)?)
         .item(&github)
         .item(&help_about)
         .build()?;
@@ -149,6 +154,15 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
             // warning since switching plugins is out of scope for Phase C.
             #[allow(deprecated)]
             let _ = app.shell().open("https://github.com/ek33450505/cast-desktop", None);
+        }
+        "open-docs" => {
+            // Phase D: until a dedicated marketing/docs site lands (Phase E),
+            // Documentation points at the repo README.
+            #[allow(deprecated)]
+            let _ = app.shell().open(
+                "https://github.com/ek33450505/cast-desktop#readme",
+                None,
+            );
         }
         _ => {
             // All other actions are forwarded to the front-end as a single
