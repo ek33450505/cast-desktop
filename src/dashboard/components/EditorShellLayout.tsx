@@ -15,9 +15,10 @@
  * react-resizable-panels is already in package.json per stack-context.md.
  */
 
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { toast } from 'sonner'
 import { TerminalTabs } from '../../components/terminal/TerminalTabs'
 import { ProjectFileTree } from './ProjectFileTree'
 import { EditorTabs } from './EditorTabs'
@@ -31,6 +32,14 @@ export function EditorShellLayout() {
   const bottomDockExpanded = useEditorStore((s) => s.bottomDockExpanded)
   const setBottomDockExpanded = useEditorStore((s) => s.setBottomDockExpanded)
   const openFile = useEditorStore((s) => s.openFile)
+  const activeFilePath = useEditorStore((s) => s.activeFilePath)
+  const save = useEditorStore((s) => s.save)
+  const saveAs = useEditorStore((s) => s.saveAs)
+
+  // Route-change guard for dirty files is TODO(IDE-3) — react-router-dom's
+  // useBlocker requires a DataRouter (createBrowserRouter); the app currently
+  // uses BrowserRouter. Router migration is out of scope for IDE-2.
+  // Tab-close guard (in EditorTabs) still applies for dirty close.
 
   // Root path from active terminal tab's cwd, falling back to home
   const activeTabId = useTerminalStore((s) => s.activeTabId)
@@ -57,6 +66,49 @@ export function EditorShellLayout() {
   const toggleDock = useCallback(() => {
     setBottomDockExpanded(!bottomDockExpanded)
   }, [bottomDockExpanded, setBottomDockExpanded])
+
+  // ── Cmd+S — Save ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC')
+      const metaOrCtrl = isMac ? e.metaKey : e.ctrlKey
+
+      if (!metaOrCtrl || e.key !== 's') return
+
+      // Don't intercept Cmd+Shift+S here (saveAs handles it separately)
+      if (e.shiftKey) {
+        e.preventDefault()
+        if (!activeFilePath) return
+        try {
+          const { save: dialogSave } = await import('@tauri-apps/plugin-dialog')
+          const newPath = await dialogSave({ defaultPath: activeFilePath })
+          if (typeof newPath === 'string' && newPath) {
+            await saveAs(activeFilePath, newPath)
+            const filename = newPath.split('/').pop() ?? newPath
+            toast.success(`Saved as ${filename}`)
+          }
+          // If user cancelled, newPath is null — do nothing silently
+        } catch (err) {
+          toast.error(`Save As failed: ${String(err)}`)
+        }
+        return
+      }
+
+      e.preventDefault()
+      if (!activeFilePath) return
+
+      try {
+        await save(activeFilePath)
+        const filename = activeFilePath.split('/').pop() ?? activeFilePath
+        toast.success(`Saved ${filename}`)
+      } catch (err) {
+        toast.error(`Save failed: ${String(err)}`)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeFilePath, save, saveAs])
 
   const DOCK_HEADER_H = 40
 

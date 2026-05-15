@@ -1,7 +1,9 @@
 import { useCallback } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion } from 'framer-motion'
+import { toast } from 'sonner'
 import { useEditorStore } from '../../stores/editorStore'
+import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -20,26 +22,54 @@ export function EditorTabs() {
   const activeFilePath = useEditorStore((s) => s.activeFilePath)
   const closeFile = useEditorStore((s) => s.closeFile)
   const setActive = useEditorStore((s) => s.setActive)
+  const dirty = useEditorStore((s) => s.dirty)
+  const save = useEditorStore((s) => s.save)
   const shouldReduceMotion = useReducedMotion()
+  const { promptGuard, modalElement } = useUnsavedChangesGuard()
 
   const handleClose = useCallback(
-    (path: string, e: React.MouseEvent | React.KeyboardEvent) => {
+    async (path: string, e: React.MouseEvent | React.KeyboardEvent) => {
       e.stopPropagation()
+      if (dirty.has(path)) {
+        const result = await promptGuard([path])
+        if (result.action === 'cancel') return
+        if (result.action === 'save') {
+          try {
+            await save(path)
+          } catch (err) {
+            toast.error(`Save failed: ${String(err)}`)
+            return
+          }
+        }
+        // 'discard' — fall through to close
+      }
       closeFile(path)
     },
-    [closeFile],
+    [closeFile, dirty, promptGuard, save],
   )
 
-  // Cmd+W — close active tab
+  // Cmd+W — close active tab (async — guard for unsaved changes)
   useHotkeys(
     'mod+w',
-    (e) => {
+    async (e) => {
       if (!activeFilePath) return
       // Only intercept if we're in editor context (not terminal)
       const active = document.activeElement
       const isTermFocused = active?.closest('.xterm') !== null
       if (isTermFocused) return
       e.preventDefault()
+      if (dirty.has(activeFilePath)) {
+        const result = await promptGuard([activeFilePath])
+        if (result.action === 'cancel') return
+        if (result.action === 'save') {
+          try {
+            await save(activeFilePath)
+          } catch (err) {
+            toast.error(`Save failed: ${String(err)}`)
+            return
+          }
+        }
+      }
       closeFile(activeFilePath)
     },
     { enableOnFormTags: false, enableOnContentEditable: false },
@@ -66,6 +96,7 @@ export function EditorTabs() {
   }
 
   return (
+    <>
     <div
       role="tablist"
       aria-label="Editor tabs"
@@ -81,8 +112,9 @@ export function EditorTabs() {
     >
       {openFiles.map((file, idx) => {
         const isActive = file.path === activeFilePath
+        const isDirty = dirty.has(file.path)
         const label = basename(file.path)
-        const tabLabel = `${label}${isActive ? ', active tab' : ''}`
+        const tabLabel = `${label}${isDirty ? ' (unsaved)' : ''}${isActive ? ', active tab' : ''}`
 
         return (
           <div
@@ -156,6 +188,15 @@ export function EditorTabs() {
                 textOverflow: 'ellipsis',
               }}
             >
+              {isDirty && (
+                <span
+                  aria-hidden="true"
+                  data-testid="dirty-indicator"
+                  style={{ color: 'var(--cast-accent)', marginRight: 3 }}
+                >
+                  •
+                </span>
+              )}
               {label}
             </span>
 
@@ -226,5 +267,7 @@ export function EditorTabs() {
         )
       })}
     </div>
+    {modalElement}
+    </>
   )
 }
