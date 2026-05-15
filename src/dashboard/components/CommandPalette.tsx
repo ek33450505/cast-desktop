@@ -165,8 +165,14 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
                   key="action-about"
                   value="action-about-cast-desktop"
                   onSelect={() => {
+                    // Fire the dispatch on next microtask so the palette
+                    // unmounts before the About popover mounts — avoids
+                    // any z-index / focus-trap interaction with the closing
+                    // palette backdrop.
                     onClose()
-                    window.dispatchEvent(new Event('cast:open-about'))
+                    queueMicrotask(() =>
+                      window.dispatchEvent(new Event('cast:open-about')),
+                    )
                   }}
                   className="flex items-center gap-3 px-5 py-2 text-left text-[var(--text-secondary)] transition-colors cursor-default data-[selected=true]:bg-[var(--accent-subtle)] data-[selected=true]:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
                 >
