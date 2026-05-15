@@ -1,9 +1,11 @@
 mod cwd;
 mod git;
+mod lsp;
 mod process;
 mod pty;
 mod session;
 
+use lsp::LspState;
 use session::SessionStore;
 use tauri::Manager;
 use tauri_plugin_shell::ShellExt;
@@ -12,6 +14,7 @@ use tauri_plugin_shell::ShellExt;
 pub fn run() {
     tauri::Builder::default()
         .manage(SessionStore::new())
+        .manage(LspState::new())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
@@ -51,6 +54,8 @@ pub fn run() {
             process::get_default_shell,
             cwd::get_cwd,
             git::get_git_status,
+            lsp::start_lsp_server,
+            lsp::stop_lsp_server,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

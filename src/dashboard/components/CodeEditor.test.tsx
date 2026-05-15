@@ -3,6 +3,25 @@ import { render, screen, act } from '@testing-library/react'
 import { CodeEditor } from './CodeEditor'
 import { useEditorStore } from '../../stores/editorStore'
 
+// Mock Tauri core — not available in jsdom
+vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn().mockResolvedValue(9999) }))
+
+// Mock useLspClient — control status + extension in tests
+const mockUseLspClient = vi.fn(() => ({ extension: null, status: 'connecting' as const, error: undefined }))
+vi.mock('../hooks/useLspClient', () => ({ useLspClient: (...args: unknown[]) => mockUseLspClient(...args) }))
+
+// Mock useFileTouches
+vi.mock('../hooks/useFileTouches', () => ({ useFileTouches: () => ({ touches: [], loading: false, error: null, refresh: vi.fn() }) }))
+
+// Mock AgentTouchPopover
+vi.mock('./AgentTouchPopover', () => ({ AgentTouchPopover: () => null }))
+
+// Mock agentGutter
+vi.mock('./editor/agentGutter', () => ({
+  agentGutter: () => [],
+  setHasTouches: { of: () => ({}) },
+}))
+
 // CodeMirror creates canvas / DOM that jsdom can't fully support.
 // Stub the EditorView to avoid canvas errors while still testing
 // that CodeEditor renders the correct container and states.
@@ -44,6 +63,7 @@ vi.mock('@codemirror/view', async (importOriginal) => {
 
 beforeEach(() => {
   capturedUpdateListener = null
+  mockUseLspClient.mockReturnValue({ extension: null, status: 'connecting' as const, error: undefined })
   useEditorStore.setState({
     openFiles: [],
     activeFilePath: null,
@@ -133,5 +153,46 @@ describe('CodeEditor', () => {
 
     // dirty should not be set
     expect(useEditorStore.getState().dirty.has('/foo/a.ts')).toBe(false)
+  })
+
+  // ── IDE-4: LSP status pill ──────────────────────────────────────────────────
+
+  it('shows TS status pill for .ts files', () => {
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/app.ts', content: 'const x = 1', language: 'javascript' }],
+      activeFilePath: '/foo/app.ts',
+    })
+    render(<CodeEditor />)
+    // The pill is a div with aria-live, aria-label, and visible text
+    expect(screen.getByLabelText(/typescript language server/i)).toBeInTheDocument()
+  })
+
+  it('does not show TS status pill for .md files', () => {
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/README.md', content: '# Hello', language: 'markdown' }],
+      activeFilePath: '/foo/README.md',
+    })
+    render(<CodeEditor />)
+    expect(screen.queryByLabelText(/typescript language server/i)).not.toBeInTheDocument()
+  })
+
+  it('shows TS: ready pill when lsp status is ready', () => {
+    mockUseLspClient.mockReturnValue({ extension: 'FAKE_EXT', status: 'ready' as const, error: undefined })
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/index.tsx', content: '', language: 'javascript' }],
+      activeFilePath: '/foo/index.tsx',
+    })
+    render(<CodeEditor />)
+    expect(screen.getByText('TS: ready')).toBeInTheDocument()
+  })
+
+  it('shows TS: unavailable pill when lsp status is error', () => {
+    mockUseLspClient.mockReturnValue({ extension: null, status: 'error' as const, error: 'WS failed' })
+    useEditorStore.setState({
+      openFiles: [{ path: '/foo/util.ts', content: '', language: 'javascript' }],
+      activeFilePath: '/foo/util.ts',
+    })
+    render(<CodeEditor />)
+    expect(screen.getByText('TS: unavailable')).toBeInTheDocument()
   })
 })
