@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useState } from 'react'
-import { Routes, Route, Navigate, Link, Outlet } from 'react-router-dom'
+import { Routes, Route, Navigate, Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { useHotkeys } from 'react-hotkeys-hook'
 
@@ -11,6 +11,7 @@ import RightRail from './components/RightRail'
 import { useRailState, LEFT_RAIL_DEFAULT_PX, RIGHT_RAIL_DEFAULT_PX } from './hooks/useRailState'
 import { TerminalTabs } from '../components/terminal/TerminalTabs'
 import CommandPalette from '../components/CommandPalette'
+import { EditorShellLayout } from './components/EditorShellLayout'
 import {
   HooksPage,
   PlansPage,
@@ -52,6 +53,8 @@ function ShellLayout() {
 
   const shouldReduceMotion = useReducedMotion()
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   // Toggle handlers — pure state flips, the DOM follows via width animation
   const handleToggleLeft = useCallback(() => setLeftRailOpen(!leftRailOpen),
@@ -65,6 +68,18 @@ function ShellLayout() {
   useHotkeys('mod+alt+b', (e) => { e.preventDefault(); handleToggleRight() }, { enableOnFormTags: false })
   // ⌘K opens command palette
   useHotkeys('mod+k', (e) => { e.preventDefault(); setPaletteOpen(true) }, { enableOnFormTags: true, enableOnContentEditable: true })
+  // ⌘E — open editor (checked for conflicts: no existing Cmd+E bindings in codebase)
+  useHotkeys(
+    'mod+e',
+    (e) => {
+      e.preventDefault()
+      if (location.pathname !== '/editor') {
+        navigate('/editor')
+      }
+      // If already on /editor, focus is handled by the editor component itself
+    },
+    { enableOnFormTags: false, enableOnContentEditable: false },
+  )
 
   const leftTargetPx = leftRailOpen ? (leftWidthPx || LEFT_RAIL_DEFAULT_PX) : COLLAPSED_PX
   const rightTargetPx = rightRailOpen ? (rightWidthPx || RIGHT_RAIL_DEFAULT_PX) : COLLAPSED_PX
@@ -131,7 +146,10 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <Routes>
-        {/* ── Shell wraps all routes ── */}
+        {/* ── Editor route — no Cast rails (sibling of ShellLayout) ── */}
+        <Route path="/editor" element={<ErrorBoundary><EditorShellLayout /></ErrorBoundary>} />
+
+        {/* ── Shell wraps all other routes ── */}
         <Route element={<ShellLayout />}>
           <Route path="/" element={<ErrorBoundary><TerminalTabs /></ErrorBoundary>} />
           <Route path="/sessions" element={<ErrorBoundary><SessionsView /></ErrorBoundary>} />
