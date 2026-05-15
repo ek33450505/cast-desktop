@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { FolderOpen } from 'lucide-react'
-import CastFsTree from '../components/left-rail/CastFsTree'
+import ProjectFsTree from '../components/left-rail/ProjectFsTree'
 import PreviewModal from '../components/left-rail/PreviewModal'
 import type { PreviewTarget } from '../components/left-rail/CastFsTree'
 
 // ── ClaudeView ─────────────────────────────────────────────────────────────────
-// Surfaces ~/.claude/ as a full-page recursive tree powered by CastFsTree.
+// Surfaces ~/.claude/ as a full-page recursive filesystem tree (real directories,
+// not curated sections) by reusing ProjectFsTree pointed at /api/cast-fs/tree.
 // Clicking a file opens the same PreviewModal used by the left rail.
 
 export default function ClaudeView() {
@@ -49,7 +50,11 @@ export default function ClaudeView() {
 
       {/* ── Tree ────────────────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto py-1">
-        <CastFsTree onPreview={handlePreview} />
+        <ProjectFsTree
+          onPreview={handlePreview}
+          apiBase="/api/cast-fs/tree"
+          eventChannel="cast_fs_change"
+        />
       </div>
 
       {/* ── Preview modal ────────────────────────────────────────────────────── */}
