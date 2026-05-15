@@ -21,20 +21,13 @@ vi.mock('react-hotkeys-hook', () => ({
   useHotkeys: vi.fn(),
 }))
 
-// Stub CodeMirror view
-vi.mock('@codemirror/view', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@codemirror/view')>()
-  class MockEditorView {
-    constructor({ parent }: { parent?: HTMLElement }) {
-      if (parent) parent.setAttribute('data-cm-mounted', 'true')
-    }
-    dispatch() {}
-    destroy() {}
-    get state() { return { doc: { length: 0 } } }
-    static theme() { return [] }
-  }
-  return { ...original, EditorView: MockEditorView }
-})
+// Stub CodeEditor wholesale — shell smoke tests don't need a real CodeMirror.
+// (We previously only mocked @codemirror/view partially, but the always-mount
+// path in CodeEditor uses several more static facets — stubbing the component
+// is simpler and more correct than trying to keep a CodeMirror mock in sync.)
+vi.mock('./CodeEditor', () => ({
+  CodeEditor: () => <div data-testid="code-editor-stub">CodeEditor</div>,
+}))
 
 function renderInRouter(ui: React.ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>)

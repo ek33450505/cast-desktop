@@ -244,32 +244,20 @@ export function CodeEditor() {
   // Show the LSP pill only when the active file is a TS/JS file
   const showLspPill = isLspFile(activeFilePath)
 
-  if (!activeFile) {
-    return (
-      <div
-        role="region"
-        aria-label="Editor — no file open"
-        style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--cast-center-bg)',
-          color: 'var(--text-muted)',
-          fontSize: '0.875rem',
-        }}
-      >
-        Open a file from the project tree to view it here.
-      </div>
-    )
-  }
-
+  // NOTE: we ALWAYS render the CodeMirror container, even when no file is
+  // active. Earlier versions early-returned a placeholder div in this case,
+  // which meant `containerRef.current` was null when the mount effect ran —
+  // and because the effect has `[]` deps it never re-ran after a file was
+  // opened, so CodeMirror never instantiated. The placeholder is now an
+  // overlay on top of the always-mounted container.
   return (
     <div style={{ flex: 1, overflow: 'hidden', position: 'relative', display: 'flex', flexDirection: 'column' }}>
       <div
         ref={containerRef}
         role="region"
-        aria-label={`Editor — ${filename} (editable)`}
+        aria-label={activeFile
+          ? `Editor — ${filename} (editable)`
+          : 'Editor — no file open'}
         data-testid="code-editor"
         style={{
           flex: 1,
@@ -278,11 +266,31 @@ export function CodeEditor() {
         }}
       />
 
+      {/* Empty-state overlay — sits on top of the always-mounted editor */}
+      {!activeFile && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--cast-center-bg)',
+            color: 'var(--text-muted)',
+            fontSize: '0.875rem',
+            pointerEvents: 'none',
+          }}
+        >
+          Open a file from the project tree to view it here.
+        </div>
+      )}
+
       {/* IDE-4: TypeScript LSP status pill */}
       <LspStatusPill status={lspStatus} visible={showLspPill} />
 
       {/* Agent touch popover */}
-      {popoverOpen && (
+      {popoverOpen && activeFile && (
         <AgentTouchPopover
           touches={touches}
           anchorEl={popoverAnchor}

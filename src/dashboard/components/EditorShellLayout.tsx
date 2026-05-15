@@ -153,10 +153,10 @@ export function EditorShellLayout() {
         <PanelGroup orientation="horizontal" style={{ flex: 1, minHeight: 0 }}>
           {/* ── Left: Project file tree ── */}
           <Panel
-            defaultSize={20}
-            minSize={12}
+            defaultSize={22}
+            minSize={18}
             maxSize={40}
-            style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+            style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 200 }}
           >
             <div
               style={{
