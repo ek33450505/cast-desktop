@@ -175,6 +175,14 @@ code, pre, .font-mono {
   box-shadow: 0 0 20px rgba(0, 255, 194, 0.05);
 }
 
+/* Scrollable card body — apply to the content wrapper inside a .bento-card
+   to cap vertical growth at 360px and enable internal scroll. */
+.bento-card-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
 .hover-lift {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }

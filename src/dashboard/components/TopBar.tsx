@@ -66,40 +66,26 @@ export default function TopBar({
     <header
       className="flex items-center justify-between shrink-0"
       style={{
-        height: '48px',
+        height: '44px',
         background: 'var(--system-chrome)',
-        borderBottom: '1px solid var(--stroke-subtle)',
         paddingLeft: '16px',
         paddingRight: '8px',
       }}
     >
-      {/* ── Left: cast wordmark + project + date ─────────────────────────── */}
+      {/* ── Left: product wordmark + clock ────────────────────────────────── */}
       <div className="flex items-baseline gap-3">
         <span
-          className="text-base font-semibold tracking-tight select-none"
+          className="text-sm font-semibold tracking-tight select-none"
           style={{
-            color: 'var(--text-primary)',
+            color: 'var(--content-primary)',
             letterSpacing: '-0.01em',
           }}
-        >
-          cast
-        </span>
-        <span
-          className="text-xs select-none"
-          style={{ color: 'var(--text-muted)' }}
-          aria-hidden="true"
-        >
-          ·
-        </span>
-        <span
-          className="text-xs select-none"
-          style={{ color: 'var(--text-secondary)' }}
         >
           cast-desktop
         </span>
         <span
           className="text-xs select-none"
-          style={{ color: 'var(--text-muted)' }}
+          style={{ color: 'var(--content-muted)' }}
           aria-hidden="true"
         >
           ·

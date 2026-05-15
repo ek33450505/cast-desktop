@@ -4,7 +4,7 @@ import { Command } from 'cmdk'
 import {
   Search, History, Users, Map, Brain, X,
   Home, Activity, GitBranch, Coins, BarChart2,
-  Settings, ShieldCheck,
+  Settings, ShieldCheck, Info,
 } from 'lucide-react'
 import { useSearch } from '../api/useSearch'
 import { timeAgo } from '../utils/time'
@@ -151,6 +151,33 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
         {/* Results */}
         <Command.List className="max-h-[50vh] overflow-y-auto">
+          {/* Actions — non-navigation commands (About, etc.) */}
+          {(() => {
+            const q = query.toLowerCase().trim()
+            const matches = q.length === 0 || 'about cast desktop'.includes(q)
+            if (!matches) return null
+            return (
+              <Command.Group heading="Actions" className="px-2 py-1">
+                <div className="px-3 py-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Actions</span>
+                </div>
+                <Command.Item
+                  key="action-about"
+                  value="action-about-cast-desktop"
+                  onSelect={() => {
+                    onClose()
+                    window.dispatchEvent(new Event('cast:open-about'))
+                  }}
+                  className="flex items-center gap-3 px-5 py-2 text-left text-[var(--text-secondary)] transition-colors cursor-default data-[selected=true]:bg-[var(--accent-subtle)] data-[selected=true]:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]"
+                >
+                  <Info className="w-4 h-4 text-[var(--text-muted)]" />
+                  <span className="text-sm font-medium flex-1">About Cast Desktop</span>
+                  <span className="text-xs text-[var(--text-muted)] shrink-0">action</span>
+                </Command.Item>
+              </Command.Group>
+            )
+          })()}
+
           {/* Nav items — shown when query is empty or matches a label */}
           {(() => {
             const q = query.toLowerCase().trim()

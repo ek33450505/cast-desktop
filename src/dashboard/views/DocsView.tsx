@@ -145,7 +145,7 @@ function SlashCommandsSection() {
   return (
     <div className="bento-card p-6">
       <SectionHeader icon={Terminal} title="Slash Commands" count={SLASH_COMMANDS.length} />
-      <div className="overflow-x-auto">
+      <div className="bento-card-scroll">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
@@ -198,7 +198,7 @@ function AgentsSection() {
       {liveAgents && liveAgents.length > 0 && (
         <p className="text-[10px] text-[var(--content-muted)] mb-3">Live from /api/agents</p>
       )}
-      <div className="overflow-x-auto">
+      <div className="bento-card-scroll">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
@@ -250,31 +250,19 @@ function SkillsSection() {
   return (
     <div className="bento-card p-6">
       <SectionHeader icon={Blocks} title="Skills" count={skills.length} />
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)]">
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">Skill</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider pr-6">User-Invocable</th>
-              <th className="text-left pb-2 text-xs font-semibold text-[var(--content-muted)] uppercase tracking-wider">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border)]">
-            {skills.map(row => (
-              <tr key={row.name} className="hover:bg-[var(--system-elevated)] transition-colors">
-                <td className="py-2 pr-6">
-                  <span className="text-xs font-mono text-[var(--content-primary)]">{row.name}</span>
-                </td>
-                <td className="py-2 pr-6">
-                  <InvocableBadge invocable={row.invocable} />
-                </td>
-                <td className="py-2">
-                  <span className="text-sm text-[var(--content-secondary)]">{row.description}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+        {skills.map(row => (
+          <div
+            key={row.name}
+            className="flex flex-col gap-1 px-3 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--system-elevated)] transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-[var(--content-primary)] truncate flex-1">{row.name}</span>
+              <InvocableBadge invocable={row.invocable} />
+            </div>
+            <span className="text-[11px] text-[var(--content-muted)] leading-snug line-clamp-2">{row.description}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -285,7 +273,7 @@ function CastCliSection() {
     <div className="bento-card p-6">
       <SectionHeader icon={Command} title="CAST CLI" />
       <p className="text-xs text-[var(--content-muted)] mb-4 font-mono">cast &lt;subcommand&gt;</p>
-      <div className="overflow-x-auto">
+      <div className="bento-card-scroll">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
@@ -315,7 +303,7 @@ function HookDirectivesSection() {
   return (
     <div className="bento-card p-6">
       <SectionHeader icon={Hash} title="Hook Directives" count={HOOK_DIRECTIVES.length} />
-      <div className="overflow-x-auto">
+      <div className="bento-card-scroll">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
@@ -345,7 +333,7 @@ function TerminalKeybindsSection() {
   return (
     <div className="bento-card p-6">
       <SectionHeader icon={Keyboard} title="Terminal Keybinds" count={TERMINAL_KEYBINDS.length} />
-      <div className="overflow-x-auto">
+      <div className="bento-card-scroll">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">

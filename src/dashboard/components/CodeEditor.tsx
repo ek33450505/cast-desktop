@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { EditorState, Compartment } from '@codemirror/state'
+import { EditorState, Compartment, Extension } from '@codemirror/state'
 import {
   EditorView,
   keymap,
@@ -34,6 +34,7 @@ import { javascript } from '@codemirror/lang-javascript'
 import { json } from '@codemirror/lang-json'
 import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
+import { useAppearance } from '../../hooks/useAppearance'
 import { useEditorStore } from '../../stores/editorStore'
 import type { EditorLanguage } from '../../stores/editorStore'
 import { useTerminalStore } from '../../stores/terminalStore'
@@ -116,7 +117,14 @@ function LspStatusPill({ status, visible }: { status: 'connecting' | 'ready' | '
 // ── CodeEditor ─────────────────────────────────────────────────────────────────
 // CodeMirror 6 editor with IDE-3 agent gutter annotations and IDE-4 LSP support.
 
+// Returns the CodeMirror theme extension for the given appearance.
+// Dawn uses the default CodeMirror theme (light); dusk uses oneDark.
+function getThemeExtension(appearance: 'dawn' | 'dusk'): Extension {
+  return appearance === 'dusk' ? oneDark : []
+}
+
 export function CodeEditor() {
+  const { appearance } = useAppearance()
   const activeFilePath = useEditorStore((s) => s.activeFilePath)
   const openFiles = useEditorStore((s) => s.openFiles)
   const updateContent = useEditorStore((s) => s.updateContent)
@@ -142,6 +150,7 @@ export function CodeEditor() {
   const viewRef = useRef<EditorView | null>(null)
   const languageCompartment = useRef(new Compartment())
   const lspCompartment = useRef(new Compartment())
+  const themeCompartment = useRef(new Compartment())
 
   // Ref to always point at the current path/callback without recreating the view
   const activePathRef = useRef<string | null>(activeFilePath)
@@ -235,7 +244,8 @@ export function CodeEditor() {
           languageCompartment.current.of([]),
           // ── IDE-4: LSP — reconfigured when LSP becomes ready/unavailable
           lspCompartment.current.of([]),
-          oneDark,
+          // ── Theme — reconfigured reactively when appearance changes
+          themeCompartment.current.of(getThemeExtension(appearance)),
           // ── Keymaps (order matters — earlier wins on conflict). historyKeymap
           // gives Cmd+Z / Cmd+Shift+Z. searchKeymap gives Cmd+F / Cmd+G.
           // closeBracketsKeymap handles smart bracket Backspace. completionKeymap
@@ -310,6 +320,17 @@ export function CodeEditor() {
     })
   }, [lspStatus, lspExtension, activeFilePath])
 
+  // ── Reconfigure theme compartment when appearance changes ──────────────────
+  // The CodeMirror view is created once (empty deps []), so the theme must be
+  // swapped via Compartment.reconfigure() — the frozen-theme fix pattern.
+  useEffect(() => {
+    const view = viewRef.current
+    if (!view) return
+    view.dispatch({
+      effects: themeCompartment.current.reconfigure(getThemeExtension(appearance)),
+    })
+  }, [appearance])
+
   // Show the LSP pill only when the active file is a TS/JS file
   const showLspPill = isLspFile(activeFilePath)
 
@@ -331,7 +352,7 @@ export function CodeEditor() {
         style={{
           flex: 1,
           overflow: 'hidden',
-          background: '#282c34',
+          background: appearance === 'dusk' ? '#282c34' : '#ffffff',
         }}
       />
 

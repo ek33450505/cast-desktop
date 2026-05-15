@@ -1,12 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="cast app icon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Cast Desktop">
   <defs>
-    <linearGradient id="duskBg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#152A24"/>
-      <stop offset="1" stop-color="#0C1B17"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#13171B"/>
+      <stop offset="1" stop-color="#080A0D"/>
     </linearGradient>
   </defs>
-  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#duskBg)"/>
-  <circle cx="256" cy="256" r="56" fill="#E6A532"/>
-  <circle cx="256" cy="256" r="92" fill="none" stroke="#E6A532" stroke-opacity="0.18" stroke-width="3"/>
-  <circle cx="256" cy="256" r="132" fill="none" stroke="#E6A532" stroke-opacity="0.10" stroke-width="2"/>
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+  <rect x="14" y="14" width="484" height="484" rx="100" ry="100" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"/>
+  <g font-family="'JetBrains Mono', 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="700">
+    <text x="118" y="338" font-size="240" fill="#E6A532" letter-spacing="-6">&gt;_</text>
+  </g>
+  <circle cx="402" cy="208" r="14" fill="#E6A532"/>
 </svg>
