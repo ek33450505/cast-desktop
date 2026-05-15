@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="cast app icon">
+  <defs>
+    <linearGradient id="duskBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#152A24"/>
+      <stop offset="1" stop-color="#0C1B17"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#duskBg)"/>
+  <circle cx="256" cy="256" r="56" fill="#E6A532"/>
+  <circle cx="256" cy="256" r="92" fill="none" stroke="#E6A532" stroke-opacity="0.18" stroke-width="3"/>
+  <circle cx="256" cy="256" r="132" fill="none" stroke="#E6A532" stroke-opacity="0.10" stroke-width="2"/>
+</svg>
