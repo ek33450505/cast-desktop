@@ -16,11 +16,12 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ChevronDown, ChevronUp, Home, PanelLeftClose, PanelLeft, Search } from 'lucide-react'
 import { useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import { TerminalTabs } from '../../components/terminal/TerminalTabs'
+import CommandPalette from '../../components/CommandPalette'
 import { ProjectFileTree } from './ProjectFileTree'
 import { EditorTabs } from './EditorTabs'
 import { CodeEditor } from './CodeEditor'
@@ -49,9 +50,17 @@ export function EditorShellLayout() {
   const saveAs = useEditorStore((s) => s.saveAs)
   const shouldReduceMotion = useReducedMotion()
 
+  const navigate = useNavigate()
+
   // ── IDE-5: Dispatch modal + status panel ─────────────────────────────────────
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false)
   const [activeRun, setActiveRun] = useState<{ run_id: string; agent: DispatchAgent } | null>(null)
+
+  // ── Hotfix: command palette + collapsible Explorer sidebar ───────────────────
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [explorerOpen, setExplorerOpen] = useState(true)
+  const EXPLORER_WIDTH = 240
+  const EXPLORER_COLLAPSED = 36
 
   // Stable list of open paths for useFileWatch
   const openPaths = useMemo(() => openFiles.map((f) => f.path), [openFiles])
@@ -151,6 +160,13 @@ export function EditorShellLayout() {
           toast.error(`Save failed: ${String(err)}`)
         }
       }
+
+      // ── Cmd+K — Command palette (not bound by ShellLayout here since /editor
+      // renders outside ShellLayout)
+      if (!e.shiftKey && e.key === 'k') {
+        e.preventDefault()
+        setPaletteOpen((open) => !open)
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
@@ -164,67 +180,100 @@ export function EditorShellLayout() {
       className="flex flex-col h-screen overflow-hidden"
       style={{ background: 'var(--system-canvas)' }}
     >
-      {/* ── Main area: horizontal panels ── */}
+      {/* ── Main area: fixed sidebar + flex center ── */}
+      {/* Switched from react-resizable-panels (percentage-only minSize couldn't
+        * enforce a pixel floor on narrow windows — sidebar collapsed below readability)
+        * to a fixed-pixel sidebar with a collapse toggle. Resize-by-drag may
+        * return in a polish wave. */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <PanelGroup orientation="horizontal" style={{ flex: 1, minHeight: 0 }}>
-          {/* ── Left: Project file tree ── */}
-          <Panel
-            defaultSize={22}
-            minSize={18}
-            maxSize={40}
-            style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 200 }}
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row' }}>
+          {/* ── Left: Project file tree (fixed-px, collapsible) ── */}
+          <aside
+            aria-label="Project sidebar"
+            style={{
+              width: explorerOpen ? EXPLORER_WIDTH : EXPLORER_COLLAPSED,
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              borderRight: '1px solid var(--stroke-regular)',
+              background: 'var(--cast-rail-bg, var(--bg-secondary))',
+              transition: shouldReduceMotion ? 'none' : 'width 0.18s ease',
+            }}
           >
+            {/* Sidebar header — Home, Search (Cmd+K), and Collapse toggle */}
             <div
               style={{
-                height: '100%',
-                overflow: 'hidden',
                 display: 'flex',
-                flexDirection: 'column',
-                borderRight: '1px solid var(--stroke-regular)',
-                background: 'var(--cast-rail-bg, var(--bg-secondary))',
+                alignItems: 'center',
+                gap: 2,
+                padding: '4px 4px',
+                borderBottom: '1px solid var(--cast-rail-border)',
+                flexShrink: 0,
               }}
             >
-              {/* File tree header */}
-              <div
-                style={{
-                  padding: '8px 8px 6px',
-                  fontSize: '0.6875rem',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: 'var(--text-muted)',
-                  borderBottom: '1px solid var(--cast-rail-border)',
-                  flexShrink: 0,
-                  userSelect: 'none',
-                }}
+              <button
+                onClick={() => navigate('/')}
+                aria-label="Back to Cast home"
+                title="Back to Cast home"
+                style={iconButtonStyle}
+                onFocus={iconButtonFocus}
+                onBlur={iconButtonBlur}
               >
-                Explorer
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-                <ProjectFileTree rootPath={rootPath} onOpenFile={handleOpenFile} />
-              </div>
+                <Home size={14} aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => setPaletteOpen(true)}
+                aria-label="Open command palette (Cmd+K)"
+                title="Command palette (⌘K)"
+                style={iconButtonStyle}
+                onFocus={iconButtonFocus}
+                onBlur={iconButtonBlur}
+              >
+                <Search size={14} aria-hidden="true" />
+              </button>
+              <div style={{ flex: 1 }} />
+              <button
+                onClick={() => setExplorerOpen((o) => !o)}
+                aria-label={explorerOpen ? 'Collapse Explorer' : 'Expand Explorer'}
+                aria-expanded={explorerOpen}
+                title={explorerOpen ? 'Collapse Explorer' : 'Expand Explorer'}
+                style={iconButtonStyle}
+                onFocus={iconButtonFocus}
+                onBlur={iconButtonBlur}
+              >
+                {explorerOpen
+                  ? <PanelLeftClose size={14} aria-hidden="true" />
+                  : <PanelLeft size={14} aria-hidden="true" />}
+              </button>
             </div>
-          </Panel>
 
-          <PanelResizeHandle
-            aria-label="Resize file tree"
-            style={{
-              width: 4,
-              background: 'var(--stroke-regular)',
-              cursor: 'col-resize',
-              transition: 'background 0.15s',
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = 'var(--cast-accent)'
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = 'var(--stroke-regular)'
-            }}
-          />
+            {/* File tree label + tree (hidden when collapsed) */}
+            {explorerOpen && (
+              <>
+                <div
+                  style={{
+                    padding: '8px 12px 6px',
+                    fontSize: '0.6875rem',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                    color: 'var(--text-muted)',
+                    flexShrink: 0,
+                    userSelect: 'none',
+                  }}
+                >
+                  Explorer
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+                  <ProjectFileTree rootPath={rootPath} onOpenFile={handleOpenFile} />
+                </div>
+              </>
+            )}
+          </aside>
 
           {/* ── Center: Editor tabs + CodeMirror ── */}
-          <Panel style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <div
               style={{
                 height: '100%',
@@ -304,8 +353,8 @@ export function EditorShellLayout() {
                 <CodeEditor />
               </div>
             </div>
-          </Panel>
-        </PanelGroup>
+          </div>
+        </div>
 
         {/* ── Bottom: Terminal dock ── */}
         <div
@@ -420,6 +469,9 @@ export function EditorShellLayout() {
           onClose={() => setActiveRun(null)}
         />
       )}
+
+      {/* ── Command palette (Cmd+K) — not mounted by ShellLayout on this route ── */}
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   )
 }
@@ -431,4 +483,32 @@ function buildDispatchPrompt(filePath: string | null, selection: string): string
   const fileStr = filePath ? `File: ${filePath}` : 'File: (no file open)'
   const selStr = selection ? `Selection:\n${selection}` : 'Selection:\n(none)'
   return `${fileStr}\n\n${selStr}\n\nTask: `
+}
+
+// ── Icon-button styling shared across sidebar header ──────────────────────────
+
+const iconButtonStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 26,
+  height: 26,
+  border: 'none',
+  borderRadius: 4,
+  background: 'transparent',
+  color: 'var(--text-muted)',
+  cursor: 'pointer',
+  outline: 'none',
+  flexShrink: 0,
+}
+
+function iconButtonFocus(e: React.FocusEvent<HTMLButtonElement>) {
+  e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+  e.currentTarget.style.outlineOffset = '-2px'
+  e.currentTarget.style.color = 'var(--text-primary)'
+}
+
+function iconButtonBlur(e: React.FocusEvent<HTMLButtonElement>) {
+  e.currentTarget.style.outline = 'none'
+  e.currentTarget.style.color = 'var(--text-muted)'
 }
