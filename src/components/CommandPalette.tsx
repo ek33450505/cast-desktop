@@ -14,6 +14,7 @@ import {
   Search,
   X,
   Code2,
+  FolderOpen,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 
@@ -33,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Work Log', path: '/work-log', icon: ScrollText },
   { label: 'System', path: '/system', icon: Settings },
   { label: 'Docs', path: '/docs', icon: FileText },
+  { label: '~/.claude/ Vault', path: '/claude', icon: FolderOpen },
 ]
 
 export interface CommandPaletteProps {

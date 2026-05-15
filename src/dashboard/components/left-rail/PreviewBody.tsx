@@ -58,7 +58,9 @@ export function normalizeFrontmatter(content: string): string {
  */
 export default function PreviewBody({ filePath, content }: PreviewBodyProps) {
   const fileName = basename(filePath)
-  const isMarkdown = fileName.endsWith('.md')
+  const ext = fileName.toLowerCase().match(/\.(\w+)$/)?.[1] ?? ''
+  const isCode = ext === 'json' || ext === 'sh' || ext === 'py'
+  const isMarkdown = !isCode && fileName.endsWith('.md')
 
   const { frontmatter, bodyContent } = useMemo(() => {
     if (!isMarkdown || !content) {
