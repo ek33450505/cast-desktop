@@ -111,10 +111,13 @@ pub fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let github = MenuItem::with_id(app, "open-github", "Cast Desktop on GitHub", true, None::<&str>)?;
     let docs = MenuItem::with_id(app, "open-docs", "Documentation", true, None::<&str>)?;
     let whats_new = MenuItem::with_id(app, "open-whats-new", "What's New", true, None::<&str>)?;
+    // "navigate-claude" is forwarded to the front-end bridge → cast:navigate-claude window event
+    let browse_claude = MenuItem::with_id(app, "navigate-claude", "Browse ~/.claude/", true, None::<&str>)?;
     let help_about = MenuItem::with_id(app, "help-about", "About Cast Desktop", true, None::<&str>)?;
     let help_menu = SubmenuBuilder::new(app, "Help")
         .item(&docs)
         .item(&whats_new)
+        .item(&browse_claude)
         .item(&PredefinedMenuItem::separator(app)?)
         .item(&github)
         .item(&help_about)
