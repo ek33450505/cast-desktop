@@ -17,7 +17,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Home, PanelLeftClose, PanelLeft, Search } from 'lucide-react'
+import { ChevronDown, ChevronUp, Home, PanelLeftClose, PanelLeft, Search, FolderOpen } from 'lucide-react'
 import { useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import { TerminalTabs } from '../../components/terminal/TerminalTabs'
@@ -70,11 +70,27 @@ export function EditorShellLayout() {
   // uses BrowserRouter. Router migration is out of scope for IDE-2.
   // Tab-close guard (in EditorTabs) still applies for dirty close.
 
-  // Root path from active terminal tab's cwd, falling back to home
+  // Root path resolution: explicit editor workspace root takes precedence,
+  // then the active terminal cwd, then '~'. This means the user can open a
+  // project in /editor without ever launching a terminal.
+  const workspaceRoot = useEditorStore((s) => s.workspaceRoot)
+  const setWorkspaceRoot = useEditorStore((s) => s.setWorkspaceRoot)
   const activeTabId = useTerminalStore((s) => s.activeTabId)
   const tabs = useTerminalStore((s) => s.tabs)
   const activeTab = tabs.find((t) => t.id === activeTabId)
-  const rootPath = activeTab?.cwd || '~'
+  const rootPath = workspaceRoot ?? activeTab?.cwd ?? '~'
+
+  const handleOpenWorkspace = useCallback(async () => {
+    try {
+      const { open } = await import('@tauri-apps/plugin-dialog')
+      const picked = await open({ directory: true, multiple: false })
+      if (typeof picked === 'string' && picked) {
+        setWorkspaceRoot(picked)
+      }
+    } catch (err) {
+      toast.error(`Could not open folder: ${String(err)}`)
+    }
+  }, [setWorkspaceRoot])
 
   // ── IDE-3: External file watch ───────────────────────────────────────────────
   const handleExternalFileChange = useCallback(
@@ -233,6 +249,16 @@ export function EditorShellLayout() {
                 onBlur={iconButtonBlur}
               >
                 <Search size={14} aria-hidden="true" />
+              </button>
+              <button
+                onClick={handleOpenWorkspace}
+                aria-label="Open folder as workspace"
+                title="Open Folder…"
+                style={iconButtonStyle}
+                onFocus={iconButtonFocus}
+                onBlur={iconButtonBlur}
+              >
+                <FolderOpen size={14} aria-hidden="true" />
               </button>
               {/* Spacer pushes the collapse toggle to the far end of the row when open */}
               {explorerOpen && <div style={{ flex: 1 }} />}
