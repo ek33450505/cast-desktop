@@ -1,7 +1,35 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { EditorState, Compartment } from '@codemirror/state'
-import { EditorView, keymap, lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
-import { defaultKeymap } from '@codemirror/commands'
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  highlightActiveLineGutter,
+  highlightActiveLine,
+  drawSelection,
+  rectangularSelection,
+  crosshairCursor,
+  dropCursor,
+} from '@codemirror/view'
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentWithTab,
+} from '@codemirror/commands'
+import {
+  bracketMatching,
+  indentOnInput,
+  foldGutter,
+  foldKeymap,
+} from '@codemirror/language'
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
+import {
+  autocompletion,
+  closeBrackets,
+  closeBracketsKeymap,
+  completionKeymap,
+} from '@codemirror/autocomplete'
 import { javascript } from '@codemirror/lang-javascript'
 import { json } from '@codemirror/lang-json'
 import { markdown } from '@codemirror/lang-markdown'
@@ -185,15 +213,42 @@ export function CodeEditor() {
       state: EditorState.create({
         doc: '',
         extensions: [
+          // ── Modern IDE feature set ────────────────────────────────────────
           lineNumbers(),
           highlightActiveLineGutter(),
-          // IDE-3: agent gutter — dot at line 1 when file has agent touches
+          highlightActiveLine(),
+          foldGutter(),
+          dropCursor(),
+          EditorState.allowMultipleSelections.of(true),
+          drawSelection(),
+          rectangularSelection(),
+          crosshairCursor(),
+          indentOnInput(),
+          bracketMatching(),
+          closeBrackets(),
+          autocompletion(),
+          highlightSelectionMatches(),
+          history(),
+          // ── IDE-3: agent gutter — dot at line 1 when file has agent touches
           ...agentGutter(handleOpenPopover, filename),
+          // ── Language: reconfigured per-file by activeFile effect
           languageCompartment.current.of([]),
-          // IDE-4: LSP compartment — reconfigured when LSP becomes ready/unavailable
+          // ── IDE-4: LSP — reconfigured when LSP becomes ready/unavailable
           lspCompartment.current.of([]),
           oneDark,
-          keymap.of(defaultKeymap),
+          // ── Keymaps (order matters — earlier wins on conflict). historyKeymap
+          // gives Cmd+Z / Cmd+Shift+Z. searchKeymap gives Cmd+F / Cmd+G.
+          // closeBracketsKeymap handles smart bracket Backspace. completionKeymap
+          // gives Tab to accept. indentWithTab gives Tab indent at line start.
+          keymap.of([
+            ...closeBracketsKeymap,
+            ...defaultKeymap,
+            ...searchKeymap,
+            ...historyKeymap,
+            ...foldKeymap,
+            ...completionKeymap,
+            indentWithTab,
+          ]),
           onChange,
           EditorView.theme({
             '&': { height: '100%' },

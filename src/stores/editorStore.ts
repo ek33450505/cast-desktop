@@ -40,11 +40,20 @@ interface EditorState {
    */
   activeSelection: string
 
+  /**
+   * Editor workspace root — explicitly chosen via "Open Folder" in the editor
+   * sidebar. When null, the editor falls back to the terminal cwd (legacy)
+   * then '~'. This lets users open a project in /editor without ever launching
+   * a terminal.
+   */
+  workspaceRoot: string | null
+
   // Actions
   openFile: (path: string, content: string) => void
   closeFile: (path: string) => void
   setActive: (path: string) => void
   setBottomDockExpanded: (expanded: boolean) => void
+  setWorkspaceRoot: (path: string | null) => void
   /** Update content in memory; marks dirty if different from original */
   updateContent: (path: string, newContent: string) => void
   /** IDE-5: update the current selection text from the CodeMirror view */
@@ -80,6 +89,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   originalContent: new Map<string, string>(),
   externalChange: new Map<string, string>(),
   activeSelection: '',
+  workspaceRoot: null,
+
+  setWorkspaceRoot: (path: string | null) => {
+    set({ workspaceRoot: path })
+  },
 
   openFile: (path: string, content: string) => {
     const existing = get().openFiles.find((f) => f.path === path)

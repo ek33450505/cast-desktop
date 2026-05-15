@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
+import { Save } from 'lucide-react'
 import { useEditorStore } from '../../stores/editorStore'
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
 
@@ -266,6 +267,62 @@ export function EditorTabs() {
           </div>
         )
       })}
+      {/* Spacer pushes the Save button to the right edge of the tab strip */}
+      <div style={{ flex: 1, minWidth: 0 }} />
+      {/* Save button — visible affordance for ⌘S */}
+      <button
+        type="button"
+        onClick={async () => {
+          if (!activeFilePath || !dirty.has(activeFilePath)) return
+          try {
+            await save(activeFilePath)
+            const fn = basename(activeFilePath)
+            toast.success(`Saved ${fn}`)
+          } catch (err) {
+            toast.error(`Save failed: ${String(err)}`)
+          }
+        }}
+        disabled={!activeFilePath || !dirty.has(activeFilePath)}
+        aria-label={
+          activeFilePath && dirty.has(activeFilePath)
+            ? `Save ${basename(activeFilePath)} (⌘S)`
+            : 'Save (no unsaved changes)'
+        }
+        title={
+          activeFilePath && dirty.has(activeFilePath)
+            ? `Save ${basename(activeFilePath)} (⌘S)`
+            : 'No unsaved changes'
+        }
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '4px 12px',
+          marginRight: 6,
+          border: 'none',
+          borderRadius: 4,
+          background: 'transparent',
+          color: activeFilePath && dirty.has(activeFilePath)
+            ? 'var(--cast-accent)'
+            : 'var(--text-muted)',
+          opacity: activeFilePath && dirty.has(activeFilePath) ? 1 : 0.4,
+          cursor: activeFilePath && dirty.has(activeFilePath) ? 'pointer' : 'default',
+          fontSize: '0.8125rem',
+          outline: 'none',
+          flexShrink: 0,
+          transition: shouldReduceMotion ? 'none' : 'opacity 0.15s ease, color 0.15s ease',
+        }}
+        onFocus={(e) => {
+          if (!e.currentTarget.disabled) {
+            e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+            e.currentTarget.style.outlineOffset = '-2px'
+          }
+        }}
+        onBlur={(e) => { e.currentTarget.style.outline = 'none' }}
+      >
+        <Save size={13} aria-hidden="true" />
+        <span>Save</span>
+      </button>
     </div>
     {modalElement}
     </>
