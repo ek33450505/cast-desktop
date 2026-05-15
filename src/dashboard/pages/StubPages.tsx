@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom'
 
-interface StubPageProps {
+interface ComingSoonProps {
   title: string
   subtitle?: string
+  targetVersion?: string
 }
 
-function StubPage({ title, subtitle }: StubPageProps) {
+function ComingSoon({ title, subtitle = 'Coming in v1.1.' }: ComingSoonProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
       <h1 className="text-2xl font-semibold text-[var(--content-primary)]">{title}</h1>
       <p className="text-sm text-[var(--content-muted)] max-w-sm">
-        {subtitle ?? 'Repatriates from claude-code-dashboard in a sub-wave'}
+        {subtitle}
       </p>
       <Link
         to="/"
@@ -23,33 +24,64 @@ function StubPage({ title, subtitle }: StubPageProps) {
 }
 
 export function HooksPage() {
-  return <StubPage title="Hooks" />
+  return (
+    <ComingSoon
+      title="Hooks"
+      subtitle="View and edit Claude Code hooks from inside Cast Desktop. Coming in v1.1."
+    />
+  )
 }
 
 export function PlansPage() {
-  return <StubPage title="Plans" />
+  return (
+    <ComingSoon
+      title="Plans"
+      subtitle="Browse and resume CAST plans. Coming in v1.1."
+    />
+  )
 }
 
 export function MemoryPage() {
-  return <StubPage title="Memory" />
+  return (
+    <ComingSoon
+      title="Memory"
+      subtitle="Inspect agent and project memory. Coming in v1.1."
+    />
+  )
 }
 
 export function DbPage() {
-  return <StubPage title="DB Explorer" />
+  return (
+    <ComingSoon
+      title="Database"
+      subtitle="Explore cast.db tables and schema. Coming in v1.1."
+    />
+  )
 }
 
 export function SettingsPage() {
-  return <StubPage title="Settings" />
+  return (
+    <ComingSoon
+      title="Settings"
+      subtitle="Configure Cast Desktop. Coming in v1.1."
+    />
+  )
 }
 
 export function ThemesPage() {
-  return <StubPage title="Themes" subtitle="Themes are coming in v1.1 — forest-at-dusk (dark) and sunrise (light) palettes are in design. We're polishing functional UX first." />
+  return (
+    <ComingSoon
+      title="Themes"
+      subtitle="forest-at-dusk (dark) and sunrise (light) palettes are in design. Coming in v1.1."
+    />
+  )
 }
 
 export function SkillsPage() {
-  return <StubPage title="Skills" />
-}
-
-export function AboutPage() {
-  return <StubPage title="About" />
+  return (
+    <ComingSoon
+      title="Skills"
+      subtitle="Browse installed Claude Code skills. Coming in v1.1."
+    />
+  )
 }

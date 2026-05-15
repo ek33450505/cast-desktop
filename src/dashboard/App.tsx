@@ -24,7 +24,6 @@ import {
   SettingsPage,
   ThemesPage,
   SkillsPage,
-  AboutPage,
 } from './pages/StubPages'
 
 // ── Lazy-loaded route views ───────────────────────────────────────────────────
@@ -244,8 +243,6 @@ export default function App() {
           <Route path="/settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
           <Route path="/themes" element={<ErrorBoundary><ThemesPage /></ErrorBoundary>} />
           <Route path="/skills" element={<ErrorBoundary><SkillsPage /></ErrorBoundary>} />
-          <Route path="/about" element={<ErrorBoundary><AboutPage /></ErrorBoundary>} />
-
           {/* ── Consolidation redirects ── */}
           <Route path="/commands" element={<Navigate to="/docs" replace />} />
           <Route path="/activity" element={<Navigate to="/sessions" replace />} />

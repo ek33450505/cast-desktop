@@ -1,10 +1,34 @@
 import { Router } from 'express'
-import { execFile } from 'child_process'
+import { execFile, spawn } from 'child_process'
 import { promisify } from 'util'
 import os from 'os'
 import path from 'path'
 
 const execFileAsync = promisify(execFile)
+
+/**
+ * Write `content` to the user's crontab via `crontab -`.
+ *
+ * Uses spawn() + stdin write — never bash -c with string interpolation —
+ * so the content cannot trigger shell command substitution regardless of
+ * what characters it contains. (Prior implementation used
+ * `bash -c \`echo ${JSON.stringify(content)} | crontab -\``; JSON.stringify
+ * does not escape $() or backticks, which bash evaluates inside double-quoted
+ * echo args before crontab ever runs.)
+ */
+function writeCrontab(content: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('crontab', ['-'], { stdio: ['pipe', 'ignore', 'pipe'] })
+    let stderr = ''
+    child.stderr?.on('data', (chunk: Buffer) => { stderr += chunk.toString('utf8') })
+    child.on('error', reject)
+    child.on('close', (code) => {
+      if (code === 0) resolve()
+      else reject(new Error(`crontab - exited with ${code}: ${stderr.trim()}`))
+    })
+    child.stdin?.end(content, 'utf8')
+  })
+}
 
 export const castdControlRouter = Router()
 
@@ -88,7 +112,7 @@ castdControlRouter.post('/cron', async (req, res) => {
       .then((r) => r.stdout)
       .catch(() => '')
     const updated = stdout.trimEnd() + '\n' + newEntry + '\n'
-    await execFileAsync('bash', ['-c', `echo ${JSON.stringify(updated)} | crontab -`])
+    await writeCrontab(updated)
     res.json({ ok: true, entry: newEntry })
   } catch (err) {
     console.error('Cron add error:', err)
@@ -105,7 +129,7 @@ castdControlRouter.delete('/cron', async (req, res) => {
       .then((r) => r.stdout)
       .catch(() => '')
     const filtered = stdout.split('\n').filter(l => l.trim() !== entry.trim()).join('\n')
-    await execFileAsync('bash', ['-c', `echo ${JSON.stringify(filtered)} | crontab -`])
+    await writeCrontab(filtered)
     res.json({ ok: true })
   } catch (err) {
     console.error('Cron delete error:', err)

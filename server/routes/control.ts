@@ -8,8 +8,10 @@ import { DASHBOARD_COMMANDS_DIR } from '../constants.js'
 import { getCastDbWritable } from './castDb.js'
 import type { DashboardCommand, CommandType } from '../../src/types/index.js'
 
-// Hardcoded CAST repo path — never accept this from request body
-const CAST_REPO_PATH = '/Users/edkubiak/Projects/personal/claude-agent-team'
+// CAST repo path — set via CAST_REPO_PATH env var. Never accepted from the
+// request body. /api/control/rollback returns 503 if unset; users who do not
+// run a local CAST repo simply cannot rollback (the rest of the API works).
+const CAST_REPO_PATH = process.env.CAST_REPO_PATH
 
 export const controlRouter = Router()
 
@@ -185,6 +187,12 @@ controlRouter.post('/weekly-report', (_req, res) => {
 
 // POST /api/control/rollback — git revert a commit in the CAST repo
 controlRouter.post('/rollback', (req, res) => {
+  if (!CAST_REPO_PATH) {
+    return res.status(503).json({
+      error: 'Rollback unavailable: CAST_REPO_PATH env var is not set on the server.',
+    })
+  }
+
   const { commit_sha } = req.body as { commit_sha?: string }
   if (!commit_sha || !/^[a-f0-9]{7,40}$/.test(commit_sha)) {
     return res.status(400).json({ error: 'commit_sha must be a valid 7-40 char hex string' })

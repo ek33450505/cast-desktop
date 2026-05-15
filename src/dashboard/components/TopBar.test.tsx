@@ -8,6 +8,12 @@ vi.mock('./AppearanceToggle', () => ({
   default: () => <button aria-label="Toggle appearance (stub)" />,
 }))
 
+vi.mock('./AppIcon', () => ({
+  AppIconSVG: ({ size, ...props }: { size: number; [k: string]: unknown }) => (
+    <svg data-testid="topbar-app-icon" width={size} height={size} {...props} />
+  ),
+}))
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const DEFAULT_PROPS = {
@@ -75,5 +81,10 @@ describe('TopBar', () => {
   it('does not render a settings button (removed)', () => {
     render(<TopBar {...DEFAULT_PROPS} />)
     expect(screen.queryByRole('button', { name: /settings/i })).toBeNull()
+  })
+
+  it('renders the app icon in the header', () => {
+    render(<TopBar {...DEFAULT_PROPS} />)
+    expect(screen.getByTestId('topbar-app-icon')).toBeInTheDocument()
   })
 })

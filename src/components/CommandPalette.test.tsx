@@ -145,12 +145,21 @@ describe('StubPage rendering', () => {
     expect(getByRole('heading', { name: /memory/i })).toBeInTheDocument()
   })
 
-  it('MemoryPage renders subtitle text', () => {
+  it('MemoryPage does not contain internal placeholder copy', () => {
+    const { queryByText } = render(
+      <MemoryRouter>
+        <MemoryPage />
+      </MemoryRouter>,
+    )
+    expect(queryByText(/repatriates from claude-code-dashboard/i)).not.toBeInTheDocument()
+  })
+
+  it('MemoryPage renders public-ready subtitle', () => {
     const { getByText } = render(
       <MemoryRouter>
         <MemoryPage />
       </MemoryRouter>,
     )
-    expect(getByText(/repatriates from claude-code-dashboard/i)).toBeInTheDocument()
+    expect(getByText(/inspect agent and project memory/i)).toBeInTheDocument()
   })
 })
