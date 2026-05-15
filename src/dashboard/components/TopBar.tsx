@@ -51,6 +51,8 @@ function HeaderClock() {
 interface TopBarProps {
   leftRailOpen: boolean
   rightRailOpen: boolean
+  /** When false the left-rail toggle button is hidden (e.g. on the terminal page). */
+  showLeftRailToggle?: boolean
   onToggleLeft: () => void
   onToggleRight: () => void
   onOpenPalette: () => void
@@ -59,6 +61,7 @@ interface TopBarProps {
 export default function TopBar({
   leftRailOpen,
   rightRailOpen,
+  showLeftRailToggle = true,
   onToggleLeft,
   onToggleRight,
   onOpenPalette,
@@ -108,18 +111,20 @@ export default function TopBar({
           <Search className="w-4 h-4" aria-hidden="true" />
         </button>
 
-        <button
-          type="button"
-          onClick={onToggleLeft}
-          aria-label={leftRailOpen ? 'Collapse left rail (⌘B)' : 'Expand left rail (⌘B)'}
-          title={leftRailOpen ? 'Collapse left rail (⌘B)' : 'Expand left rail (⌘B)'}
-          className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
-          style={{ width: '36px', height: '36px' }}
-        >
-          {leftRailOpen
-            ? <PanelLeftClose className="w-4 h-4" aria-hidden="true" />
-            : <PanelLeftOpen className="w-4 h-4" aria-hidden="true" />}
-        </button>
+        {showLeftRailToggle && (
+          <button
+            type="button"
+            onClick={onToggleLeft}
+            aria-label={leftRailOpen ? 'Collapse left rail (⌘B)' : 'Expand left rail (⌘B)'}
+            title={leftRailOpen ? 'Collapse left rail (⌘B)' : 'Expand left rail (⌘B)'}
+            className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
+            style={{ width: '36px', height: '36px' }}
+          >
+            {leftRailOpen
+              ? <PanelLeftClose className="w-4 h-4" aria-hidden="true" />
+              : <PanelLeftOpen className="w-4 h-4" aria-hidden="true" />}
+          </button>
+        )}
 
         <button
           type="button"

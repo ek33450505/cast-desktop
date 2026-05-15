@@ -102,6 +102,11 @@ function ShellLayout() {
     { enableOnFormTags: false, enableOnContentEditable: false },
   )
 
+  // Left rail is hidden on the terminal page (/) — it would occlude the terminal.
+  // Right rail stays everywhere. The keyboard shortcut (⌘B) remains wired but
+  // becomes a no-op on `/` to avoid complexity.
+  const showLeftRail = location.pathname !== '/'
+
   const leftTargetPx = leftRailOpen ? (leftWidthPx || LEFT_RAIL_DEFAULT_PX) : COLLAPSED_PX
   const rightTargetPx = rightRailOpen ? (rightWidthPx || RIGHT_RAIL_DEFAULT_PX) : COLLAPSED_PX
 
@@ -115,22 +120,25 @@ function ShellLayout() {
       <TopBar
         leftRailOpen={leftRailOpen}
         rightRailOpen={rightRailOpen}
+        showLeftRailToggle={showLeftRail}
         onToggleLeft={handleToggleLeft}
         onToggleRight={handleToggleRight}
         onOpenPalette={() => setPaletteOpen(true)}
       />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <div className="flex-1 min-h-0 flex">
-        {/* ── Left Rail ─────────────────────────────────────────────── */}
-        <motion.div
-          initial={false}
-          animate={{ width: leftTargetPx }}
-          transition={transition}
-          className="shrink-0 overflow-hidden"
-          style={{ borderRight: '1px solid var(--stroke-regular)' }}
-        >
-          <LeftRail open={leftRailOpen} onExpand={() => setLeftRailOpen(true)} />
-        </motion.div>
+        {/* ── Left Rail — hidden on terminal page ───────────────────── */}
+        {showLeftRail && (
+          <motion.div
+            initial={false}
+            animate={{ width: leftTargetPx }}
+            transition={transition}
+            className="shrink-0 overflow-hidden"
+            style={{ borderRight: '1px solid var(--stroke-regular)' }}
+          >
+            <LeftRail open={leftRailOpen} onExpand={() => setLeftRailOpen(true)} />
+          </motion.div>
+        )}
 
         {/* ── Center ────────────────────────────────────────────────── */}
         <main id="main-content" className="flex-1 min-w-0 overflow-auto"
