@@ -92,6 +92,7 @@ export function CodeEditor() {
   const activeFilePath = useEditorStore((s) => s.activeFilePath)
   const openFiles = useEditorStore((s) => s.openFiles)
   const updateContent = useEditorStore((s) => s.updateContent)
+  const setActiveSelection = useEditorStore((s) => s.setActiveSelection)
   const activeFile = openFiles.find((f) => f.path === activeFilePath) ?? null
 
   // Workspace root for the LSP server — use the active terminal's cwd.
@@ -117,10 +118,12 @@ export function CodeEditor() {
   // Ref to always point at the current path/callback without recreating the view
   const activePathRef = useRef<string | null>(activeFilePath)
   const updateContentRef = useRef(updateContent)
+  const setActiveSelectionRef = useRef(setActiveSelection)
 
   // Keep refs in sync
   activePathRef.current = activeFilePath
   updateContentRef.current = updateContent
+  setActiveSelectionRef.current = setActiveSelection
 
   // ── Agent gutter popover state ──────────────────────────────────────────────
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null)
@@ -161,10 +164,21 @@ export function CodeEditor() {
     if (!containerRef.current) return
 
     const onChange = EditorView.updateListener.of((update) => {
-      if (!update.docChanged) return
-      const path = activePathRef.current
-      if (!path) return
-      updateContentRef.current(path, update.state.doc.toString())
+      if (update.docChanged) {
+        const path = activePathRef.current
+        if (path) {
+          updateContentRef.current(path, update.state.doc.toString())
+        }
+      }
+      // IDE-5: track selection for Cmd+Shift+A dispatch pre-fill.
+      // Guarded: tests may pass a partial update without selection state.
+      if (update.selectionSet || update.docChanged) {
+        const sel = update.state.selection?.main
+        if (sel) {
+          const text = sel.empty ? '' : update.state.doc.sliceString(sel.from, sel.to)
+          setActiveSelectionRef.current(text)
+        }
+      }
     })
 
     const view = new EditorView({
