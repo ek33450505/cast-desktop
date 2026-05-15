@@ -1,5 +1,5 @@
 {
-  "productName": "cast",
+  "productName": "Cast Desktop",
   "version": "0.1.0",
   "identifier": "com.cast-desktop.app",
   "build": {
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "cast",
+        "title": "Cast Desktop",
         "width": 1200,
         "height": 800,
         "resizable": true,
@@ -24,6 +24,15 @@
     }
   },
   "bundle": {
-    "externalBin": ["binaries/cast-server", "binaries/cast-lsp-ts"]
+    "externalBin": ["binaries/cast-server", "binaries/cast-lsp-ts"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "shortDescription": "Your agents, in the room.",
+    "longDescription": "Cast Desktop is a local-first developer workspace built for AI-native workflows — terminal, editor, and agent observability on one surface."
   }
 }

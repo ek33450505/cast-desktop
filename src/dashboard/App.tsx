@@ -1,9 +1,10 @@
-import { lazy, Suspense, useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Routes, Route, Navigate, Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { useHotkeys } from 'react-hotkeys-hook'
 
 import { useDbChangeInvalidation } from './api/useDbChangeInvalidation'
+import { AboutDialog } from './components/AboutDialog'
 import ErrorBoundary from './components/ErrorBoundary'
 import TopBar from './components/TopBar'
 import LeftRail from './components/LeftRail'
@@ -143,8 +144,18 @@ function ShellLayout() {
 export default function App() {
   useDbChangeInvalidation()
 
+  const [aboutOpen, setAboutOpen] = useState(false)
+
+  // Phase C native menu bar will fire this event from "Cast → About"
+  useEffect(() => {
+    const handleOpenAbout = () => setAboutOpen(true)
+    window.addEventListener('cast:open-about', handleOpenAbout)
+    return () => window.removeEventListener('cast:open-about', handleOpenAbout)
+  }, [])
+
   return (
     <MotionConfig reducedMotion="user">
+      {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
       <Routes>
         {/* ── Editor route — no Cast rails (sibling of ShellLayout) ── */}
         <Route path="/editor" element={<ErrorBoundary><EditorShellLayout /></ErrorBoundary>} />
