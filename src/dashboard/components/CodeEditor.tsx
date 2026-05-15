@@ -8,9 +8,11 @@ import { markdown } from '@codemirror/lang-markdown'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { useEditorStore } from '../../stores/editorStore'
 import type { EditorLanguage } from '../../stores/editorStore'
+import { useTerminalStore } from '../../stores/terminalStore'
 import { agentGutter, setHasTouches } from './editor/agentGutter'
 import { useFileTouches } from '../hooks/useFileTouches'
 import { AgentTouchPopover } from './AgentTouchPopover'
+import { useLspClient } from '../hooks/useLspClient'
 
 // ── Language compartment — allows swapping language extension dynamically ─────
 function getLanguageExtension(language: EditorLanguage) {
@@ -26,8 +28,65 @@ function getLanguageExtension(language: EditorLanguage) {
   }
 }
 
+/** Returns true for file extensions that benefit from TS LSP. */
+function isLspFile(path: string | null): boolean {
+  if (!path) return false
+  const ext = path.split('.').pop()?.toLowerCase() ?? ''
+  return ['ts', 'tsx', 'js', 'jsx'].includes(ext)
+}
+
+// ── LspStatusPill ─────────────────────────────────────────────────────────────
+// Small inline pill indicating TypeScript intelligence status.
+
+function LspStatusPill({ status, visible }: { status: 'connecting' | 'ready' | 'error'; visible: boolean }) {
+  if (!visible) return null
+
+  // Each status gets BOTH a glyph (shape-encoded for color-blind users) and
+  // distinct label text. Color is decorative, not the primary signal.
+  const glyph =
+    status === 'ready' ? '●'
+    : status === 'connecting' ? '○'
+    : '×'
+
+  const label =
+    status === 'ready' ? 'TS: ready'
+    : status === 'connecting' ? 'TS: connecting'
+    : 'TS: unavailable'
+
+  const color =
+    status === 'ready' ? '#4ec94e'
+    : status === 'connecting' ? '#bbb'
+    : '#e06c75'
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label={`TypeScript language server: ${status}`}
+      style={{
+        position: 'absolute',
+        top: 6,
+        right: 8,
+        zIndex: 10,
+        padding: '2px 8px',
+        borderRadius: 10,
+        background: 'rgba(0,0,0,0.45)',
+        color,
+        fontSize: '11px',
+        fontFamily: '"SF Mono", Menlo, Monaco, monospace',
+        letterSpacing: '0.02em',
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}
+    >
+      <span aria-hidden="true" style={{ marginRight: 4 }}>{glyph}</span>
+      {label}
+    </div>
+  )
+}
+
 // ── CodeEditor ─────────────────────────────────────────────────────────────────
-// CodeMirror 6 editor with IDE-3 agent gutter annotations.
+// CodeMirror 6 editor with IDE-3 agent gutter annotations and IDE-4 LSP support.
 
 export function CodeEditor() {
   const activeFilePath = useEditorStore((s) => s.activeFilePath)
@@ -35,9 +94,25 @@ export function CodeEditor() {
   const updateContent = useEditorStore((s) => s.updateContent)
   const activeFile = openFiles.find((f) => f.path === activeFilePath) ?? null
 
+  // Workspace root for the LSP server — use the active terminal's cwd.
+  // If no terminal is active, fall back to: directory of the active file, then
+  // process home dir hint, then '/'. Never pass an empty string to the LSP —
+  // it confuses path resolution and is the most common cause of broken
+  // intelligence on the first open.
+  const terminalCwd = useTerminalStore((s) => {
+    const activeId = s.activeTabId
+    if (!activeId) return null
+    return s.tabs.find((t) => t.id === activeId)?.cwd ?? null
+  })
+  const activeFileDir = activeFilePath
+    ? activeFilePath.split('/').slice(0, -1).join('/') || '/'
+    : null
+  const workspaceRoot = terminalCwd ?? activeFileDir ?? '/'
+
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const languageCompartment = useRef(new Compartment())
+  const lspCompartment = useRef(new Compartment())
 
   // Ref to always point at the current path/callback without recreating the view
   const activePathRef = useRef<string | null>(activeFilePath)
@@ -60,8 +135,6 @@ export function CodeEditor() {
   }, [])
 
   const handleClosePopover = useCallback(() => {
-    // Return focus to the gutter button before unmounting the popover so
-    // keyboard users land back on the trigger.
     if (popoverAnchor) {
       try { popoverAnchor.focus() } catch { /* ignore */ }
     }
@@ -70,6 +143,9 @@ export function CodeEditor() {
 
   // ── Fetch agent touches for current file ───────────────────────────────────
   const { touches } = useFileTouches(activeFilePath)
+
+  // ── IDE-4: LSP client ──────────────────────────────────────────────────────
+  const { extension: lspExtension, status: lspStatus } = useLspClient(workspaceRoot)
 
   // ── Sync touch data into CodeMirror state field ────────────────────────────
   useEffect(() => {
@@ -100,6 +176,8 @@ export function CodeEditor() {
           // IDE-3: agent gutter — dot at line 1 when file has agent touches
           ...agentGutter(handleOpenPopover, filename),
           languageCompartment.current.of([]),
+          // IDE-4: LSP compartment — reconfigured when LSP becomes ready/unavailable
+          lspCompartment.current.of([]),
           oneDark,
           keymap.of(defaultKeymap),
           onChange,
@@ -152,6 +230,20 @@ export function CodeEditor() {
     }
   }, [activeFile])
 
+  // ── Reconfigure LSP compartment when status or active file changes ──────────
+  useEffect(() => {
+    const view = viewRef.current
+    if (!view) return
+
+    const shouldAttach = lspStatus === 'ready' && lspExtension !== null && isLspFile(activeFilePath)
+    view.dispatch({
+      effects: lspCompartment.current.reconfigure(shouldAttach ? lspExtension : []),
+    })
+  }, [lspStatus, lspExtension, activeFilePath])
+
+  // Show the LSP pill only when the active file is a TS/JS file
+  const showLspPill = isLspFile(activeFilePath)
+
   if (!activeFile) {
     return (
       <div
@@ -185,6 +277,9 @@ export function CodeEditor() {
           background: '#282c34',
         }}
       />
+
+      {/* IDE-4: TypeScript LSP status pill */}
+      <LspStatusPill status={lspStatus} visible={showLspPill} />
 
       {/* Agent touch popover */}
       {popoverOpen && (

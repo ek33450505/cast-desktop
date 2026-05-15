@@ -1,0 +1,19 @@
+{
+  "name": "cast-lsp-ts-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WebSocket adapter bridging typescript-language-server stdio to a localhost WS port",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "start": "bun index.ts"
+  },
+  "dependencies": {
+    "typescript-language-server": "^4.3.3",
+    "typescript": "^5.2.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.10"
+  }
+}

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "identifier": "com.cast-desktop.app",
   "build": {
-    "beforeBuildCommand": "npm run build && npm run build:sidecar",
+    "beforeBuildCommand": "npm run build && npm run build:sidecars",
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../dist"
@@ -24,6 +24,6 @@
     }
   },
   "bundle": {
-    "externalBin": ["binaries/cast-server"]
+    "externalBin": ["binaries/cast-server", "binaries/cast-lsp-ts"]
   }
 }
