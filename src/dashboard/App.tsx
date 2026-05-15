@@ -38,6 +38,7 @@ const DocsView = lazy(() => import('./views/DocsView'))
 const AgentsView = lazy(() => import('./views/AgentsView'))
 const SwarmView = lazy(() => import('./views/SwarmView'))
 const WorkLogView = lazy(() => import('./views/WorkLogView'))
+const ClaudeView = lazy(() => import('./views/ClaudeView'))
 
 // Collapsed icon strip is always 48px (spec §Q1 + §Q3).
 const COLLAPSED_PX = 48
@@ -78,6 +79,13 @@ function ShellLayout() {
       window.removeEventListener('cast:toggle-right-rail', onToggleRight)
     }
   }, [handleToggleLeft, handleToggleRight])
+
+  // ── cast:navigate-claude — Help menu + palette ────────────────────────────────
+  useEffect(() => {
+    const handler = () => navigate('/claude')
+    window.addEventListener('cast:navigate-claude', handler)
+    return () => window.removeEventListener('cast:navigate-claude', handler)
+  }, [navigate])
 
   // ⌘K opens command palette (Cmd+K stays React-owned — palette is keyboard-primary nav)
   useHotkeys('mod+k', (e) => { e.preventDefault(); setPaletteOpen(true) }, { enableOnFormTags: true, enableOnContentEditable: true })
@@ -234,6 +242,7 @@ export default function App() {
           <Route path="/agents" element={<ErrorBoundary><AgentsView /></ErrorBoundary>} />
           <Route path="/swarm" element={<ErrorBoundary><SwarmView /></ErrorBoundary>} />
           <Route path="/work-log" element={<ErrorBoundary><WorkLogView /></ErrorBoundary>} />
+          <Route path="/claude" element={<ErrorBoundary><ClaudeView /></ErrorBoundary>} />
 
           {/* ── Wave 2.11 stub routes ── */}
           <Route path="/hooks" element={<ErrorBoundary><HooksPage /></ErrorBoundary>} />

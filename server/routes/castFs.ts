@@ -9,6 +9,10 @@ import {
   RULES_DIR,
   PLANS_DIR,
   COMMANDS_DIR,
+  BRIEFINGS_DIR,
+  REPORTS_DIR,
+  SCRIPTS_DIR,
+  RESEARCH_DIR,
   SETTINGS_GLOBAL_FILE,
 } from '../constants.js'
 
@@ -79,6 +83,22 @@ function readDirItems(dir: string): FsItem[] {
           path: full,
           mtime: stat.mtimeMs,
         }
+      })
+      .sort((a, b) => a.name.localeCompare(b.name))
+  } catch {
+    return []
+  }
+}
+
+function readScriptItems(dir: string): FsItem[] {
+  try {
+    return fs
+      .readdirSync(dir)
+      .filter(f => f.endsWith('.sh') || f.endsWith('.py') || f.endsWith('.md'))
+      .map(f => {
+        const full = path.join(dir, f)
+        const stat = fs.statSync(full)
+        return { name: f, path: full, mtime: stat.mtimeMs }
       })
       .sort((a, b) => a.name.localeCompare(b.name))
   } catch {
@@ -217,6 +237,22 @@ router.get('/hooks', (_req, res) => {
 
 router.get('/mcp', (_req, res) => {
   res.json(readMcpItems())
+})
+
+router.get('/research', (_req, res) => {
+  res.json(readDirItems(RESEARCH_DIR))
+})
+
+router.get('/briefings', (_req, res) => {
+  res.json(readDirItems(BRIEFINGS_DIR))
+})
+
+router.get('/reports', (_req, res) => {
+  res.json(readDirItems(REPORTS_DIR))
+})
+
+router.get('/scripts', (_req, res) => {
+  res.json(readScriptItems(SCRIPTS_DIR))
 })
 
 const MAX_PREVIEW_SIZE = 2 * 1024 * 1024 // 2 MB
