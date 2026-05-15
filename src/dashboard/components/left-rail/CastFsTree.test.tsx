@@ -211,24 +211,9 @@ describe('CastFsTree', () => {
     expect(hookItemBtn.getAttribute('tabindex')).toBe('-1')
   })
 
-  it('Project header renders fetched project basename', async () => {
+  it('does not render the Project section in the home left rail (now lives in /editor)', () => {
     renderTree()
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /cast-desktop section/i })).toBeTruthy()
-    })
-    expect(screen.getByText('cast-desktop')).toBeTruthy()
-  })
-
-  it('Project header falls back to "Project" when query is loading', () => {
-    // Override fetch to delay forever so query stays in loading state
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
-      const url = input.toString()
-      if (url.includes('/api/project-fs/tree')) {
-        return new Promise(() => { /* never resolves */ })
-      }
-      return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } })
-    })
-    renderTree()
-    expect(screen.getByRole('button', { name: /project section/i })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /cast-desktop section/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /project section/i })).toBeNull()
   })
 })

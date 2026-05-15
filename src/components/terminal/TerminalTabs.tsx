@@ -212,24 +212,31 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
         }}
         title="Double-click to rename, right-click for options"
         style={{
+          // Tab color signal uses TWO reinforcing visuals so it's unmistakable:
+          //   1. a 4px-wide colored left bar
+          //   2. a faint (12% active / 8% inactive) background tint of the same color
+          // (The previous 3px left border alone got lost against the adjacent
+          //  tab's right border on narrow chrome.)
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          paddingLeft: tab.color ? 7 : 10,
+          paddingLeft: tab.color ? 6 : 10,
           paddingRight: 10,
           height: 36,
           cursor: 'pointer',
           fontSize: '0.8125rem',
           color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
-          background: isActive ? 'var(--cast-center-bg)' : 'transparent',
-          borderLeft: tab.color ? `3px solid var(--${tab.color})` : undefined,
+          background: tab.color
+            ? `color-mix(in srgb, var(--${tab.color}) ${isActive ? 14 : 9}%, var(--cast-center-bg))`
+            : (isActive ? 'var(--cast-center-bg)' : 'transparent'),
+          borderLeft: tab.color ? `4px solid var(--${tab.color})` : undefined,
           borderBottom: isActive
             ? '2px solid var(--cast-accent)'
             : '2px solid transparent',
           borderRight: '1px solid var(--cast-rail-border)',
           userSelect: 'none',
           outline: 'none',
-          transition: shouldReduceMotion ? 'none' : 'color 0.15s ease',
+          transition: shouldReduceMotion ? 'none' : 'color 0.15s ease, background 0.15s ease',
         }}
         onFocus={(e) => {
           e.currentTarget.style.outline = '2px solid var(--cast-accent)'

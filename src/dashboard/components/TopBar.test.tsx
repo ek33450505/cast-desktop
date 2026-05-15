@@ -30,8 +30,9 @@ describe('TopBar', () => {
     vi.useRealTimers()
   })
 
-  it('renders cast-desktop label', () => {
+  it('renders the cast wordmark and project subtitle', () => {
     render(<TopBar {...DEFAULT_PROPS} />)
+    expect(screen.getByText('cast')).toBeInTheDocument()
     expect(screen.getByText('cast-desktop')).toBeInTheDocument()
   })
 
@@ -65,11 +66,15 @@ describe('TopBar', () => {
     expect(timeEl.textContent).toMatch(/Mon|Tue|Wed|Thu|Fri|Sat|Sun/)
   })
 
-  it('renders all four control buttons (palette, left rail, right rail, settings)', () => {
+  it('renders the three control buttons (palette, left rail, right rail)', () => {
     render(<TopBar {...DEFAULT_PROPS} />)
     expect(screen.getByRole('button', { name: /open command palette/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /collapse left rail/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /collapse right rail/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument()
+  })
+
+  it('does not render a settings button (removed)', () => {
+    render(<TopBar {...DEFAULT_PROPS} />)
+    expect(screen.queryByRole('button', { name: /settings/i })).toBeNull()
   })
 })
