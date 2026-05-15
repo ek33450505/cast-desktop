@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Routes, Route, Navigate, Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { useHotkeys } from 'react-hotkeys-hook'
+import { listen } from '@tauri-apps/api/event'
 
 import { useDbChangeInvalidation } from './api/useDbChangeInvalidation'
 import { AboutDialog } from './components/AboutDialog'
@@ -13,6 +14,7 @@ import { useRailState, LEFT_RAIL_DEFAULT_PX, RIGHT_RAIL_DEFAULT_PX } from './hoo
 import { TerminalTabs } from '../components/terminal/TerminalTabs'
 import CommandPalette from '../components/CommandPalette'
 import { EditorShellLayout } from './components/EditorShellLayout'
+import { useAppearance } from '../hooks/useAppearance'
 import {
   HooksPage,
   PlansPage,
@@ -63,11 +65,21 @@ function ShellLayout() {
   const handleToggleRight = useCallback(() => setRightRailOpen(!rightRailOpen),
     [rightRailOpen, setRightRailOpen])
 
-  // ⌘B toggles left rail (VS Code precedent)
-  useHotkeys('mod+b', (e) => { e.preventDefault(); handleToggleLeft() }, { enableOnFormTags: false })
-  // ⌘⌥B toggles right rail (spec Ed's call #5)
-  useHotkeys('mod+alt+b', (e) => { e.preventDefault(); handleToggleRight() }, { enableOnFormTags: false })
-  // ⌘K opens command palette
+  // ⌘B / ⌘⌥B — rail toggles are now owned by the native menu (Phase C).
+  // The menu fires a Tauri event → App.tsx bridge re-dispatches as window event.
+  // These window event listeners invoke the same handlers without double-firing.
+  useEffect(() => {
+    const onToggleLeft = () => handleToggleLeft()
+    const onToggleRight = () => handleToggleRight()
+    window.addEventListener('cast:toggle-left-rail', onToggleLeft)
+    window.addEventListener('cast:toggle-right-rail', onToggleRight)
+    return () => {
+      window.removeEventListener('cast:toggle-left-rail', onToggleLeft)
+      window.removeEventListener('cast:toggle-right-rail', onToggleRight)
+    }
+  }, [handleToggleLeft, handleToggleRight])
+
+  // ⌘K opens command palette (Cmd+K stays React-owned — palette is keyboard-primary nav)
   useHotkeys('mod+k', (e) => { e.preventDefault(); setPaletteOpen(true) }, { enableOnFormTags: true, enableOnContentEditable: true })
   // ⌘E — open editor (checked for conflicts: no existing Cmd+E bindings in codebase)
   useHotkeys(
@@ -145,13 +157,48 @@ export default function App() {
   useDbChangeInvalidation()
 
   const [aboutOpen, setAboutOpen] = useState(false)
+  const { toggle: toggleAppearance } = useAppearance()
 
-  // Phase C native menu bar will fire this event from "Cast → About"
+  // ── Phase C: Tauri menu event bridge ─────────────────────────────────────────
+  // The native menu emits "cast:menu" Tauri events with an action string payload.
+  // This bridge re-dispatches them as window CustomEvents so in-app handlers
+  // (scattered across ShellLayout, EditorShellLayout, TerminalTabs, etc.) can
+  // respond without each needing their own Tauri listener.
+  useEffect(() => {
+    let unlisten: (() => void) | null = null
+
+    listen<string>('cast:menu', (event) => {
+      const action = event.payload
+      window.dispatchEvent(new CustomEvent(`cast:${action}`))
+    }).then((fn) => {
+      unlisten = fn
+    })
+
+    return () => {
+      unlisten?.()
+    }
+  }, [])
+
+  // ── cast:open-about — from App menu and Help menu ─────────────────────────────
   useEffect(() => {
     const handleOpenAbout = () => setAboutOpen(true)
     window.addEventListener('cast:open-about', handleOpenAbout)
-    return () => window.removeEventListener('cast:open-about', handleOpenAbout)
+    // help-about fires cast:help-about → bridge maps to cast:help-about event
+    // Both menu items share the same action name "about" via the bridge above.
+    // "about" and "help-about" both dispatch their own window events, so wire both:
+    window.addEventListener('cast:help-about', handleOpenAbout)
+    return () => {
+      window.removeEventListener('cast:open-about', handleOpenAbout)
+      window.removeEventListener('cast:help-about', handleOpenAbout)
+    }
   }, [])
+
+  // ── cast:toggle-appearance ────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = () => toggleAppearance()
+    window.addEventListener('cast:toggle-appearance', handler)
+    return () => window.removeEventListener('cast:toggle-appearance', handler)
+  }, [toggleAppearance])
 
   return (
     <MotionConfig reducedMotion="user">

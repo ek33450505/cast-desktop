@@ -652,38 +652,31 @@ export function TerminalTabs() {
     { enableOnFormTags: true, enableOnContentEditable: true },
   )
 
-  // ⌘Shift+] / ⌘Shift+[ — cycle tabs
-  useHotkeys(
-    'mod+shift+]',
-    (e) => {
-      e.preventDefault()
+  // ⌘Shift+] / ⌘Shift+[ / ⌘T — owned by native menu (Phase C).
+  // The menu fires Tauri events → App.tsx bridge → window CustomEvents here.
+  // useHotkeys removed to avoid double-fire with menu accelerators.
+  useEffect(() => {
+    const onNextTab = () => {
       const idx = tabs.findIndex((t) => t.id === activeTabId)
       const next = tabs[(idx + 1) % tabs.length]
       if (next) setActiveTab(next.id)
-    },
-    { enableOnFormTags: true, enableOnContentEditable: true },
-  )
-
-  useHotkeys(
-    'mod+shift+[',
-    (e) => {
-      e.preventDefault()
+    }
+    const onPrevTab = () => {
       const idx = tabs.findIndex((t) => t.id === activeTabId)
       const prev = tabs[(idx - 1 + tabs.length) % tabs.length]
       if (prev) setActiveTab(prev.id)
-    },
-    { enableOnFormTags: true, enableOnContentEditable: true },
-  )
+    }
+    const onNewTab = () => handleAddTab()
 
-  // ⌘T — new tab (fast path: spawns in ~)
-  useHotkeys(
-    'mod+t',
-    (e) => {
-      e.preventDefault()
-      handleAddTab()
-    },
-    { enableOnFormTags: true, enableOnContentEditable: true },
-  )
+    window.addEventListener('cast:next-tab', onNextTab)
+    window.addEventListener('cast:prev-tab', onPrevTab)
+    window.addEventListener('cast:new-tab', onNewTab)
+    return () => {
+      window.removeEventListener('cast:next-tab', onNextTab)
+      window.removeEventListener('cast:prev-tab', onPrevTab)
+      window.removeEventListener('cast:new-tab', onNewTab)
+    }
+  }, [tabs, activeTabId, setActiveTab, handleAddTab])
 
   // ⌘⇧T — new tab with folder picker
   useHotkeys(
