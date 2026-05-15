@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Command } from 'cmdk'
 import {
-  Search, History, Users, Map, Brain, X,
+  Search, History, Users, X,
   Home, Activity, GitBranch, Coins, BarChart2,
   Settings, ShieldCheck, Info, Sparkles,
 } from 'lucide-react'
@@ -35,7 +35,7 @@ interface CommandPaletteProps {
 
 interface ResultItem {
   id: string
-  category: 'session' | 'agent' | 'plan' | 'memory'
+  category: 'session' | 'agent'
   title: string
   subtitle: string
   route: string
@@ -75,24 +75,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
         route: `/agents/${a.name}`,
       })
     }
-    for (const p of data.plans) {
-      results.push({
-        id: `plan-${p.filename}`,
-        category: 'plan',
-        title: p.title || p.filename,
-        subtitle: p.preview?.slice(0, 60) || '',
-        route: `/knowledge/plans/${encodeURIComponent(p.filename)}`,
-      })
-    }
-    for (const m of data.memories) {
-      results.push({
-        id: `memory-${m.path}`,
-        category: 'memory',
-        title: m.name || m.path.split('/').pop() || '',
-        subtitle: m.description || m.agent,
-        route: '/knowledge',
-      })
-    }
   }
 
   // Reset query on open
@@ -112,8 +94,6 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     switch (cat) {
       case 'session': return <History className="w-4 h-4 text-[var(--text-muted)]" />
       case 'agent': return <Users className="w-4 h-4 text-[var(--text-muted)]" />
-      case 'plan': return <Map className="w-4 h-4 text-[var(--text-muted)]" />
-      case 'memory': return <Brain className="w-4 h-4 text-[var(--text-muted)]" />
     }
   }
 
@@ -140,7 +120,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           <Command.Input
             value={query}
             onValueChange={setQuery}
-            placeholder="Search sessions, agents, plans, memories..."
+            placeholder="Search sessions, agents..."
             className="flex-1 bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none text-sm"
             autoFocus
           />
@@ -241,7 +221,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
           {query.length < 2 && (
             <div className="px-5 py-4 text-center text-xs text-[var(--text-muted)]">
-              Type to search sessions, agents, plans, memories…
+              Type to search sessions, agents…
             </div>
           )}
 

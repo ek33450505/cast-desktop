@@ -16,6 +16,21 @@ fs.mkdirSync(DASHBOARD_COMMANDS_DIR, { recursive: true })
 const app = express()
 app.use(express.json({ limit: '5mb' }))
 
+// Defense-in-depth: reject requests whose Host header is not loopback. This
+// neutralizes DNS-rebinding attacks even though the server also binds to
+// 127.0.0.1 below. Allow undefined Host for unit tests / curl --resolve etc.
+const ALLOWED_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
+app.use((req, res, next) => {
+  const host = req.headers.host
+  if (host) {
+    const hostname = host.split(':')[0]
+    if (hostname && !ALLOWED_HOSTS.has(hostname)) {
+      return res.status(403).json({ error: 'Forbidden host' })
+    }
+  }
+  next()
+})
+
 const allowedOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173'
 app.use((_req, res, next) => {
   res.header('Access-Control-Allow-Origin', allowedOrigin)
@@ -71,7 +86,10 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
   }
 })
 
-app.listen(PORT, () => {
+// Bind to loopback only — the API exposes local CAST observability and must
+// never be reachable from LAN/Wi-Fi peers. Combined with the Host-header guard
+// above, this defeats both naive remote access and DNS-rebinding attempts.
+app.listen(PORT, '127.0.0.1', () => {
   console.log(`Claude Dashboard server on :${PORT}`)
 
   // Non-blocking auto-seed on startup: backfill tokens without user action.
@@ -79,7 +97,9 @@ app.listen(PORT, () => {
   setImmediate(() => {
     fetch(`http://localhost:${PORT}/api/cast/seed`, { method: 'POST' })
       .then(r => r.json())
-      .then(body => console.log('[auto-seed]', JSON.stringify(body)))
+      .then(body => {
+        if (process.env.DEBUG) console.debug('[auto-seed]', JSON.stringify(body))
+      })
       .catch(err => console.error('[auto-seed] failed:', err))
   })
 })

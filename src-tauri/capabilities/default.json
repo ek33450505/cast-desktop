@@ -11,9 +11,21 @@
     "dialog:allow-save",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
-    "fs:allow-write",
     "fs:allow-read-dir",
     "fs:scope-home-recursive",
+    {
+      "identifier": "fs:scope",
+      "deny": [
+        { "path": "$HOME/.ssh/**" },
+        { "path": "$HOME/.aws/**" },
+        { "path": "$HOME/.gnupg/**" },
+        { "path": "$HOME/.netrc" },
+        { "path": "$HOME/.config/gh/**" },
+        { "path": "$HOME/Library/Keychains/**" },
+        { "path": "$HOME/Library/Application Support/Google/Chrome/**" },
+        { "path": "$HOME/Library/Application Support/Firefox/**" }
+      ]
+    },
     {
       "identifier": "shell:allow-open",
       "allow": [{ "url": "https://github.com/**" }]

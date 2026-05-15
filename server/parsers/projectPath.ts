@@ -2,7 +2,7 @@ import fs from 'fs'
 
 export function decodeProjectPath(dirName: string): string {
   // The dir name is the full path with / replaced by -
-  // e.g. "-Users-edkubiak-Projects-work-ses-wiki"
+  // e.g. "-Users-alice-Projects-some-repo"
   // We need to figure out which hyphens are path separators vs part of names
   // Strategy: try from left, greedily match existing directories
   const parts = dirName.split('-').filter(Boolean)

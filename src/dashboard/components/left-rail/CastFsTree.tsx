@@ -97,7 +97,7 @@ function useCastFsStream() {
 
   useEvent<LiveEvent>('cast_fs_change', (e) => {
     // fsPath encodes the section as the first path segment under ~/.claude/
-    // e.g. /Users/edkubiak/.claude/agents/foo.md → section: 'agents'
+    // e.g. ~/.claude/agents/foo.md → section: 'agents'
     if (e.fsPath) {
       const claudeRoot = '/.claude/'
       const idx = e.fsPath.indexOf(claudeRoot)

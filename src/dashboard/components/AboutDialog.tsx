@@ -17,37 +17,6 @@ import { open as openExternal } from '@tauri-apps/plugin-shell'
 import { APP_VERSION, REPO_URL } from '../lib/version'
 import { AppIconSVG } from './AppIcon'
 
-// ── WordmarkSVG (dusk variant, inline) ────────────────────────────────────────
-// Inlined so the dialog has no runtime asset dependency at the stub stage.
-
-function WordmarkSVG() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 220 72"
-      role="img"
-      aria-label="cast"
-      style={{ width: 110, height: 36 }}
-    >
-      <g
-        fontFamily="'JetBrains Mono', 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-        fontWeight={500}
-      >
-        <text
-          x="0"
-          y="48"
-          fontSize="40"
-          fill="var(--text-primary)"
-          letterSpacing="-0.5"
-        >
-          cast
-        </text>
-        <circle cx="94" cy="16" r="5" fill="var(--cast-accent, #E6A532)" />
-      </g>
-    </svg>
-  )
-}
-
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 export interface AboutDialogProps {
@@ -162,10 +131,9 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         style={dropdownStyle}
         data-testid="about-dialog"
       >
-          {/* App icon + wordmark group */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          {/* App icon */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 8px' }}>
             <AppIconSVG size={56} aria-hidden="true" />
-            <WordmarkSVG />
           </div>
 
           {/* Version */}

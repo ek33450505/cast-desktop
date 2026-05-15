@@ -75,7 +75,7 @@ describe('AboutDialog', () => {
     expect(heading).toBeTruthy()
   })
 
-  it('renders the AppIcon SVG above the wordmark', () => {
+  it('renders the AppIcon SVG above the heading', () => {
     render(<AboutDialog onClose={vi.fn()} />)
     expect(screen.getByTestId('app-icon-svg')).toBeInTheDocument()
   })

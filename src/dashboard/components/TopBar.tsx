@@ -75,7 +75,7 @@ export default function TopBar({
     >
       {/* ── Left: app icon + product wordmark + clock ───────────────────── */}
       <div className="flex items-center gap-3">
-        <AppIconSVG size={18} aria-hidden="true" />
+        <AppIconSVG size={24} aria-hidden="true" />
         <span
           className="text-sm font-semibold tracking-tight select-none"
           style={{
