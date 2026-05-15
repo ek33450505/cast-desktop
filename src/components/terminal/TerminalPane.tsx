@@ -29,11 +29,13 @@ export interface TerminalPaneHandle {
 export function buildTerminalTheme(appearance: Appearance): ITheme {
   const isDawn = appearance === 'dawn'
   return {
-    background: isDawn ? '#F7F9F6' : '#1D2622',
+    // Dusk surfaces aligned to the v1 polish-bundle palette
+    // (less green, more neutral dark). See tokens.css.
+    background: isDawn ? '#F7F9F6' : '#181B1A',
     foreground: isDawn ? '#1A211E' : '#E6E8E2',
     cursor:    '#E6A532',
-    cursorAccent: isDawn ? '#F7F9F6' : '#1D2622',
-    black:     isDawn ? '#1A211E' : '#1A1E26',
+    cursorAccent: isDawn ? '#F7F9F6' : '#181B1A',
+    black:     isDawn ? '#1A211E' : '#15181A',
     red:       isDawn ? '#C42F1E' : '#E64837',
     green:     isDawn ? '#1F8B4C' : '#3FA968',
     yellow:    isDawn ? '#D86B0F' : '#F09543',

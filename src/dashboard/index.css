@@ -7,13 +7,16 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Carbon Mint Design System */
-  --bg-primary: #070A0F;
-  --bg-secondary: #1A1D23;
-  --bg-tertiary: #252830;
-  --text-primary: #E6E8EE;
-  --text-secondary: #88A3D6;
-  --text-muted: #5a6c8a;
+  /* Legacy --bg-* tokens — aligned with new --system-* neutral-dark palette
+   * so surfaces still consuming legacy tokens (tab strip, modals, etc.)
+   * match the surrounding new-token chrome. Source of truth for hex values:
+   * dusk block in src/dashboard/styles/tokens.css. */
+  --bg-primary: #181B1A;
+  --bg-secondary: #1C2120;
+  --bg-tertiary: #272C2A;
+  --text-primary: #E6E8E2;
+  --text-secondary: #A8ADA6;
+  --text-muted: #737A75;
   /* Legacy accent tokens removed in Wave 3.3 — all consumers migrated to --accent / --accent-hover. */
   --accent-subtle: rgba(0, 255, 194, 0.08);
   --success: #34d399;
