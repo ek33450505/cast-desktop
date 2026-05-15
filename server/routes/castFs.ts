@@ -205,6 +205,122 @@ function readMcpItems(): McpItem[] {
   }
 }
 
+// ── shared tree types ────────────────────────────────────────────────────────
+
+interface TreeNode {
+  name: string
+  path: string
+  type: 'dir' | 'file'
+  mtime: number
+  size: number
+  children?: TreeNode[]
+}
+
+const CLAUDE_ROOT = path.resolve(os.homedir(), '.claude')
+const CLAUDE_ROOT_PREFIX = CLAUDE_ROOT + path.sep
+
+// ── /tree — recursive lazy filesystem tree of ~/.claude/ ─────────────────────
+
+/**
+ * Resolves `rawPath` within the CLAUDE_ROOT boundary.
+ * Mirrors the security pattern from projectFs.ts.
+ */
+function safeCastResolve(rawPath: string): string | null {
+  const resolved = path.resolve(rawPath)
+  // Allow the root itself (CLAUDE_ROOT) or anything inside it
+  if (resolved !== CLAUDE_ROOT && !resolved.startsWith(CLAUDE_ROOT_PREFIX)) return null
+  let real: string
+  try {
+    real = fs.realpathSync(resolved)
+  } catch {
+    real = resolved
+  }
+  if (real !== CLAUDE_ROOT && !real.startsWith(CLAUDE_ROOT_PREFIX)) return null
+  return real
+}
+
+/**
+ * GET /tree?dir=<encoded>
+ *
+ * Returns ONE level of children (lazy — client expands folders on demand).
+ * Default dir when none provided: ~/.claude/
+ * Skip patterns mirror projectFs.ts; dotfiles are NOT skipped because the
+ * entire vault lives under a dotfile dir (all useful content would be hidden).
+ */
+router.get('/tree', (req, res) => {
+  const rawDir = req.query['dir']
+  const targetDir = (typeof rawDir === 'string' && rawDir)
+    ? safeCastResolve(rawDir)
+    : CLAUDE_ROOT
+
+  if (!targetDir) {
+    res.status(403).json({ error: 'path outside allowed root' })
+    return
+  }
+
+  try {
+    const stat = fs.statSync(targetDir)
+    if (stat.isFile()) {
+      const node: TreeNode = {
+        name: path.basename(targetDir),
+        path: targetDir,
+        type: 'file',
+        mtime: stat.mtimeMs,
+        size: stat.size,
+      }
+      res.json(node)
+      return
+    }
+
+    const entries = fs.readdirSync(targetDir, { withFileTypes: true })
+    const children: TreeNode[] = []
+
+    for (const entry of entries) {
+      // Skip heavy build / cache artifacts
+      if (entry.name === 'node_modules') continue
+      if (entry.name === 'dist' || entry.name === 'build') continue
+      if (entry.name === 'coverage' || entry.name === '__pycache__') continue
+      if (entry.name === 'target') continue
+      // Do NOT skip dotfiles — contents of ~/.claude/ are all useful
+
+      const full = path.join(targetDir, entry.name)
+      try {
+        const s = fs.statSync(full)
+        children.push({
+          name: entry.name,
+          path: full,
+          type: entry.isDirectory() ? 'dir' : 'file',
+          mtime: s.mtimeMs,
+          size: s.size,
+        })
+      } catch { /* skip unreadable entries */ }
+    }
+
+    // Dirs first, then files — both sorted by name
+    children.sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'dir' ? -1 : 1
+      return a.name.localeCompare(b.name)
+    })
+
+    const node: TreeNode = {
+      name: path.basename(targetDir) || targetDir,
+      path: targetDir,
+      type: 'dir',
+      mtime: stat.mtimeMs,
+      size: stat.size,
+      children,
+    }
+    res.json(node)
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code
+    if (code === 'ENOENT') {
+      res.status(404).json({ error: 'directory not found' })
+    } else {
+      res.status(500).json({ error: 'failed to read directory' })
+    }
+  }
+})
+
 // ── routes ───────────────────────────────────────────────────────────────────
 
 router.get('/agents', (_req, res) => {

@@ -18,12 +18,19 @@ interface TreeNode {
 
 interface ProjectFsTreeProps {
   onPreview: (target: PreviewTarget, triggerEl?: HTMLElement) => void
+  /** API base for tree fetches. Defaults to `/api/project-fs/tree`. */
+  apiBase?: string
+  /** SSE event channel name for invalidation. Defaults to `project_fs_change`. */
+  eventChannel?: LiveEvent['type']
 }
 
 // ── fetcher ───────────────────────────────────────────────────────────────────
 
-async function fetchTreeNode(dir: string): Promise<TreeNode> {
-  const res = await fetch(`/api/project-fs/tree?dir=${encodeURIComponent(dir)}`)
+async function fetchTreeNode(apiBase: string, dir: string): Promise<TreeNode> {
+  const url = dir
+    ? `${apiBase}?dir=${encodeURIComponent(dir)}`
+    : apiBase
+  const res = await fetch(url)
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(body.error ?? `HTTP ${res.status}`)
@@ -34,10 +41,10 @@ async function fetchTreeNode(dir: string): Promise<TreeNode> {
 // ── SSE for invalidation ──────────────────────────────────────────────────────
 
 // Exported so tests can verify it's used
-export function useProjectFsStream(rootPath: string) {
+export function useProjectFsStream(rootPath: string, eventChannel: LiveEvent['type'] = 'project_fs_change') {
   const queryClient = useQueryClient()
 
-  useEvent<LiveEvent>('project_fs_change', (e) => {
+  useEvent<LiveEvent>(eventChannel, (e) => {
     if (e.fsPath) {
       const dir = e.fsPath.split('/').slice(0, -1).join('/')
       if (dir) {
@@ -59,15 +66,17 @@ interface FolderNodeProps {
   depth: number
   onPreview: (target: PreviewTarget, triggerEl?: HTMLElement) => void
   initialExpanded?: boolean
+  apiBase: string
+  source?: 'cast' | 'project'
 }
 
-function FolderNode({ dirPath, name, depth, onPreview, initialExpanded = false }: FolderNodeProps) {
+function FolderNode({ dirPath, name, depth, onPreview, initialExpanded = false, apiBase, source = 'project' }: FolderNodeProps) {
   const [expanded, setExpanded] = useState(initialExpanded)
   const childrenId = `project-dir-${dirPath.replace(/[^a-zA-Z0-9]/g, '-')}`
 
   const { data, isLoading } = useQuery({
-    queryKey: ['projectFs', dirPath],
-    queryFn: () => fetchTreeNode(dirPath),
+    queryKey: ['projectFs', apiBase, dirPath],
+    queryFn: () => fetchTreeNode(apiBase, dirPath),
     enabled: expanded,
     staleTime: 30_000,
   })
@@ -121,12 +130,15 @@ function FolderNode({ dirPath, name, depth, onPreview, initialExpanded = false }
                   name={child.name}
                   depth={depth + 1}
                   onPreview={onPreview}
+                  apiBase={apiBase}
+                  source={source}
                 />
               ) : (
                 <FileNode
                   node={child}
                   depth={depth + 1}
                   onPreview={onPreview}
+                  source={source}
                 />
               )}
             </div>
@@ -151,19 +163,20 @@ interface FileNodeProps {
   node: TreeNode
   depth: number
   onPreview: (target: PreviewTarget, triggerEl?: HTMLElement) => void
+  source?: 'cast' | 'project'
 }
 
-function FileNode({ node, depth, onPreview }: FileNodeProps) {
+function FileNode({ node, depth, onPreview, source = 'project' }: FileNodeProps) {
   return (
     <button
       type="button"
       onClick={(e) => {
         onPreview(
-          { section: 'plans', name: node.name, path: node.path, source: 'project' },
+          { section: 'plans', name: node.name, path: node.path, source },
           e.currentTarget,
         )
       }}
-      aria-label={`Preview project file: ${node.name}`}
+      aria-label={`Preview ${source === 'cast' ? 'cast' : 'project'} file: ${node.name}`}
       title={node.path}
       className="w-full flex items-center gap-1.5 text-left hover:bg-[var(--system-elevated)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[-2px] rounded-sm"
       style={{
@@ -183,15 +196,20 @@ function FileNode({ node, depth, onPreview }: FileNodeProps) {
 
 // ── main component ────────────────────────────────────────────────────────────
 
-export default function ProjectFsTree({ onPreview }: ProjectFsTreeProps) {
+export default function ProjectFsTree({
+  onPreview,
+  apiBase = '/api/project-fs/tree',
+  eventChannel = 'project_fs_change' as LiveEvent['type'],
+}: ProjectFsTreeProps) {
+  const source: 'cast' | 'project' = apiBase.includes('cast-fs') ? 'cast' : 'project'
   const { data, isLoading } = useQuery({
-    queryKey: ['projectFs', '__root__'],
-    queryFn: () => fetchTreeNode(''),
+    queryKey: ['projectFs', apiBase, '__root__'],
+    queryFn: () => fetchTreeNode(apiBase, ''),
     staleTime: 30_000,
   })
 
   const rootPath = data?.path ?? ''
-  useProjectFsStream(rootPath)
+  useProjectFsStream(rootPath, eventChannel)
 
   if (isLoading) {
     return (
@@ -222,12 +240,15 @@ export default function ProjectFsTree({ onPreview }: ProjectFsTreeProps) {
               name={child.name}
               depth={0}
               onPreview={onPreview}
+              apiBase={apiBase}
+              source={source}
             />
           ) : (
             <FileNode
               node={child}
               depth={0}
               onPreview={onPreview}
+              source={source}
             />
           )}
         </div>

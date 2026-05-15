@@ -27,6 +27,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Terminal', path: '/', icon: Home },
   { label: 'Open Editor', path: '/editor', icon: Code2 },
+  { label: '~/.claude/ Vault', path: '/claude', icon: FolderOpen },
   { label: 'Sessions', path: '/sessions', icon: History },
   { label: 'Analytics', path: '/analytics', icon: BarChart2 },
   { label: 'Agents', path: '/agents', icon: Users },
@@ -34,7 +35,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Work Log', path: '/work-log', icon: ScrollText },
   { label: 'System', path: '/system', icon: Settings },
   { label: 'Docs', path: '/docs', icon: FileText },
-  { label: '~/.claude/ Vault', path: '/claude', icon: FolderOpen },
 ]
 
 export interface CommandPaletteProps {
