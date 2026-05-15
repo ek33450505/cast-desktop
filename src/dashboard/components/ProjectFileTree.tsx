@@ -206,7 +206,7 @@ function TreeItem({ node, level, onOpenFile, isSelected, onSelect, pendingFiles 
           : <File size={14} aria-hidden="true" style={{ flexShrink: 0, color: 'var(--text-muted)' }} />
         }
 
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
           {loading ? `${node.name} …` : node.name}
         </span>
 
