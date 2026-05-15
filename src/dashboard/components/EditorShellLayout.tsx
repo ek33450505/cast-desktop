@@ -201,10 +201,12 @@ export function EditorShellLayout() {
               transition: shouldReduceMotion ? 'none' : 'width 0.18s ease',
             }}
           >
-            {/* Sidebar header — Home, Search (Cmd+K), and Collapse toggle */}
+            {/* Sidebar header — buttons stack vertically when collapsed so all three
+              * stay visible at the narrow width (36px is too tight for a row). */}
             <div
               style={{
                 display: 'flex',
+                flexDirection: explorerOpen ? 'row' : 'column',
                 alignItems: 'center',
                 gap: 2,
                 padding: '4px 4px',
@@ -232,7 +234,8 @@ export function EditorShellLayout() {
               >
                 <Search size={14} aria-hidden="true" />
               </button>
-              <div style={{ flex: 1 }} />
+              {/* Spacer pushes the collapse toggle to the far end of the row when open */}
+              {explorerOpen && <div style={{ flex: 1 }} />}
               <button
                 onClick={() => setExplorerOpen((o) => !o)}
                 aria-label={explorerOpen ? 'Collapse Explorer' : 'Expand Explorer'}
