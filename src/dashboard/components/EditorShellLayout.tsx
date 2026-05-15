@@ -15,7 +15,7 @@
  * react-resizable-panels is already in package.json per stack-context.md.
  */
 
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useReducedMotion } from 'framer-motion'
@@ -24,6 +24,9 @@ import { TerminalTabs } from '../../components/terminal/TerminalTabs'
 import { ProjectFileTree } from './ProjectFileTree'
 import { EditorTabs } from './EditorTabs'
 import { CodeEditor } from './CodeEditor'
+import { DispatchModal } from './DispatchModal'
+import type { DispatchAgent } from './DispatchModal'
+import { AgentRunStatusPanel } from './AgentRunStatusPanel'
 import { useEditorStore } from '../../stores/editorStore'
 import { useTerminalStore } from '../../stores/terminalStore'
 import { useFileWatch } from '../hooks/useFileWatch'
@@ -36,6 +39,7 @@ export function EditorShellLayout() {
   const openFile = useEditorStore((s) => s.openFile)
   const openFiles = useEditorStore((s) => s.openFiles)
   const activeFilePath = useEditorStore((s) => s.activeFilePath)
+  const activeSelection = useEditorStore((s) => s.activeSelection)
   const dirty = useEditorStore((s) => s.dirty)
   const externalChange = useEditorStore((s) => s.externalChange)
   const handleExternalChange = useEditorStore((s) => s.handleExternalChange)
@@ -44,6 +48,10 @@ export function EditorShellLayout() {
   const save = useEditorStore((s) => s.save)
   const saveAs = useEditorStore((s) => s.saveAs)
   const shouldReduceMotion = useReducedMotion()
+
+  // ── IDE-5: Dispatch modal + status panel ─────────────────────────────────────
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false)
+  const [activeRun, setActiveRun] = useState<{ run_id: string; agent: DispatchAgent } | null>(null)
 
   // Stable list of open paths for useFileWatch
   const openPaths = useMemo(() => openFiles.map((f) => f.path), [openFiles])
@@ -98,16 +106,23 @@ export function EditorShellLayout() {
     setBottomDockExpanded(!bottomDockExpanded)
   }, [bottomDockExpanded, setBottomDockExpanded])
 
-  // ── Cmd+S — Save ────────────────────────────────────────────────────────────
+  // ── Cmd+S / Cmd+Shift+S / Cmd+Shift+A ───────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().includes('MAC')
       const metaOrCtrl = isMac ? e.metaKey : e.ctrlKey
 
-      if (!metaOrCtrl || e.key !== 's') return
+      if (!metaOrCtrl) return
 
-      // Don't intercept Cmd+Shift+S here (saveAs handles it separately)
-      if (e.shiftKey) {
+      // ── Cmd+Shift+A — Dispatch agent ──────────────────────────────────────
+      if (e.shiftKey && e.key === 'a') {
+        e.preventDefault()
+        setDispatchModalOpen(true)
+        return
+      }
+
+      // ── Cmd+Shift+S — Save As ─────────────────────────────────────────────
+      if (e.shiftKey && e.key === 's') {
         e.preventDefault()
         if (!activeFilePath) return
         try {
@@ -118,22 +133,23 @@ export function EditorShellLayout() {
             const filename = newPath.split('/').pop() ?? newPath
             toast.success(`Saved as ${filename}`)
           }
-          // If user cancelled, newPath is null — do nothing silently
         } catch (err) {
           toast.error(`Save As failed: ${String(err)}`)
         }
         return
       }
 
-      e.preventDefault()
-      if (!activeFilePath) return
-
-      try {
-        await save(activeFilePath)
-        const filename = activeFilePath.split('/').pop() ?? activeFilePath
-        toast.success(`Saved ${filename}`)
-      } catch (err) {
-        toast.error(`Save failed: ${String(err)}`)
+      // ── Cmd+S — Save ──────────────────────────────────────────────────────
+      if (!e.shiftKey && e.key === 's') {
+        e.preventDefault()
+        if (!activeFilePath) return
+        try {
+          await save(activeFilePath)
+          const filename = activeFilePath.split('/').pop() ?? activeFilePath
+          toast.success(`Saved ${filename}`)
+        } catch (err) {
+          toast.error(`Save failed: ${String(err)}`)
+        }
       }
     }
 
@@ -383,6 +399,36 @@ export function EditorShellLayout() {
           </div>
         </div>
       </div>
+
+      {/* ── IDE-5: Dispatch modal ── */}
+      {dispatchModalOpen && (
+        <DispatchModal
+          initialPrompt={buildDispatchPrompt(activeFilePath, activeSelection)}
+          cwd={rootPath.startsWith('~') ? (rootPath === '~' ? process.env.HOME ?? '/' : rootPath) : rootPath}
+          onClose={() => setDispatchModalOpen(false)}
+          onDispatched={(run_id, agent) => {
+            setActiveRun({ run_id, agent })
+          }}
+        />
+      )}
+
+      {/* ── IDE-5: Agent run status panel ── */}
+      {activeRun !== null && (
+        <AgentRunStatusPanel
+          run_id={activeRun.run_id}
+          agent={activeRun.agent}
+          onClose={() => setActiveRun(null)}
+        />
+      )}
     </div>
   )
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Build the pre-filled dispatch prompt from active file path + selection. */
+function buildDispatchPrompt(filePath: string | null, selection: string): string {
+  const fileStr = filePath ? `File: ${filePath}` : 'File: (no file open)'
+  const selStr = selection ? `Selection:\n${selection}` : 'Selection:\n(none)'
+  return `${fileStr}\n\n${selStr}\n\nTask: `
 }

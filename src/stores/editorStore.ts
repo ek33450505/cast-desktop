@@ -33,6 +33,13 @@ interface EditorState {
    */
   externalChange: Map<string, string>
 
+  /**
+   * IDE-5: current selection text from the active CodeMirror view.
+   * CodeEditor writes this on selectionSet events; EditorShellLayout reads
+   * it to pre-fill the DispatchModal prompt. Empty string when nothing is selected.
+   */
+  activeSelection: string
+
   // Actions
   openFile: (path: string, content: string) => void
   closeFile: (path: string) => void
@@ -40,6 +47,8 @@ interface EditorState {
   setBottomDockExpanded: (expanded: boolean) => void
   /** Update content in memory; marks dirty if different from original */
   updateContent: (path: string, newContent: string) => void
+  /** IDE-5: update the current selection text from the CodeMirror view */
+  setActiveSelection: (text: string) => void
   markClean: (path: string) => void
   /** Write file to disk via Tauri fs, then markClean */
   save: (path: string) => Promise<void>
@@ -70,6 +79,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   dirty: new Set<string>(),
   originalContent: new Map<string, string>(),
   externalChange: new Map<string, string>(),
+  activeSelection: '',
 
   openFile: (path: string, content: string) => {
     const existing = get().openFiles.find((f) => f.path === path)
@@ -127,6 +137,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
       return { openFiles: nextFiles, dirty: nextDirty }
     })
+  },
+
+  setActiveSelection: (text: string) => {
+    set({ activeSelection: text })
   },
 
   markClean: (path: string) => {
