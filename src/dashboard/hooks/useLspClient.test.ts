@@ -109,15 +109,17 @@ describe('useLspClient', () => {
     expect(mockConnect).toHaveBeenCalled()
   })
 
-  it('returns error status when Tauri invoke throws', async () => {
+  it('returns error status when both Tauri invoke and Express fallback fail', async () => {
     mockInvoke.mockRejectedValue(new Error('Tauri not available'))
+    // Mock the Express fallback path to also fail so the hook lands in error state.
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')))
 
     const { result } = renderHook(() => useLspClient('/workspace'))
 
     await waitFor(() => expect(result.current.status).toBe('error'))
 
     expect(result.current.extension).toBeNull()
-    expect(result.current.error).toContain('Tauri not available')
+    expect(result.current.error).toMatch(/LSP sidecar unavailable/i)
   })
 
   it('returns error status when WebSocket onerror fires', async () => {

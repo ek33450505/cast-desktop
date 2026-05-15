@@ -47,6 +47,7 @@ import { paneBindingsRouter } from './paneBindings.js'
 import { sessionCostRouter } from './sessionCost.js'
 import { filesRouter } from './files.js'
 import { dispatchRouter } from './dispatch.js'
+import { lspRouter } from './lsp.js'
 
 export const router = Router()
 
@@ -129,6 +130,7 @@ router.use('/session-cost', sessionCostRouter)
 router.use('/files', filesRouter)
 // IDE-5 — Agent dispatch from editor
 router.use('/dispatch', dispatchRouter)
+router.use('/lsp', lspRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {

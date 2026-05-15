@@ -92,17 +92,30 @@ export function useLspClient(workspaceRoot: string): UseLspClientResult {
 
     async function connect() {
       try {
-        // Step 1: ask Tauri to start the LSP sidecar, get back its WS port
+        // Step 1: ask Tauri to start the LSP sidecar, get back its WS port.
+        // In Vite-only dev (`npm run dev`, no Tauri runtime), Tauri invoke
+        // fails. Fall back to the Express dev server's /api/lsp/start, which
+        // spawns the same sidecar binary directly via Node child_process.
         let port: number
         try {
           port = await invokeTauri<number>('start_lsp_server')
         } catch (tauriErr) {
-          // Not running inside Tauri (browser dev mode) — graceful no-op
-          if (!mountedRef.current) return
-          console.warn('[useLspClient] Tauri not available:', tauriErr)
-          setStatus('error')
-          setError('Tauri not available')
-          return
+          console.info('[useLspClient] Tauri runtime unavailable, trying Express fallback:', tauriErr)
+          try {
+            const res = await fetch('/api/lsp/start')
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({})) as { error?: string }
+              throw new Error(body.error ?? `HTTP ${res.status}`)
+            }
+            const body = (await res.json()) as { port: number }
+            port = body.port
+          } catch (fallbackErr) {
+            if (!mountedRef.current) return
+            console.warn('[useLspClient] LSP unavailable in both Tauri and dev server:', fallbackErr)
+            setStatus('error')
+            setError('LSP sidecar unavailable')
+            return
+          }
         }
 
         // Step 2: open WebSocket to sidecar
