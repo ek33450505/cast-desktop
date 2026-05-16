@@ -172,7 +172,8 @@ agentHallucinationsRouter.get('/summary', (_req: Request, res: Response) => {
 // Must be registered after /summary to avoid swallowing that literal route.
 
 agentHallucinationsRouter.get('/:id', (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10)
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
+  const id = parseInt(idParam, 10)
   if (isNaN(id) || id < 1) {
     res.status(400).json({ error: 'Invalid id. Expected a positive integer.' })
     return
