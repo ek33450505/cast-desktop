@@ -2,40 +2,8 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Command } from 'cmdk'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import {
-  Home,
-  History,
-  BarChart2,
-  Users,
-  Layers,
-  ScrollText,
-  Settings,
-  FileText,
-  Search,
-  X,
-  Code2,
-  FolderOpen,
-} from 'lucide-react'
-import type { ComponentType } from 'react'
-
-interface NavItem {
-  label: string
-  path: string
-  icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Terminal', path: '/', icon: Home },
-  { label: 'Open Editor', path: '/editor', icon: Code2 },
-  { label: '~/.claude/ Vault', path: '/claude', icon: FolderOpen },
-  { label: 'Sessions', path: '/sessions', icon: History },
-  { label: 'Analytics', path: '/analytics', icon: BarChart2 },
-  { label: 'Agents', path: '/agents', icon: Users },
-  { label: 'Swarm', path: '/swarm', icon: Layers },
-  { label: 'Work Log', path: '/work-log', icon: ScrollText },
-  { label: 'System', path: '/system', icon: Settings },
-  { label: 'Docs', path: '/docs', icon: FileText },
-]
+import { Search, X } from 'lucide-react'
+import { NAV_ITEMS } from '../dashboard/lib/navItems'
 
 export interface CommandPaletteProps {
   open: boolean
