@@ -68,6 +68,7 @@ app.use('/api/constellation', controlLimiter)
 // IDE-5: agent dispatch is user-initiated but spawns real processes — moderate limit
 app.use('/api/dispatch', destructiveLimiter)
 app.use('/api/routines', controlLimiter)
+app.use('/api/agent-hallucinations', controlLimiter)
 
 app.use('/api', router)
 attachSSE(app)
