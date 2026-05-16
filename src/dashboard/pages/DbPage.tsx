@@ -3,6 +3,7 @@ import { Database, ChevronRight, ArrowUp, ArrowDown, Search } from 'lucide-react
 import { useSqliteTables, useSqliteTable, useSqliteTableSchema } from '../api/useSqliteExplorer'
 import type { SqliteTableMeta, SqliteColumnInfo } from '../api/useSqliteExplorer'
 import RowDetailModal from '../components/RowDetailModal'
+import { StatusBadge } from '../components/StatusBadge'
 
 // ── Group map ─────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,18 @@ const GROUP_MAP: Record<string, string> = {
 
 // Canonical group order; hook_failures sorts to top within Hooks (see sort logic)
 const GROUPS = ['Sessions', 'Agents', 'Hooks', 'Memory', 'Quality', 'Routing', 'System', 'Other']
+
+// ── Writer-status metadata ────────────────────────────────────────────────────
+// 'no-writer' = schema exists, reader wired, no writer in claude-agent-team
+// 'deferred'  = no reader AND no writer (stream_hook_events)
+const TABLE_STATUS: Record<string, 'no-writer' | 'deferred'> = {
+  parry_guard_events: 'no-writer',
+  injection_log: 'no-writer',
+  pane_bindings: 'no-writer',
+  budgets: 'no-writer',
+  stream_events: 'no-writer',
+  stream_hook_events: 'deferred',
+}
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
@@ -114,6 +127,9 @@ function Sidebar({ tables, selectedTable, onSelect }: SidebarProps) {
                       <span className="flex items-center gap-1.5 min-w-0">
                         {isActive && <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />}
                         <span className="font-mono truncate">{tbl.name}</span>
+                        {TABLE_STATUS[tbl.name] && (
+                          <StatusBadge variant={TABLE_STATUS[tbl.name]} size="sm" />
+                        )}
                       </span>
                       <span
                         className="text-[10px] shrink-0 tabular-nums"
