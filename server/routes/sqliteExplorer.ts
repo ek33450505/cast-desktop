@@ -1,17 +1,25 @@
 import { Router } from 'express'
+import type { Database } from 'better-sqlite3'
 import { getCastDb } from './castDb.js'
 
 export const sqliteExplorerRouter = Router()
 
-const ALLOWED_TABLES = new Set([
-  'sessions',
-  'agent_runs',
-  'task_queue',
-  'agent_memories',
-  'routing_events',
-  'budgets',
-  'mismatch_signals',
-])
+/**
+ * Returns all non-FTS-shadow tables from sqlite_master, sorted by name.
+ * FTS5 creates shadow tables matching patterns: *_fts*, *_content*, *_data*, *_idx*.
+ * These are excluded to avoid exposing internal SQLite implementation details.
+ */
+function getAllowedTables(db: Database): string[] {
+  return db.prepare(
+    `SELECT name FROM sqlite_master
+     WHERE type='table'
+       AND name NOT LIKE '%_fts%'
+       AND name NOT LIKE '%_content%'
+       AND name NOT LIKE '%_data%'
+       AND name NOT LIKE '%_idx%'
+     ORDER BY name`
+  ).pluck().all() as string[]
+}
 
 sqliteExplorerRouter.get('/tables', (_req, res) => {
   try {
@@ -19,12 +27,9 @@ sqliteExplorerRouter.get('/tables', (_req, res) => {
     if (!db) {
       return res.json({ tables: [] })
     }
-    const rows = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    ).all() as Array<{ name: string }>
-    const existingAllowed = rows.map(r => r.name).filter(n => ALLOWED_TABLES.has(n))
+    const allowed = getAllowedTables(db)
 
-    const tables = existingAllowed.map(name => {
+    const tables = allowed.map(name => {
       const countRow = db.prepare(`SELECT COUNT(*) AS total FROM "${name}"`).get() as { total: number }
       return { name, rowCount: countRow.total }
     })
@@ -36,16 +41,40 @@ sqliteExplorerRouter.get('/tables', (_req, res) => {
   }
 })
 
+sqliteExplorerRouter.get('/schema/:table', (req, res) => {
+  const { table } = req.params
+
+  try {
+    const db = getCastDb()
+    if (!db) {
+      return res.status(500).json({ error: 'Database unavailable' })
+    }
+
+    const allowed = getAllowedTables(db)
+    if (!allowed.includes(table)) {
+      return res.status(404).json({ error: `Table '${table}' not found` })
+    }
+
+    const schema = db.prepare(`PRAGMA table_info("${table}")`).all()
+    res.json(schema)
+  } catch (err) {
+    console.error('SQLite explorer schema error:', err)
+    res.status(500).json({ error: 'Failed to get schema' })
+  }
+})
+
 sqliteExplorerRouter.get('/:table', (req, res) => {
   const { table } = req.params
-  if (!ALLOWED_TABLES.has(table)) {
-    return res.status(400).json({ error: `Table '${table}' is not in the allowed list` })
-  }
 
   try {
     const db = getCastDb()
     if (!db) {
       return res.json({ columns: [], rows: [], total: 0, nullColumns: [] })
+    }
+
+    const allowed = getAllowedTables(db)
+    if (!allowed.includes(table)) {
+      return res.status(404).json({ error: `Table '${table}' not found` })
     }
 
     const rawLimit = Number(req.query.limit) || 50
@@ -54,13 +83,28 @@ sqliteExplorerRouter.get('/:table', (req, res) => {
 
     const totalRow = db.prepare(`SELECT COUNT(*) AS total FROM "${table}"`).get() as { total: number }
 
-    // Get column names from PRAGMA
+    // Get column metadata from PRAGMA
     const pragmaRows = db.prepare(`PRAGMA table_info("${table}")`).all() as Array<{ name: string; pk: number }>
     const columns = pragmaRows.map(r => r.name)
 
-    // Sort newest-first if the table has an integer primary key named 'id'
-    const hasPkId = pragmaRows.some(r => r.name === 'id' && r.pk === 1)
-    const orderClause = hasPkId ? 'ORDER BY id DESC' : ''
+    // Build ORDER BY clause:
+    // 1. If ?sort param is provided, validate it against known columns and use it
+    // 2. Otherwise fall back to ordering by integer pk named 'id' if it exists
+    let orderClause = ''
+    const { sort, dir } = req.query
+
+    if (sort) {
+      if (!columns.includes(sort as string)) {
+        return res.status(400).json({ error: `Invalid sort column: '${sort}'` })
+      }
+      const safeDir = dir === 'desc' ? 'DESC' : 'ASC'
+      orderClause = `ORDER BY "${sort as string}" ${safeDir}`
+    } else {
+      const hasPkId = pragmaRows.some(r => r.name === 'id' && r.pk === 1)
+      if (hasPkId) {
+        orderClause = 'ORDER BY "id" DESC'
+      }
+    }
 
     const rows = db.prepare(
       `SELECT * FROM "${table}" ${orderClause} LIMIT ? OFFSET ?`

@@ -50,14 +50,7 @@ export function MemoryPage() {
   )
 }
 
-export function DbPage() {
-  return (
-    <ComingSoon
-      title="Database"
-      subtitle="Explore cast.db tables and schema. Coming in v1.1."
-    />
-  )
-}
+export { DbPage } from './DbPage'
 
 export function SettingsPage() {
   return (

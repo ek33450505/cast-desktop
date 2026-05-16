@@ -137,7 +137,8 @@ describe('useSqliteTable', () => {
       { wrapper: makeWrapper() }
     )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(global.fetch).toHaveBeenCalledWith('/api/cast/explore/agent_runs')
+    // Default limit=50 is appended as a query param
+    expect(global.fetch).toHaveBeenCalledWith('/api/cast/explore/agent_runs?limit=50')
   })
 
   it('appends limit and offset query params when provided', async () => {

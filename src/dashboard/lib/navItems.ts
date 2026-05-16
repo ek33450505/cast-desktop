@@ -9,6 +9,7 @@ import {
   FileText,
   Code2,
   FolderOpen,
+  Database,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 
@@ -24,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: '~/.claude/ Vault', path: '/claude', icon: FolderOpen },
   { label: 'Sessions', path: '/sessions', icon: History },
   { label: 'Analytics', path: '/analytics', icon: BarChart2 },
+  { label: 'DB Browser', path: '/db', icon: Database },
   { label: 'Agents', path: '/agents', icon: Users },
   { label: 'Swarm', path: '/swarm', icon: Layers },
   { label: 'Work Log', path: '/work-log', icon: ScrollText },
