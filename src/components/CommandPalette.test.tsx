@@ -114,8 +114,8 @@ describe('CommandPalette', () => {
   it('shows current set of nav items when no search', () => {
     renderPalette(true)
     const items = screen.getAllByRole('option')
-    // 8 original nav items + 1 Open Editor item added in IDE-1 + 1 ~/.claude/ Vault + 1 DB Browser
-    expect(items.length).toBe(11)
+    // 8 original nav items + 1 Open Editor item added in IDE-1 + 1 ~/.claude/ Vault + 1 DB Browser + 1 Reliability + 1 Routines (Phase 3.5)
+    expect(items.length).toBe(13)
   })
 
   it('focus trap: Tab from last focusable element wraps to first (search input)', async () => {

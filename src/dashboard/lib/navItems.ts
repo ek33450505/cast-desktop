@@ -10,6 +10,8 @@ import {
   Code2,
   FolderOpen,
   Database,
+  Clock,
+  ShieldAlert,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 
@@ -27,6 +29,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Analytics', path: '/analytics', icon: BarChart2 },
   { label: 'DB Browser', path: '/db', icon: Database },
   { label: 'Agents', path: '/agents', icon: Users },
+  { label: 'Reliability', path: '/agents/reliability', icon: ShieldAlert },
+  { label: 'Routines', path: '/routines', icon: Clock },
   { label: 'Swarm', path: '/swarm', icon: Layers },
   { label: 'Work Log', path: '/work-log', icon: ScrollText },
   { label: 'System', path: '/system', icon: Settings },
