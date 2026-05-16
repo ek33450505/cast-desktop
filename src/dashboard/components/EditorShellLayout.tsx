@@ -15,9 +15,9 @@
  * react-resizable-panels is already in package.json per stack-context.md.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Home, PanelLeftClose, PanelLeft, Search, FolderOpen } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { ChevronDown, ChevronUp, Home, Menu, PanelLeftClose, PanelLeft, Search, FolderOpen } from 'lucide-react'
 import { useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
 import { TerminalTabs } from '../../components/terminal/TerminalTabs'
@@ -31,6 +31,7 @@ import { AgentRunStatusPanel } from './AgentRunStatusPanel'
 import { useEditorStore } from '../../stores/editorStore'
 import { useTerminalStore } from '../../stores/terminalStore'
 import { useFileWatch } from '../hooks/useFileWatch'
+import { NAV_ITEMS } from '../lib/navItems'
 
 // ── EditorShellLayout ─────────────────────────────────────────────────────────
 
@@ -59,6 +60,8 @@ export function EditorShellLayout() {
   // ── Hotfix: command palette + collapsible Explorer sidebar ───────────────────
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [explorerOpen, setExplorerOpen] = useState(true)
+  const [navMenuOpen, setNavMenuOpen] = useState(false)
+  const navMenuRef = useRef<HTMLDivElement>(null)
   const EXPLORER_WIDTH = 240
   const EXPLORER_COLLAPSED = 36
 
@@ -110,6 +113,25 @@ export function EditorShellLayout() {
     paths: openPaths,
     onChange: handleExternalFileChange,
   })
+
+  // ── Nav menu: click-outside + Escape close ───────────────────────────────────
+  useEffect(() => {
+    if (!navMenuOpen) return
+    const onMouseDown = (e: MouseEvent) => {
+      if (navMenuRef.current && !navMenuRef.current.contains(e.target as Node)) {
+        setNavMenuOpen(false)
+      }
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNavMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [navMenuOpen])
 
   const handleOpenFile = useCallback(
     async (path: string) => {
@@ -248,6 +270,81 @@ export function EditorShellLayout() {
               >
                 <Home size={14} aria-hidden="true" />
               </button>
+              {/* Nav menu — relative wrapper anchors the absolute popover */}
+              <div ref={navMenuRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setNavMenuOpen((o) => !o)}
+                  aria-label="Open navigation menu"
+                  aria-haspopup="menu"
+                  aria-expanded={navMenuOpen}
+                  title="Navigation menu"
+                  style={iconButtonStyle}
+                  onFocus={iconButtonFocus}
+                  onBlur={iconButtonBlur}
+                >
+                  <Menu size={14} aria-hidden="true" />
+                </button>
+                {navMenuOpen && (
+                  <div
+                    role="menu"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      zIndex: 100,
+                      marginTop: 4,
+                      minWidth: 200,
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--cast-rail-border)',
+                      borderRadius: 6,
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+                      padding: '4px 0',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    {NAV_ITEMS.map((item) => (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        role="menuitem"
+                        end={item.path === '/'}
+                        onClick={() => setNavMenuOpen(false)}
+                        style={({ isActive }) => ({
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          minHeight: 36,
+                          padding: '0 12px',
+                          fontSize: '0.8125rem',
+                          color: isActive ? 'var(--cast-accent, #00FFC2)' : 'var(--text-secondary)',
+                          background: isActive ? 'var(--bg-tertiary)' : 'transparent',
+                          textDecoration: 'none',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          borderRadius: 0,
+                        })}
+                        onFocus={(e) => {
+                          e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+                          e.currentTarget.style.outlineOffset = '-2px'
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.outline = 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--bg-tertiary)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent'
+                        }}
+                      >
+                        <item.icon aria-hidden="true" />
+                        {item.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => setPaletteOpen(true)}
                 aria-label="Open command palette (Cmd+K)"

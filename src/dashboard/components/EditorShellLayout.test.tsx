@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { EditorShellLayout } from './EditorShellLayout'
 import { useEditorStore } from '../../stores/editorStore'
 import { useTerminalStore } from '../../stores/terminalStore'
+import { NAV_ITEMS } from '../lib/navItems'
 
 // Stub Tauri fs — not available in jsdom
 vi.mock('@tauri-apps/plugin-fs', () => ({
@@ -83,5 +84,56 @@ describe('EditorShellLayout smoke tests', () => {
     // After render, the store should still have the tab
     const storeTabs = useTerminalStore.getState().tabs
     expect(storeTabs.find((t) => t.id === tab.id)).toBeDefined()
+  })
+})
+
+describe('EditorShellLayout — nav menu', () => {
+  it('Menu button renders with accessible name "Open navigation menu"', () => {
+    renderInRouter(<EditorShellLayout />)
+    expect(screen.getByRole('button', { name: 'Open navigation menu' })).toBeInTheDocument()
+  })
+
+  it('Menu button has aria-haspopup="menu" and aria-expanded="false" initially', () => {
+    renderInRouter(<EditorShellLayout />)
+    const btn = screen.getByRole('button', { name: 'Open navigation menu' })
+    expect(btn).toHaveAttribute('aria-haspopup', 'menu')
+    expect(btn).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('clicking Menu button opens popover containing all NAV_ITEMS', () => {
+    renderInRouter(<EditorShellLayout />)
+    const btn = screen.getByRole('button', { name: 'Open navigation menu' })
+    fireEvent.click(btn)
+    expect(btn).toHaveAttribute('aria-expanded', 'true')
+    const menu = screen.getByRole('menu')
+    expect(menu).toBeInTheDocument()
+    for (const item of NAV_ITEMS) {
+      expect(screen.getByRole('menuitem', { name: item.label })).toBeInTheDocument()
+    }
+  })
+
+  it('clicking a NavLink closes the popover', () => {
+    renderInRouter(<EditorShellLayout />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    const sessionsItem = screen.getByRole('menuitem', { name: 'Sessions' })
+    fireEvent.click(sessionsItem)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('pressing Escape closes the popover', () => {
+    renderInRouter(<EditorShellLayout />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('clicking outside the nav menu wrapper closes the popover', () => {
+    renderInRouter(<EditorShellLayout />)
+    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.mouseDown(document.body)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 })
