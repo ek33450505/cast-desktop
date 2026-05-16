@@ -13,6 +13,7 @@ const GROUP_MAP: Record<string, string> = {
   session_context: 'Sessions',
   // Agents
   agent_runs: 'Agents',
+  dispatch_events: 'Agents',
   dispatch_decisions: 'Agents',
   routing_events: 'Agents',
   // Hooks — hook_failures is first in the group (see GROUPS order)
@@ -46,6 +47,16 @@ const TABLE_STATUS: Record<string, 'no-writer' | 'deferred'> = {
   budgets: 'no-writer',
   stream_events: 'no-writer',
   stream_hook_events: 'deferred',
+}
+
+const TABLE_DESCRIPTIONS: Record<string, string> = {
+  dispatch_events:      'Oldest dispatch design — single-agent events, largely superseded.',
+  dispatch_decisions:   'Mid-era dispatch log — records backend choice (local vs. managed).',
+  routing_events:       'Current dispatch surface — full routing telemetry per agent invocation.',
+  hook_failures:        'Fires when any hook script exits non-zero. Primary silent-failure surface.',
+  quality_gates:        'Per-agent Status-block contract check. TRUNCATED = agent stalled mid-output.',
+  agent_truncations:    'Recorded truncation events with last_line context for stall diagnosis.',
+  agent_hallucinations: 'Unverified file-write claims detected by CAST quality gate.',
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -124,11 +135,18 @@ function Sidebar({ tables, selectedTable, onSelect }: SidebarProps) {
                       aria-current={isActive ? 'true' : undefined}
                       aria-label={`Select table ${tbl.name}, ${tbl.rowCount} rows`}
                     >
-                      <span className="flex items-center gap-1.5 min-w-0">
-                        {isActive && <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />}
-                        <span className="font-mono truncate">{tbl.name}</span>
-                        {TABLE_STATUS[tbl.name] && (
-                          <StatusBadge variant={TABLE_STATUS[tbl.name]} size="sm" />
+                      <span className="flex flex-col min-w-0">
+                        <span className="flex items-center gap-1.5">
+                          {isActive && <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />}
+                          <span className="font-mono truncate">{tbl.name}</span>
+                          {TABLE_STATUS[tbl.name] && (
+                            <StatusBadge variant={TABLE_STATUS[tbl.name]} size="sm" />
+                          )}
+                        </span>
+                        {TABLE_DESCRIPTIONS[tbl.name] && (
+                          <span className="text-[10px] leading-tight truncate" style={{ color: 'var(--content-muted)' }}>
+                            {TABLE_DESCRIPTIONS[tbl.name]}
+                          </span>
                         )}
                       </span>
                       <span

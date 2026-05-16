@@ -50,6 +50,8 @@ import { dispatchRouter } from './dispatch.js'
 import { lspRouter } from './lsp.js'
 import { routinesRouter } from './routines.js'
 import { agentHallucinationsRouter } from './agentHallucinations.js'
+import { hookFailuresRouter } from './hookFailures.js'
+import { incidentsRouter } from './incidents.js'
 
 export const router = Router()
 
@@ -135,6 +137,8 @@ router.use('/dispatch', dispatchRouter)
 router.use('/lsp', lspRouter)
 router.use('/routines', routinesRouter)
 router.use('/agent-hallucinations', agentHallucinationsRouter)
+router.use('/hook-failures', hookFailuresRouter)
+router.use('/incidents', incidentsRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {
