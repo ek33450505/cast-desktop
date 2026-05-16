@@ -4,7 +4,7 @@ import { Command } from 'cmdk'
 import {
   Search, History, Users, X,
   Home, Activity, GitBranch, Coins, BarChart2,
-  Settings, ShieldCheck, Info, Sparkles,
+  Settings, ShieldCheck, Info, Sparkles, Database,
 } from 'lucide-react'
 import { useSearch } from '../api/useSearch'
 import { timeAgo } from '../utils/time'
@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dispatch Log', to: '/dispatch-log', icon: GitBranch },
   { label: 'Token Spend', to: '/token-spend', icon: Coins },
   { label: 'Analytics', to: '/analytics', icon: BarChart2 },
+  { label: 'DB Browser', to: '/db', icon: Database },
   { label: 'Sessions', to: '/sessions', icon: History },
   { label: 'Quality Gates', to: '/quality-gates', icon: ShieldCheck },
   { label: 'System', to: '/system', icon: Settings },
