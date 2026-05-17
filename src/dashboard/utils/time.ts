@@ -53,6 +53,30 @@ export function formatTimeOfDay(iso: string | null): string {
 }
 
 /**
+ * Formats a timestamp as a locale short date (e.g. "5/5/26").
+ * Accepts an ISO date string or epoch milliseconds.
+ */
+export function formatShortDate(ts: string | number): string {
+  try {
+    return new Date(ts).toLocaleDateString(undefined, { dateStyle: 'short' })
+  } catch {
+    return String(ts)
+  }
+}
+
+/**
+ * Formats a timestamp as a locale short date+time (e.g. "5/5/26, 2:30 PM").
+ * Accepts an ISO date string or epoch milliseconds.
+ */
+export function formatShortDateTime(ts: string | number): string {
+  try {
+    return new Date(ts).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return String(ts)
+  }
+}
+
+/**
  * Formats a duration in milliseconds as "Xm Ys" or "Xh Ym".
  * Accepts null (returns '--').
  */

@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Bot, AlertTriangle } from 'lucide-react'
 import { useAgentProfile } from '../api/useAgentProfile'
 import type { AgentRunRow } from '../api/useAgentProfile'
-import { formatDuration } from '../utils/time'
+import { formatDuration, formatShortDateTime } from '../utils/time'
 import { formatCost, formatTokens } from '../utils/costEstimate'
 import { useChartColors } from '../hooks/useChartColors'
 
@@ -24,14 +24,6 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={classes}>{status}</span>
 }
 
-function formatDate(ts: string): string {
-  try {
-    return new Date(ts).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-  } catch {
-    return ts
-  }
-}
-
 function RunRow({ run }: { run: AgentRunRow }) {
   const [expanded, setExpanded] = useState(false)
   const hasSummary = !!run.task_summary?.trim()
@@ -44,7 +36,7 @@ function RunRow({ run }: { run: AgentRunRow }) {
         aria-expanded={hasSummary ? expanded : undefined}
       >
         <td className="px-4 py-3 text-xs text-[var(--content-muted)] tabular-nums whitespace-nowrap">
-          {formatDate(run.started_at)}
+          {formatShortDateTime(run.started_at)}
         </td>
         <td className="px-4 py-3">
           <div className="flex items-center gap-1.5 flex-wrap">

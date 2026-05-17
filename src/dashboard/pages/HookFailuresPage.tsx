@@ -2,15 +2,7 @@ import { useState } from 'react'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 import { useHookFailures } from '../api/useHookFailures'
 import type { HookFailureRow } from '../api/useHookFailures'
-import { timeAgo } from '../utils/time'
-
-function formatDate(ts: string): string {
-  try {
-    return new Date(ts).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-  } catch {
-    return ts
-  }
-}
+import { timeAgo, formatShortDateTime } from '../utils/time'
 
 function groupByHook(failures: HookFailureRow[]): Map<string, HookFailureRow[]> {
   const map = new Map<string, HookFailureRow[]>()
@@ -124,7 +116,7 @@ export default function HookFailuresPage() {
                           style={{ borderBottom: '1px solid var(--border)' }}
                         >
                           <td className="px-5 py-2.5 text-xs tabular-nums whitespace-nowrap" style={{ color: 'var(--content-muted)' }}>
-                            {formatDate(row.timestamp)}
+                            {formatShortDateTime(row.timestamp)}
                           </td>
                           <td className="px-5 py-2.5">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold" style={{ background: 'rgb(239 68 68 / 0.15)', color: 'rgb(248 113 113)' }}>

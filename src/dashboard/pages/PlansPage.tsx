@@ -3,14 +3,7 @@ import { FileText } from 'lucide-react'
 import { usePlans } from '../api/usePlans'
 import type { PlanFile } from '../../types/index'
 import PreviewModal from '../components/left-rail/PreviewModal'
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'short' })
-  } catch {
-    return iso
-  }
-}
+import { formatShortDate } from '../utils/time'
 
 function SkeletonRows() {
   return (
@@ -57,7 +50,7 @@ function PlanRow({ plan, onClick }: PlanRowProps) {
           )}
         </div>
         <span className="shrink-0 text-xs" style={{ color: 'var(--content-muted)' }}>
-          {formatDate(plan.modifiedAt)}
+          {formatShortDate(plan.modifiedAt)}
         </span>
       </div>
     </button>

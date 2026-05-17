@@ -3,14 +3,7 @@ import { Brain } from 'lucide-react'
 import { useProjectMemory } from '../api/useMemory'
 import type { MemoryFile } from '../../types/index'
 import PreviewModal from '../components/left-rail/PreviewModal'
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'short' })
-  } catch {
-    return iso
-  }
-}
+import { formatShortDate } from '../utils/time'
 
 type MemoryType = 'user' | 'feedback' | 'project' | 'reference'
 
@@ -82,7 +75,7 @@ function MemoryRow({ mem, onClick }: MemoryRowProps) {
               {label}
             </p>
             <span className="shrink-0 text-xs" style={{ color: 'var(--content-muted)' }}>
-              {formatDate(mem.modifiedAt)}
+              {formatShortDate(mem.modifiedAt)}
             </span>
           </div>
           {mem.description && (

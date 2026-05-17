@@ -2,14 +2,7 @@ import React, { useState } from 'react'
 import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react'
 import { useIncidents } from '../api/useIncidents'
 import type { IncidentRow } from '../api/useIncidents'
-
-function formatDate(ts: string): string {
-  try {
-    return new Date(ts).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
-  } catch {
-    return ts
-  }
-}
+import { formatShortDateTime } from '../utils/time'
 
 function ResolutionBadge({ status }: { status: string | null }) {
   const val = (status ?? '').toLowerCase()
@@ -125,7 +118,7 @@ export default function IncidentsPage() {
                         ? <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
                         : <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--content-muted)' }}>{formatDate(inc.occurred_at)}</td>
+                    <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--content-muted)' }}>{formatShortDateTime(inc.occurred_at)}</td>
                     <td className="px-3 py-2 max-w-sm" style={{ color: 'var(--content-secondary)' }}>{inc.problem_summary}</td>
                     <td className="px-3 py-2"><ResolutionBadge status={inc.resolution_status} /></td>
                     <td className="px-3 py-2" style={{ color: 'var(--content-muted)' }}>{inc.surfaced_by ?? '—'}</td>

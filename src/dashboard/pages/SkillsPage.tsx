@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Zap } from 'lucide-react'
 import PreviewModal from '../components/left-rail/PreviewModal'
+import { formatShortDate } from '../utils/time'
 
 interface SkillFile {
   name: string
@@ -22,14 +23,6 @@ function useSkills() {
     queryFn: fetchSkills,
     staleTime: 60_000,
   })
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'short' })
-  } catch {
-    return iso
-  }
 }
 
 function SkeletonRows() {
@@ -77,7 +70,7 @@ function SkillRow({ skill, onClick }: SkillRowProps) {
           )}
         </div>
         <span className="shrink-0 text-xs" style={{ color: 'var(--content-muted)' }}>
-          {formatDate(skill.modifiedAt)}
+          {formatShortDate(skill.modifiedAt)}
         </span>
       </div>
     </button>
