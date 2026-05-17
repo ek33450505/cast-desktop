@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CommandPalette from './CommandPalette'
 import { MemoryPage } from '../dashboard/pages/StubPages'
 
@@ -114,8 +115,8 @@ describe('CommandPalette', () => {
   it('shows current set of nav items when no search', () => {
     renderPalette(true)
     const items = screen.getAllByRole('option')
-    // 8 original nav items + 1 Open Editor item added in IDE-1 + 1 ~/.claude/ Vault + 1 DB Browser + 1 Reliability + 1 Routines (Phase 3.5)
-    expect(items.length).toBe(13)
+    // 8 original nav items + 1 Open Editor item added in IDE-1 + 1 ~/.claude/ Vault + 1 DB Browser + 1 Reliability + 1 Routines + 1 Hook Failures (Phase 3.5 delta)
+    expect(items.length).toBe(14)
   })
 
   it('focus trap: Tab from last focusable element wraps to first (search input)', async () => {
@@ -135,31 +136,30 @@ describe('CommandPalette', () => {
   })
 })
 
-describe('StubPage rendering', () => {
-  it('MemoryPage renders stub heading', () => {
-    const { getByRole } = render(
-      <MemoryRouter>
-        <MemoryPage />
-      </MemoryRouter>,
+describe('MemoryPage rendering', () => {
+  function renderMemoryPage() {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    return render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter>
+          <MemoryPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     )
+  }
+
+  it('MemoryPage renders heading', () => {
+    const { getByRole } = renderMemoryPage()
     expect(getByRole('heading', { name: /memory/i })).toBeInTheDocument()
   })
 
   it('MemoryPage does not contain internal placeholder copy', () => {
-    const { queryByText } = render(
-      <MemoryRouter>
-        <MemoryPage />
-      </MemoryRouter>,
-    )
+    const { queryByText } = renderMemoryPage()
     expect(queryByText(/repatriates from claude-code-dashboard/i)).not.toBeInTheDocument()
   })
 
-  it('MemoryPage renders public-ready subtitle', () => {
-    const { getByText } = render(
-      <MemoryRouter>
-        <MemoryPage />
-      </MemoryRouter>,
-    )
-    expect(getByText(/inspect agent and project memory/i)).toBeInTheDocument()
+  it('MemoryPage renders subtitle', () => {
+    const { getByText } = renderMemoryPage()
+    expect(getByText(/project memory files/i)).toBeInTheDocument()
   })
 })

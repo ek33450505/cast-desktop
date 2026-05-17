@@ -3,7 +3,6 @@ import { Database, ChevronRight, ArrowUp, ArrowDown, Search } from 'lucide-react
 import { useSqliteTables, useSqliteTable, useSqliteTableSchema } from '../api/useSqliteExplorer'
 import type { SqliteTableMeta, SqliteColumnInfo } from '../api/useSqliteExplorer'
 import RowDetailModal from '../components/RowDetailModal'
-import { StatusBadge } from '../components/StatusBadge'
 
 // ── Group map ─────────────────────────────────────────────────────────────────
 
@@ -13,39 +12,78 @@ const GROUP_MAP: Record<string, string> = {
   session_context: 'Sessions',
   // Agents
   agent_runs: 'Agents',
+  dispatch_events: 'Agents',
   dispatch_decisions: 'Agents',
   routing_events: 'Agents',
-  // Hooks — hook_failures is first in the group (see GROUPS order)
+  agent_protocol_violations: 'Agents',
+  completeness_events: 'Agents',
+  // Hooks
   hook_failures: 'Hooks',
   stop_failure_events: 'Hooks',
   parry_guard_events: 'Hooks',
+  compaction_events: 'Hooks',
+  unstaged_warnings: 'Hooks',
   // Memory
   agent_memories: 'Memory',
   injection_log: 'Memory',
   agent_hallucinations: 'Memory',
+  code_ref_checks: 'Memory',
   // Quality
   quality_gates: 'Quality',
   quality_gate_results: 'Quality',
-  // Routing
-  swarm_sessions: 'Routing',
+  agent_truncations: 'Quality',
+  // Swarm
+  swarm_sessions: 'Swarm',
+  teammate_runs: 'Swarm',
+  teammate_messages: 'Swarm',
+  // Infra
+  routines: 'Infra',
+  pane_bindings: 'Infra',
+  stream_events: 'Infra',
+  rate_limit_snapshots: 'Infra',
+  budgets: 'Infra',
+  incidents: 'Infra',
   // System
   worktree_anomalies: 'System',
-  agent_truncations: 'System',
+  schema_migrations: 'System',
+  sqlite_sequence: 'System',
 }
 
 // Canonical group order; hook_failures sorts to top within Hooks (see sort logic)
-const GROUPS = ['Sessions', 'Agents', 'Hooks', 'Memory', 'Quality', 'Routing', 'System', 'Other']
+const GROUPS = ['Sessions', 'Agents', 'Hooks', 'Memory', 'Quality', 'Swarm', 'Infra', 'System', 'Other']
 
-// ── Writer-status metadata ────────────────────────────────────────────────────
-// 'no-writer' = schema exists, reader wired, no writer in claude-agent-team
-// 'deferred'  = no reader AND no writer (stream_hook_events)
-const TABLE_STATUS: Record<string, 'no-writer' | 'deferred'> = {
-  parry_guard_events: 'no-writer',
-  injection_log: 'no-writer',
-  pane_bindings: 'no-writer',
-  budgets: 'no-writer',
-  stream_events: 'no-writer',
-  stream_hook_events: 'deferred',
+const TABLE_DESCRIPTIONS: Record<string, string> = {
+  sessions:                 'One row per Claude Code session — project, duration, token spend, model.',
+  agent_runs:               'Every agent invocation — tokens, duration, status, TRUNCATED flag.',
+  dispatch_events:          'Oldest dispatch design — single-agent events, largely superseded.',
+  dispatch_decisions:       'Mid-era dispatch log — records backend choice (local vs. managed).',
+  routing_events:           'Current dispatch surface — full routing telemetry per invocation.',
+  agent_protocol_violations:'Agents that deviated from expected response protocol.',
+  completeness_events:      'Response completeness checks from the SubagentStop hook.',
+  hook_failures:            'Any hook script that exited non-zero — primary silent-failure surface.',
+  stop_failure_events:      'Fired when Stop hook fails — agent exits without a clean status line.',
+  parry_guard_events:       'Parry guard blocks and allows — pre-tool injection defense log.',
+  compaction_events:        'Context compaction events — tracks when Claude compresses history.',
+  unstaged_warnings:        'Agent tried to commit with unstaged files — warning capture.',
+  agent_memories:           'Project-scoped memory entries written by the CAST memory router.',
+  injection_log:            'Memory injections into agent context — what was retrieved and when.',
+  agent_hallucinations:     'Unverified file-write claims detected by the CAST quality gate.',
+  code_ref_checks:          'Code reference verification — functions, paths, flags in agent output.',
+  quality_gates:            'Per-agent Status-block contract check. TRUNCATED = agent stalled.',
+  quality_gate_results:     'Per-check results within a quality gate evaluation.',
+  agent_truncations:        'Truncation events with last_line context for stall diagnosis.',
+  swarm_sessions:           'Multi-agent swarm coordination sessions — parallel execution groups.',
+  teammate_runs:            'Individual agent run records within a swarm session.',
+  teammate_messages:        'Messages exchanged between agents in a swarm.',
+  routines:                 'Scheduled CAST routines — cron-triggered agent jobs with last-run status.',
+  pane_bindings:            'Terminal pane ↔ session bindings — maps pane_id to active session.',
+  stream_events:            'Live event stream records — SSE events emitted by the server.',
+  rate_limit_snapshots:     'Anthropic API rate limit state — captured during 429 events.',
+  budgets:                  'Per-session and global token budget tracking.',
+  incidents:                'Recorded incidents — problem/fix summaries for post-mortems.',
+  worktree_anomalies:       'Git worktrees that failed to clean up after agent dispatch.',
+  schema_migrations:        'Applied migration scripts — tracks DB schema version history.',
+  sqlite_sequence:          'SQLite internal autoincrement state — not user-facing.',
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -124,11 +162,15 @@ function Sidebar({ tables, selectedTable, onSelect }: SidebarProps) {
                       aria-current={isActive ? 'true' : undefined}
                       aria-label={`Select table ${tbl.name}, ${tbl.rowCount} rows`}
                     >
-                      <span className="flex items-center gap-1.5 min-w-0">
-                        {isActive && <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />}
-                        <span className="font-mono truncate">{tbl.name}</span>
-                        {TABLE_STATUS[tbl.name] && (
-                          <StatusBadge variant={TABLE_STATUS[tbl.name]} size="sm" />
+                      <span className="flex flex-col min-w-0">
+                        <span className="flex items-center gap-1.5">
+                          {isActive && <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />}
+                          <span className="truncate">{tbl.name}</span>
+                        </span>
+                        {TABLE_DESCRIPTIONS[tbl.name] && (
+                          <span className="text-[10px] leading-tight truncate" style={{ color: 'var(--content-muted)' }}>
+                            {TABLE_DESCRIPTIONS[tbl.name]}
+                          </span>
                         )}
                       </span>
                       <span
@@ -577,7 +619,7 @@ export function DbPage() {
     >
       {/* ── Left sidebar ── */}
       <div
-        className="w-56 shrink-0 min-h-0 flex flex-col"
+        className="w-64 shrink-0 min-h-0 flex flex-col"
         style={{ borderRight: '1px solid var(--border)' }}
       >
         {/* Sidebar header */}

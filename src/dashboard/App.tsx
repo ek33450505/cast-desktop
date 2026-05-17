@@ -41,6 +41,8 @@ const WorkLogView = lazy(() => import('./views/WorkLogView'))
 const ClaudeView = lazy(() => import('./views/ClaudeView'))
 const RoutinesPage = lazy(() => import('./pages/RoutinesPage'))
 const AgentReliabilityPage = lazy(() => import('./pages/AgentReliabilityPage'))
+const HookFailuresPage = lazy(() => import('./pages/HookFailuresPage'))
+const IncidentsPage = lazy(() => import('./pages/IncidentsPage'))
 
 // Collapsed icon strip is always 48px (spec §Q1 + §Q3).
 const COLLAPSED_PX = 48
@@ -243,6 +245,8 @@ export default function App() {
           <Route path="/claude" element={<ErrorBoundary><ClaudeView /></ErrorBoundary>} />
           <Route path="/routines" element={<ErrorBoundary><RoutinesPage /></ErrorBoundary>} />
           <Route path="/agents/reliability" element={<ErrorBoundary><AgentReliabilityPage /></ErrorBoundary>} />
+          <Route path="/hook-failures" element={<ErrorBoundary><HookFailuresPage /></ErrorBoundary>} />
+          <Route path="/incidents" element={<ErrorBoundary><IncidentsPage /></ErrorBoundary>} />
 
           {/* ── Wave 2.11 stub routes ── */}
           <Route path="/hooks" element={<ErrorBoundary><HooksPage /></ErrorBoundary>} />

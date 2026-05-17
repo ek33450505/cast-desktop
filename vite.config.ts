@@ -14,7 +14,7 @@ export default defineConfig({
     port: 5173,
     // Dev mode proxy: forward /api to Express sidecar on port 3001
     proxy: {
-      '/api': 'http://localhost:3001',
+      '/api': 'http://127.0.0.1:3001',
     },
   },
   build: {
