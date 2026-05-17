@@ -8,7 +8,7 @@ export const castExecRouter = Router()
 
 const PLANS_DIR = path.join(os.homedir(), '.claude', 'plans')
 const EXEC_STATE_DIR = path.join(os.homedir(), '.claude', 'cast', 'exec-state')
-const CAST_BIN = path.join(os.homedir(), 'Projects', 'personal', 'claude-agent-team', 'bin', 'cast')
+const CAST_BIN = process.env.CAST_BIN ?? 'cast'
 
 /** Check if a file contains a json dispatch manifest block */
 function hasManifest(content: string): boolean {

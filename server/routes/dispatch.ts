@@ -48,6 +48,7 @@ interface RunEntry {
   process: ChildProcess | null
   error?: string
   startedAt: number
+  tmpFile?: string
 }
 
 // Export for test reset only
@@ -76,7 +77,7 @@ const MANAGED_AGENT_SCRIPT = path.join(SCRIPTS_DIR, 'cast-managed-agent.sh')
  * Security note: spawn() vs exec() — we use spawn() with an explicit argv array,
  * so no shell interpolation occurs regardless of prompt content.
  */
-function spawnAgent(agent: string, prompt: string, cwd: string): ChildProcess {
+function spawnAgent(agent: string, prompt: string, cwd: string): { proc: ChildProcess; tmpFile: string } {
   // Write prompt to a temp file so we can pass it safely to any invocation style
   const tmpFile = path.join(os.tmpdir(), `cast-dispatch-${Date.now()}.txt`)
   fs.writeFileSync(tmpFile, prompt, 'utf-8')
@@ -84,21 +85,23 @@ function spawnAgent(agent: string, prompt: string, cwd: string): ChildProcess {
   if (fs.existsSync(MANAGED_AGENT_SCRIPT)) {
     // Preferred path: cast-managed-agent.sh <agent> <prompt-string>
     // The script accepts the prompt as $2 — a single argv element, no shell eval.
-    return spawn('bash', [MANAGED_AGENT_SCRIPT, agent, prompt], {
+    const proc = spawn('bash', [MANAGED_AGENT_SCRIPT, agent, prompt], {
       cwd,
       detached: false,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, CAST_DISPATCH_PROMPT_FILE: tmpFile },
     })
+    return { proc, tmpFile }
   }
 
   // Fallback: claude --agent <name> --prompt <text>
   // spawn() avoids shell interpolation; prompt is a single argv element.
-  return spawn('claude', ['--agent', agent, '--prompt', prompt], {
+  const proc = spawn('claude', ['--agent', agent, '--prompt', prompt], {
     cwd,
     detached: false,
     stdio: ['ignore', 'pipe', 'pipe'],
   })
+  return { proc, tmpFile }
 }
 
 // ── POST /api/dispatch ────────────────────────────────────────────────────────
@@ -137,15 +140,16 @@ router.post('/', (req: Request, res: Response) => {
   const run_id = generateRunId()
 
   let proc: ChildProcess
+  let tmpFile: string
   try {
-    proc = spawnAgent(agent, prompt, cwd)
+    ;({ proc, tmpFile } = spawnAgent(agent, prompt, cwd))
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     res.status(500).json({ error: `Failed to spawn agent: ${message}` })
     return
   }
 
-  const entry: RunEntry = { status: 'running', process: proc, startedAt: Date.now() }
+  const entry: RunEntry = { status: 'running', process: proc, startedAt: Date.now(), tmpFile }
   _runRegistry.set(run_id, entry)
 
   proc.on('close', (code) => {
@@ -154,6 +158,10 @@ router.post('/', (req: Request, res: Response) => {
       e.status = code === 0 ? 'done' : 'failed'
       e.error = code !== 0 ? `Agent exited with code ${code}` : undefined
       e.process = null
+    }
+    // Clean up the temp prompt file
+    if (tmpFile) {
+      fs.unlink(tmpFile, () => {})
     }
   })
 
