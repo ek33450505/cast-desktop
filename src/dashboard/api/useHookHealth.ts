@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface HookHealthEntry {
   hook_type: string
@@ -15,9 +16,7 @@ export interface HookHealthData {
 }
 
 async function fetchHookHealth(): Promise<HookHealthData> {
-  const res = await fetch('/api/hooks/health')
-  if (!res.ok) throw new Error('Failed to fetch hook health')
-  return res.json()
+  return apiFetch<HookHealthData>('/api/hooks/health')
 }
 
 export const useHookHealth = () =>

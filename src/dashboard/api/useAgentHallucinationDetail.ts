@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import type { HallucinationRow } from './useAgentHallucinations'
+import { apiFetch } from './apiFetch'
 
 // ── Fetch helper ───────────────────────────────────────────────────────────────
 
 async function fetchHallucinationDetail(id: number): Promise<HallucinationRow> {
-  const res = await fetch(`/api/agent-hallucinations/${id}`)
-  if (!res.ok) throw new Error(`Failed to fetch hallucination detail for id ${id}`)
-  return res.json()
+  return apiFetch<HallucinationRow>(`/api/agent-hallucinations/${id}`)
 }
 
 // ── Hook ───────────────────────────────────────────────────────────────────────

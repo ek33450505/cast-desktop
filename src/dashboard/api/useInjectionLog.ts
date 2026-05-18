@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface InjectionLogEntry {
   id: number
@@ -12,11 +13,7 @@ export interface InjectionLogEntry {
 export function useInjectionLog() {
   return useQuery<{ entries: InjectionLogEntry[] }>({
     queryKey: ['injection-log'],
-    queryFn: async () => {
-      const res = await fetch('/api/injection-log')
-      if (!res.ok) throw new Error(`API error ${res.status}: /api/injection-log`)
-      return res.json()
-    },
+    queryFn: () => apiFetch<{ entries: InjectionLogEntry[] }>('/api/injection-log'),
     staleTime: 15_000,
     refetchInterval: 30_000,
   })

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface AgentRunRow {
   started_at: string
@@ -23,9 +24,7 @@ export interface AgentProfileDetail {
 }
 
 async function fetchAgentProfile(agent: string): Promise<AgentProfileDetail> {
-  const res = await fetch(`/api/analytics/profile/${encodeURIComponent(agent)}`)
-  if (!res.ok) throw new Error(`Failed to fetch profile for agent: ${agent}`)
-  return res.json()
+  return apiFetch<AgentProfileDetail>(`/api/analytics/profile/${encodeURIComponent(agent)}`)
 }
 
 export const useAgentProfile = (agent: string) =>
@@ -45,9 +44,7 @@ export interface AgentScorecardRow {
 }
 
 async function fetchAgentScorecard(): Promise<{ agents: AgentScorecardRow[] }> {
-  const res = await fetch('/api/analytics/profile')
-  if (!res.ok) throw new Error('Failed to fetch agent scorecard')
-  return res.json()
+  return apiFetch<{ agents: AgentScorecardRow[] }>('/api/analytics/profile')
 }
 
 export const useAgentScorecard = () =>

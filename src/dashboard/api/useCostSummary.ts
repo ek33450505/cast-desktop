@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface CostSummaryTotals {
   inputTokens: number
@@ -31,9 +32,7 @@ export interface CostSummaryData {
 }
 
 async function fetchCostSummary(days = 30): Promise<CostSummaryData> {
-  const res = await fetch(`/api/cast/cost-summary?days=${days}`)
-  if (!res.ok) throw new Error('Failed to fetch cost summary')
-  return res.json()
+  return apiFetch<CostSummaryData>(`/api/cast/cost-summary?days=${days}`)
 }
 
 export const useCostSummary = (days = 30) =>

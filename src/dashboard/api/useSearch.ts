@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface SearchResults {
   sessions: Array<{ id: string; project: string; projectEncoded: string; startedAt: string; slug?: string; matchReason: string }>
@@ -8,9 +9,7 @@ export interface SearchResults {
 }
 
 async function fetchSearch(query: string): Promise<SearchResults> {
-  const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
-  if (!res.ok) throw new Error('Search failed')
-  return res.json()
+  return apiFetch<SearchResults>(`/api/search?q=${encodeURIComponent(query)}`)
 }
 
 export const useSearch = (query: string) =>

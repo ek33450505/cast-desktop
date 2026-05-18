@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import type { SessionAgentRun, PastSessionSummary } from '../types'
+import { apiFetch } from './apiFetch'
 
 // Fetch all agent runs for a given session
 async function fetchSessionAgents(sessionId: string): Promise<{ runs: SessionAgentRun[] }> {
-  const res = await fetch(`/api/cast/session-agents/${encodeURIComponent(sessionId)}`)
-  if (!res.ok) throw new Error('Failed to fetch session agents')
-  return res.json()
+  return apiFetch<{ runs: SessionAgentRun[] }>(`/api/cast/session-agents/${encodeURIComponent(sessionId)}`)
 }
 
 export function useSessionAgents(sessionId: string | undefined) {
@@ -20,9 +19,7 @@ export function useSessionAgents(sessionId: string | undefined) {
 
 // Fetch recent past sessions with their agent runs
 async function fetchRecentSessions(limit = 10): Promise<{ sessions: PastSessionSummary[] }> {
-  const res = await fetch(`/api/cast/session-agents?limit=${limit}`)
-  if (!res.ok) throw new Error('Failed to fetch recent sessions')
-  return res.json()
+  return apiFetch<{ sessions: PastSessionSummary[] }>(`/api/cast/session-agents?limit=${limit}`)
 }
 
 export function useRecentSessions(limit = 10) {
@@ -36,9 +33,7 @@ export function useRecentSessions(limit = 10) {
 
 // Fetch worktree info
 async function fetchWorktrees(): Promise<{ worktrees: Array<{ path: string; branch: string | null; head: string }> }> {
-  const res = await fetch('/api/cast/worktrees')
-  if (!res.ok) throw new Error('Failed to fetch worktrees')
-  return res.json()
+  return apiFetch<{ worktrees: Array<{ path: string; branch: string | null; head: string }> }>('/api/cast/worktrees')
 }
 
 export function useWorktrees() {

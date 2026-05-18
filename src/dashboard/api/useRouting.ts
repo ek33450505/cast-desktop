@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { DispatchEvent } from '../types'
+import { apiFetch } from './apiFetch'
 
 export interface DispatchStats {
   total: number
@@ -12,11 +13,7 @@ export interface DispatchStats {
 export function useDispatchEvents(limit = 500) {
   return useQuery<DispatchEvent[]>({
     queryKey: ['routing', 'events', limit],
-    queryFn: async () => {
-      const res = await fetch(`/api/routing/events?limit=${limit}`)
-      if (!res.ok) throw new Error('Failed to fetch dispatch events')
-      return res.json()
-    },
+    queryFn: () => apiFetch<DispatchEvent[]>(`/api/routing/events?limit=${limit}`),
     refetchInterval: 60_000,
     staleTime: 15_000,
   })
@@ -25,11 +22,7 @@ export function useDispatchEvents(limit = 500) {
 export function useRoutingStats() {
   return useQuery<DispatchStats>({
     queryKey: ['routing', 'stats'],
-    queryFn: async () => {
-      const res = await fetch('/api/routing/stats')
-      if (!res.ok) throw new Error('Failed to fetch routing stats')
-      return res.json()
-    },
+    queryFn: () => apiFetch<DispatchStats>('/api/routing/stats'),
     refetchInterval: 60_000,
     staleTime: 15_000,
   })

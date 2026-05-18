@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -43,9 +44,7 @@ export interface HallucinationsSummaryData {
 // ── Fetch helpers ──────────────────────────────────────────────────────────────
 
 async function fetchHallucinationsSummary(): Promise<HallucinationsSummaryData> {
-  const res = await fetch('/api/agent-hallucinations/summary')
-  if (!res.ok) throw new Error('Failed to fetch hallucinations summary')
-  return res.json()
+  return apiFetch<HallucinationsSummaryData>('/api/agent-hallucinations/summary')
 }
 
 async function fetchHallucinations(filters: HallucinationFilters): Promise<HallucinationsData> {
@@ -59,9 +58,7 @@ async function fetchHallucinations(filters: HallucinationFilters): Promise<Hallu
   if (filters.offset != null) params.set('offset', String(filters.offset))
 
   const qs = params.toString()
-  const res = await fetch(`/api/agent-hallucinations${qs ? `?${qs}` : ''}`)
-  if (!res.ok) throw new Error('Failed to fetch hallucinations')
-  return res.json()
+  return apiFetch<HallucinationsData>(`/api/agent-hallucinations${qs ? `?${qs}` : ''}`)
 }
 
 // ── Hooks ──────────────────────────────────────────────────────────────────────

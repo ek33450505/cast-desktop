@@ -1,16 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AgentDefinition } from '../types'
+import { apiFetch } from './apiFetch'
 
 async function fetchAgents(): Promise<AgentDefinition[]> {
-  const res = await fetch('/api/agents')
-  if (!res.ok) throw new Error('Failed to fetch agents')
-  return res.json()
+  return apiFetch<AgentDefinition[]>('/api/agents')
 }
 
 async function fetchAgent(name: string): Promise<AgentDefinition & { body: string }> {
-  const res = await fetch(`/api/agents/${name}`)
-  if (!res.ok) throw new Error('Failed to fetch agent')
-  return res.json()
+  return apiFetch<AgentDefinition & { body: string }>(`/api/agents/${name}`)
 }
 
 export const useAgents = () =>

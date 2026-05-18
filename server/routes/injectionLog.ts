@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getCastDb } from './castDb.js'
+import { withTable } from '../utils/dbHelpers.js'
 
 export const injectionLogRouter = Router()
 
@@ -15,18 +15,11 @@ export interface InjectionLogEntry {
 
 injectionLogRouter.get('/', (_req, res) => {
   try {
-    const db = getCastDb()
-    if (!db) return res.json({ entries: [] })
-
-    const tableCheck = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='injection_log'"
-    ).get()
-    if (!tableCheck) return res.json({ entries: [] })
-
-    const entries = db.prepare(
-      'SELECT id, session_id, prompt_hash, fact_id, score, injected_at FROM injection_log ORDER BY injected_at DESC LIMIT 100'
-    ).all()
-
+    const entries = withTable('injection_log', [], (db) =>
+      db.prepare(
+        'SELECT id, session_id, prompt_hash, fact_id, score, injected_at FROM injection_log ORDER BY injected_at DESC LIMIT 100'
+      ).all()
+    )
     return res.json({ entries })
   } catch (err) {
     console.error('[injection-log] error:', err)

@@ -1,16 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import type { PlanFile } from '../types'
+import { apiFetch } from './apiFetch'
 
 async function fetchPlans(): Promise<PlanFile[]> {
-  const res = await fetch('/api/plans')
-  if (!res.ok) throw new Error('Failed to fetch plans')
-  return res.json()
+  return apiFetch<PlanFile[]>('/api/plans')
 }
 
 async function fetchPlan(filename: string): Promise<PlanFile & { body: string }> {
-  const res = await fetch(`/api/plans/${encodeURIComponent(filename)}`)
-  if (!res.ok) throw new Error('Failed to fetch plan')
-  return res.json()
+  return apiFetch<PlanFile & { body: string }>(`/api/plans/${encodeURIComponent(filename)}`)
 }
 
 export const usePlans = () =>

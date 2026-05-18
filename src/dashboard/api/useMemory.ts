@@ -1,16 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import type { MemoryFile } from '../types'
+import { apiFetch } from './apiFetch'
 
 async function fetchAgentMemory(): Promise<MemoryFile[]> {
-  const res = await fetch('/api/memory/agent')
-  if (!res.ok) throw new Error('Failed to fetch agent memory')
-  return res.json()
+  return apiFetch<MemoryFile[]>('/api/memory/agent')
 }
 
 async function fetchProjectMemory(): Promise<MemoryFile[]> {
-  const res = await fetch('/api/memory/project')
-  if (!res.ok) throw new Error('Failed to fetch project memory')
-  return res.json()
+  return apiFetch<MemoryFile[]>('/api/memory/project')
 }
 
 export const useAgentMemory = () =>

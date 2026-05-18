@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface HookFailureRow {
   id: string
@@ -11,9 +12,7 @@ export interface HookFailureRow {
 
 async function fetchHookFailures(since?: string): Promise<{ failures: HookFailureRow[] }> {
   const url = since ? `/api/hook-failures?since=${encodeURIComponent(since)}` : '/api/hook-failures'
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to fetch hook failures')
-  return res.json()
+  return apiFetch<{ failures: HookFailureRow[] }>(url)
 }
 
 async function fetchHookFailureCount(): Promise<{ count: number }> {

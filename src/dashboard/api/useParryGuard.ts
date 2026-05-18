@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface ParryGuardEvent {
   id: number
@@ -10,11 +11,7 @@ export interface ParryGuardEvent {
 export function useParryGuard() {
   return useQuery<{ events: ParryGuardEvent[] }>({
     queryKey: ['parry-guard'],
-    queryFn: async () => {
-      const res = await fetch('/api/parry-guard')
-      if (!res.ok) throw new Error(`API error ${res.status}: /api/parry-guard`)
-      return res.json()
-    },
+    queryFn: () => apiFetch<{ events: ParryGuardEvent[] }>('/api/parry-guard'),
     staleTime: 15_000,
     refetchInterval: 30_000,
   })

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface TokenSpendDaily {
   date: string
@@ -22,9 +23,7 @@ export interface TokenSpendData {
 }
 
 async function fetchTokenSpend(): Promise<TokenSpendData> {
-  const res = await fetch('/api/cast/token-spend')
-  if (!res.ok) throw new Error('Failed to fetch token spend data')
-  return res.json()
+  return apiFetch<TokenSpendData>('/api/cast/token-spend')
 }
 
 export const useTokenSpend = () =>

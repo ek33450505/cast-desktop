@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import type { AgentRun } from './useAgentRuns'
+import { apiFetch } from './apiFetch'
 
 async function fetchActiveAgents(): Promise<AgentRun[]> {
-  const res = await fetch('/api/cast/active-agents')
-  if (!res.ok) throw new Error('Failed to fetch active agents')
-  const data = await res.json()
-  return data.runs as AgentRun[]
+  const data = await apiFetch<{ runs: AgentRun[] }>('/api/cast/active-agents')
+  return data.runs
 }
 
 export const useActiveAgents = () =>

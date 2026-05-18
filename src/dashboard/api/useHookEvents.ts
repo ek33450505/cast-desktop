@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useEvent } from '../../lib/SseManager'
 import type { LiveEvent } from '../types'
+import { apiFetch } from './apiFetch'
 
 export interface HookEvent {
   id: string
@@ -45,11 +46,7 @@ export function useHookEventsStream(maxEvents = 50) {
 export function useRecentHookEvents(limit = 20) {
   return useQuery<{ events: HookEvent[]; total: number }>({
     queryKey: ['hook-events-recent', limit],
-    queryFn: async () => {
-      const res = await fetch(`/api/hook-events/recent?limit=${limit}`)
-      if (!res.ok) throw new Error(`API error ${res.status}: /api/hook-events/recent`)
-      return res.json()
-    },
+    queryFn: () => apiFetch<{ events: HookEvent[]; total: number }>(`/api/hook-events/recent?limit=${limit}`),
     staleTime: 10_000,
     refetchInterval: 15_000,
   })

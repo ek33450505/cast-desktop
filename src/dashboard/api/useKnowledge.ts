@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 interface RuleFile {
   filename: string
@@ -22,27 +23,19 @@ interface CommandFile {
 }
 
 async function fetchRules(): Promise<RuleFile[]> {
-  const res = await fetch('/api/rules')
-  if (!res.ok) throw new Error('Failed to fetch rules')
-  return res.json()
+  return apiFetch<RuleFile[]>('/api/rules')
 }
 
 async function fetchSkills(): Promise<SkillFile[]> {
-  const res = await fetch('/api/skills')
-  if (!res.ok) throw new Error('Failed to fetch skills')
-  return res.json()
+  return apiFetch<SkillFile[]>('/api/skills')
 }
 
 async function fetchCommands(): Promise<CommandFile[]> {
-  const res = await fetch('/api/commands')
-  if (!res.ok) throw new Error('Failed to fetch commands')
-  return res.json()
+  return apiFetch<CommandFile[]>('/api/commands')
 }
 
 async function fetchFileContent(url: string): Promise<{ body: string }> {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to fetch file')
-  return res.json()
+  return apiFetch<{ body: string }>(url)
 }
 
 export const useRules = () =>

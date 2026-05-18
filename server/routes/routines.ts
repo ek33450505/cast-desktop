@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { getCastDb } from './castDb.js'
+import { withTable } from '../utils/dbHelpers.js'
 
 export const routinesRouter = Router()
 
@@ -39,45 +40,29 @@ function isPathAllowed(filePath: string): boolean {
     resolved === ALLOWED_OUTPUT_PREFIX
 }
 
-// ── Helper: check table existence ─────────────────────────────────────────────
-
-function routinesTableExists(): boolean {
-  const db = getCastDb()
-  if (!db) return false
-  const row = db.prepare(
-    `SELECT name FROM sqlite_master WHERE type='table' AND name='routines'`
-  ).get() as { name: string } | undefined
-  return !!row
-}
-
 // ── GET /api/routines ─────────────────────────────────────────────────────────
 
 routinesRouter.get('/', (_req: Request, res: Response) => {
   try {
-    const db = getCastDb()
-    if (!db || !routinesTableExists()) {
-      res.json({ routines: [] })
-      return
-    }
-
-    const rows = db.prepare(`
-      SELECT
-        id,
-        name,
-        trigger_type,
-        trigger_value,
-        agent_to_dispatch AS agent,
-        output_dir,
-        enabled,
-        last_run_at,
-        last_run_status,
-        last_run_output_path,
-        created_at
-      FROM routines
-      ORDER BY name ASC
-    `).all() as RoutineRow[]
-
-    res.json({ routines: rows })
+    const routines = withTable('routines', [] as RoutineRow[], (db) =>
+      db.prepare(`
+        SELECT
+          id,
+          name,
+          trigger_type,
+          trigger_value,
+          agent_to_dispatch AS agent,
+          output_dir,
+          enabled,
+          last_run_at,
+          last_run_status,
+          last_run_output_path,
+          created_at
+        FROM routines
+        ORDER BY name ASC
+      `).all() as RoutineRow[]
+    )
+    res.json({ routines })
   } catch (err) {
     console.error('Routines GET / error:', err)
     res.status(500).json({ error: 'Failed to fetch routines' })

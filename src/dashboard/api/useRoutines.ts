@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -29,15 +30,11 @@ export interface RoutineOutputData {
 // ── Fetch helpers ──────────────────────────────────────────────────────────────
 
 async function fetchRoutines(): Promise<RoutinesData> {
-  const res = await fetch('/api/routines')
-  if (!res.ok) throw new Error('Failed to fetch routines')
-  return res.json()
+  return apiFetch<RoutinesData>('/api/routines')
 }
 
 async function fetchRoutineOutput(id: string): Promise<RoutineOutputData> {
-  const res = await fetch(`/api/routines/${encodeURIComponent(id)}/output`)
-  if (!res.ok) throw new Error(`Failed to fetch output for routine ${id}`)
-  return res.json()
+  return apiFetch<RoutineOutputData>(`/api/routines/${encodeURIComponent(id)}/output`)
 }
 
 // ── Hooks ──────────────────────────────────────────────────────────────────────

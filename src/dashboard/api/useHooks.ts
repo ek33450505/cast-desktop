@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import type { HookDefinition } from '../../types/index'
+import { apiFetch } from './apiFetch'
 
 export type { HookDefinition }
 
 async function fetchHooks(): Promise<HookDefinition[]> {
-  const res = await fetch('/api/hooks')
-  if (!res.ok) throw new Error('Failed to fetch hooks')
-  return res.json()
+  return apiFetch<HookDefinition[]>('/api/hooks')
 }
 
 export const useHooks = () =>

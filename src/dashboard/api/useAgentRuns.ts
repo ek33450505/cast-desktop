@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface AgentRun {
   id: number | string
@@ -43,9 +44,7 @@ async function fetchAgentRuns(params: AgentRunsParams): Promise<AgentRunsData> {
   if (params.status) searchParams.set('status', params.status)
   if (params.since) searchParams.set('since', params.since)
   const url = `/api/cast/agent-runs${searchParams.toString() ? `?${searchParams}` : ''}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to fetch agent runs')
-  return res.json()
+  return apiFetch<AgentRunsData>(url)
 }
 
 export const useAgentRuns = (params: AgentRunsParams = {}) =>

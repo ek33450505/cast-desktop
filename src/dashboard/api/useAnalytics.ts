@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface DelegationSavings {
   savedUSD: number
@@ -27,9 +28,7 @@ export interface AnalyticsData {
 
 async function fetchAnalytics(currentMonthOnly = true): Promise<AnalyticsData> {
   const url = currentMonthOnly ? '/api/analytics?currentMonthOnly=true' : '/api/analytics'
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to fetch analytics')
-  return res.json()
+  return apiFetch<AnalyticsData>(url)
 }
 
 export const useAnalytics = (currentMonthOnly = true) =>

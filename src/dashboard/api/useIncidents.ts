@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface IncidentRow {
   id: string
@@ -12,9 +13,7 @@ export interface IncidentRow {
 }
 
 async function fetchIncidents(): Promise<{ incidents: IncidentRow[] }> {
-  const res = await fetch('/api/incidents')
-  if (!res.ok) throw new Error('Failed to fetch incidents')
-  return res.json()
+  return apiFetch<{ incidents: IncidentRow[] }>('/api/incidents')
 }
 
 export const useIncidents = () =>

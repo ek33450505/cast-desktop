@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface UnstagedWarning {
   id: number
@@ -12,11 +13,7 @@ export interface UnstagedWarning {
 export function useUnstagedWarnings() {
   return useQuery<{ warnings: UnstagedWarning[] }>({
     queryKey: ['unstaged-warnings'],
-    queryFn: async () => {
-      const res = await fetch('/api/unstaged-warnings')
-      if (!res.ok) throw new Error(`API error ${res.status}: /api/unstaged-warnings`)
-      return res.json()
-    },
+    queryFn: () => apiFetch<{ warnings: UnstagedWarning[] }>('/api/unstaged-warnings'),
     staleTime: 30_000,
     refetchInterval: 60_000,
   })

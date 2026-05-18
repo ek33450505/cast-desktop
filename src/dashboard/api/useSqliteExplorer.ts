@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface SqliteTableMeta {
   name: string
@@ -34,9 +35,7 @@ export interface SqliteTableParams {
 }
 
 async function fetchSqliteTables(): Promise<SqliteTablesData> {
-  const res = await fetch('/api/cast/explore/tables')
-  if (!res.ok) throw new Error('Failed to fetch tables')
-  return res.json()
+  return apiFetch<SqliteTablesData>('/api/cast/explore/tables')
 }
 
 async function fetchSqliteTable(table: string, params: SqliteTableParams): Promise<SqliteTableData> {
@@ -49,15 +48,11 @@ async function fetchSqliteTable(table: string, params: SqliteTableParams): Promi
     searchParams.set('dir', params.dir ?? 'asc')
   }
   const url = `/api/cast/explore/${table}${searchParams.toString() ? `?${searchParams}` : ''}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Failed to fetch table ${table}`)
-  return res.json()
+  return apiFetch<SqliteTableData>(url)
 }
 
 async function fetchSqliteTableSchema(table: string): Promise<SqliteColumnInfo[]> {
-  const res = await fetch(`/api/cast/explore/schema/${table}`)
-  if (!res.ok) throw new Error(`Failed to fetch schema for table ${table}`)
-  return res.json()
+  return apiFetch<SqliteColumnInfo[]>(`/api/cast/explore/schema/${table}`)
 }
 
 // Verification: useSqliteTables calls /api/cast/explore/tables — this is correct.

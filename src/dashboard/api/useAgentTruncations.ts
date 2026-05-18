@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 export interface AgentTruncation {
   id: number
@@ -15,11 +16,7 @@ export interface AgentTruncation {
 export function useAgentTruncations() {
   return useQuery<{ truncations: AgentTruncation[] }>({
     queryKey: ['agent-truncations'],
-    queryFn: async () => {
-      const res = await fetch('/api/agent-truncations')
-      if (!res.ok) throw new Error(`API error ${res.status}: /api/agent-truncations`)
-      return res.json()
-    },
+    queryFn: () => apiFetch<{ truncations: AgentTruncation[] }>('/api/agent-truncations'),
     staleTime: 15_000,
     refetchInterval: 30_000,
   })

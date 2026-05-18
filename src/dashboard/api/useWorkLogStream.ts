@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from './apiFetch'
 
 // Re-declared locally — do NOT import from server/ (frontend/backend are separate)
 export interface ParsedWorkLog {
@@ -40,9 +41,7 @@ async function fetchWorkLogStream(params: WorkLogStreamParams): Promise<WorkLogS
   if (params.limit) searchParams.set('limit', String(params.limit))
   if (params.since) searchParams.set('since', params.since)
   const url = `/api/work-log-stream${searchParams.toString() ? `?${searchParams}` : ''}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to fetch work log stream')
-  return res.json()
+  return apiFetch<WorkLogStreamData>(url)
 }
 
 export const useWorkLogStream = (params: WorkLogStreamParams = {}) =>

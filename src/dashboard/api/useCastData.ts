@@ -7,17 +7,14 @@ import type {
   ResearchCacheStats,
   DbMemory,
 } from '../types'
+import { apiFetch } from './apiFetch'
 
 // ── Quality Gates ────────────────────────────────────────────────────────────
 
 export function useQualityGateStats() {
   return useQuery<QualityGateStats>({
     queryKey: ['quality-gates', 'stats'],
-    queryFn: async () => {
-      const res = await fetch('/api/quality-gates/stats')
-      if (!res.ok) throw new Error('Failed to fetch quality gate stats')
-      return res.json()
-    },
+    queryFn: () => apiFetch<QualityGateStats>('/api/quality-gates/stats'),
     staleTime: 60_000,
   })
 }
@@ -28,10 +25,8 @@ export function useCompactionEvents() {
   return useQuery({
     queryKey: ['compaction-events'],
     queryFn: async () => {
-      const res = await fetch('/api/cast/compaction-events')
-      if (!res.ok) throw new Error('Failed to fetch compaction events')
-      const data = await res.json()
-      return data.events as CompactionEvent[]
+      const data = await apiFetch<{ events: CompactionEvent[] }>('/api/cast/compaction-events')
+      return data.events
     },
     staleTime: 60_000,
   })
@@ -46,10 +41,8 @@ export function useToolFailures(options?: { limit?: number; since?: string }) {
       const params = new URLSearchParams()
       if (options?.limit) params.set('limit', String(options.limit))
       if (options?.since) params.set('since', options.since)
-      const res = await fetch(`/api/cast/tool-failures?${params}`)
-      if (!res.ok) throw new Error('Failed to fetch tool failures')
-      const data = await res.json()
-      return { failures: data.failures as ToolFailure[], total: data.total as number }
+      const data = await apiFetch<{ failures: ToolFailure[]; total: number }>(`/api/cast/tool-failures?${params}`)
+      return { failures: data.failures, total: data.total }
     },
     staleTime: 60_000,
   })
@@ -58,11 +51,7 @@ export function useToolFailures(options?: { limit?: number; since?: string }) {
 export function useToolFailureStats() {
   return useQuery<ToolFailureStats>({
     queryKey: ['tool-failures', 'stats'],
-    queryFn: async () => {
-      const res = await fetch('/api/cast/tool-failures/stats')
-      if (!res.ok) throw new Error('Failed to fetch tool failure stats')
-      return res.json()
-    },
+    queryFn: () => apiFetch<ToolFailureStats>('/api/cast/tool-failures/stats'),
     staleTime: 60_000,
   })
 }
@@ -72,11 +61,7 @@ export function useToolFailureStats() {
 export function useResearchCacheStats() {
   return useQuery<ResearchCacheStats>({
     queryKey: ['research-cache', 'stats'],
-    queryFn: async () => {
-      const res = await fetch('/api/cast/research-cache/stats')
-      if (!res.ok) throw new Error('Failed to fetch research cache stats')
-      return res.json()
-    },
+    queryFn: () => apiFetch<ResearchCacheStats>('/api/cast/research-cache/stats'),
     staleTime: 120_000,
   })
 }
@@ -87,10 +72,8 @@ export function useDbMemories() {
   return useQuery({
     queryKey: ['db-memories'],
     queryFn: async () => {
-      const res = await fetch('/api/memory/db-memories')
-      if (!res.ok) throw new Error('Failed to fetch DB memories')
-      const data = await res.json()
-      return data.memories as DbMemory[]
+      const data = await apiFetch<{ memories: DbMemory[] }>('/api/memory/db-memories')
+      return data.memories
     },
     staleTime: 120_000,
   })

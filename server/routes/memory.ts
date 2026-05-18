@@ -5,7 +5,7 @@ import path from 'path'
 import { execSync } from 'child_process'
 import { AGENT_MEMORY_DIR } from '../constants.js'
 import { loadAgentMemory, loadProjectMemory } from '../parsers/memory.js'
-import { getCastDb } from './castDb.js'
+import { withTable } from '../utils/dbHelpers.js'
 
 const router = Router()
 
@@ -103,42 +103,31 @@ router.post('/backup-trigger', (_req, res) => {
 // GET /api/memory/db-memories — agent_memories from cast.db with importance/decay/retrieval fields
 router.get('/db-memories', (_req, res) => {
   try {
-    const db = getCastDb()
-    if (!db) {
-      return res.json({ memories: [] })
-    }
-
-    // Check table exists
-    const tableCheck = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_memories'"
-    ).get()
-    if (!tableCheck) {
-      return res.json({ memories: [] })
-    }
-
-    const memories = db.prepare(`
-      SELECT
-        id,
-        agent,
-        project,
-        type,
-        name,
-        description,
-        content,
-        importance,
-        decay_rate,
-        created_at,
-        updated_at
-      FROM agent_memories
-      ORDER BY updated_at DESC
-      LIMIT 500
-    `).all() as Array<{
+    type MemoryRow = {
       id: string; agent: string; project: string | null; type: string | null;
       name: string; description: string | null; content: string;
       importance: number | null; decay_rate: number | null;
       created_at: string; updated_at: string
-    }>
-
+    }
+    const memories = withTable('agent_memories', [] as MemoryRow[], (db) =>
+      db.prepare(`
+        SELECT
+          id,
+          agent,
+          project,
+          type,
+          name,
+          description,
+          content,
+          importance,
+          decay_rate,
+          created_at,
+          updated_at
+        FROM agent_memories
+        ORDER BY updated_at DESC
+        LIMIT 500
+      `).all() as MemoryRow[]
+    )
     res.json({ memories })
   } catch (err) {
     console.error('DB memories error:', err)
