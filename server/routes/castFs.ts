@@ -15,11 +15,11 @@ import {
   RESEARCH_DIR,
   SETTINGS_GLOBAL_FILE,
 } from '../constants.js'
+import { TreeNode, safeResolve } from '../utils/fsHelpers.js'
 
 const router = Router()
 
 const PROJECTS_MEMORY_DIR = path.join(CLAUDE_DIR, 'projects')
-const ALLOWED_ROOT = path.resolve(os.homedir(), '.claude') + path.sep
 
 // ── shared types ─────────────────────────────────────────────────────────────
 
@@ -43,29 +43,6 @@ interface McpItem {
   name: string
   command: string
   args: string[]
-}
-
-// ── security helper ──────────────────────────────────────────────────────────
-
-/**
- * Returns the resolved, realpath'd absolute path, or null if it falls outside
- * `~/.claude/` (path traversal guard).
- */
-function safeResolve(rawPath: string): string | null {
-  // Express has already decoded req.query.path once via qs. Do NOT re-decode —
-  // that enables %25 double-encoding bypass (%252e%252e → %2e%2e → ..).
-  const resolved = path.resolve(rawPath)
-  if (!resolved.startsWith(ALLOWED_ROOT)) return null
-  // Follow symlinks and re-check
-  let real: string
-  try {
-    real = fs.realpathSync(resolved)
-  } catch {
-    // File may not exist yet — fall back to resolved
-    real = resolved
-  }
-  if (!real.startsWith(ALLOWED_ROOT)) return null
-  return real
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -205,39 +182,9 @@ function readMcpItems(): McpItem[] {
   }
 }
 
-// ── shared tree types ────────────────────────────────────────────────────────
-
-interface TreeNode {
-  name: string
-  path: string
-  type: 'dir' | 'file'
-  mtime: number
-  size: number
-  children?: TreeNode[]
-}
-
 const CLAUDE_ROOT = path.resolve(os.homedir(), '.claude')
-const CLAUDE_ROOT_PREFIX = CLAUDE_ROOT + path.sep
 
 // ── /tree — recursive lazy filesystem tree of ~/.claude/ ─────────────────────
-
-/**
- * Resolves `rawPath` within the CLAUDE_ROOT boundary.
- * Mirrors the security pattern from projectFs.ts.
- */
-function safeCastResolve(rawPath: string): string | null {
-  const resolved = path.resolve(rawPath)
-  // Allow the root itself (CLAUDE_ROOT) or anything inside it
-  if (resolved !== CLAUDE_ROOT && !resolved.startsWith(CLAUDE_ROOT_PREFIX)) return null
-  let real: string
-  try {
-    real = fs.realpathSync(resolved)
-  } catch {
-    real = resolved
-  }
-  if (real !== CLAUDE_ROOT && !real.startsWith(CLAUDE_ROOT_PREFIX)) return null
-  return real
-}
 
 /**
  * GET /tree?dir=<encoded>
@@ -250,7 +197,7 @@ function safeCastResolve(rawPath: string): string | null {
 router.get('/tree', (req, res) => {
   const rawDir = req.query['dir']
   const targetDir = (typeof rawDir === 'string' && rawDir)
-    ? safeCastResolve(rawDir)
+    ? safeResolve(CLAUDE_ROOT, rawDir)
     : CLAUDE_ROOT
 
   if (!targetDir) {
@@ -380,7 +327,7 @@ router.get('/preview', (req, res) => {
     return
   }
 
-  const safePath = safeResolve(rawPath)
+  const safePath = safeResolve(CLAUDE_ROOT, rawPath)
   if (!safePath) {
     res.status(403).json({ error: 'path outside allowed root' })
     return

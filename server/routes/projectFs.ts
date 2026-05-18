@@ -1,55 +1,21 @@
 import { Router } from 'express'
 import fs from 'fs'
 import path from 'path'
+import { TreeNode, safeResolve } from '../utils/fsHelpers.js'
 
 const router = Router()
 
 // ── allowed root ──────────────────────────────────────────────────────────────
 
-const PROJECT_ROOT = path.resolve(process.cwd()) + path.sep
-
-// ── types ─────────────────────────────────────────────────────────────────────
-
-interface TreeNode {
-  name: string
-  path: string
-  type: 'dir' | 'file'
-  mtime: number
-  size: number
-  children?: TreeNode[]
-}
-
-// ── security helper ───────────────────────────────────────────────────────────
-
-/**
- * Resolves and validates that `rawPath` is within the project root.
- * Returns the real path or null on violation.
- *
- * Mirrors the `safeResolve` pattern from castFs.ts:
- *   - Do NOT re-decode (Express qs already decoded once — double-decode enables
- *     %252e%252e → %2e%2e → .. bypass).
- *   - Resolve, then realpath, then prefix-check against PROJECT_ROOT.
- */
-function safeResolve(rawPath: string): string | null {
-  const resolved = path.resolve(rawPath)
-  if (!resolved.startsWith(PROJECT_ROOT)) return null
-  let real: string
-  try {
-    real = fs.realpathSync(resolved)
-  } catch {
-    real = resolved
-  }
-  if (!real.startsWith(PROJECT_ROOT)) return null
-  return real
-}
+const PROJECT_ROOT = path.resolve(process.cwd())
 
 /**
  * Returns a default-safe dir when the caller passes none.
  * Falls back to PROJECT_ROOT itself.
  */
 function resolveDir(raw: unknown): string | null {
-  if (typeof raw !== 'string' || !raw) return PROJECT_ROOT.slice(0, -1)
-  return safeResolve(raw)
+  if (typeof raw !== 'string' || !raw) return PROJECT_ROOT
+  return safeResolve(PROJECT_ROOT, raw)
 }
 
 // ── routes ────────────────────────────────────────────────────────────────────
@@ -145,7 +111,7 @@ router.get('/preview', (req, res) => {
     return
   }
 
-  const safePath = safeResolve(rawPath)
+  const safePath = safeResolve(PROJECT_ROOT, rawPath)
   if (!safePath) {
     res.status(403).json({ error: 'path outside allowed root' })
     return
