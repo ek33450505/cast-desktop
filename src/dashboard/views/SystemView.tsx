@@ -1,10 +1,9 @@
 import {
   Users, Terminal, Zap, History,
-  FileText, Shield, Brain, Send, Clock,
+  Shield, Send, Clock,
   Play, Trash2, Plus, Check, ChevronRight, GitBranch, DollarSign, AlertTriangle
 } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAgents } from '../api/useAgents'
 import { useSystemHealth } from '../api/useSystem'
@@ -18,37 +17,16 @@ import PreviewModal from '../components/left-rail/PreviewModal'
 
 // ── Tab types ──────────────────────────────────────────────────────────────
 
-type SystemTab = 'agents' | 'rules' | 'skills' | 'memory' | 'plans' | 'cron' | 'chains' | 'policies' | 'pricing'
+type SystemTab = 'rules' | 'skills' | 'cron' | 'chains' | 'policies' | 'pricing'
 
 const SYSTEM_TABS: { key: SystemTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: 'agents',   label: 'Agents',    icon: Users },
   { key: 'rules',    label: 'Rules',     icon: Shield },
   { key: 'skills',   label: 'Skills',    icon: Zap },
-  { key: 'memory',   label: 'Memory',    icon: Brain },
-  { key: 'plans',    label: 'Plans',     icon: FileText },
   { key: 'cron',     label: 'Cron',      icon: Clock },
   { key: 'chains',   label: 'Chain Map', icon: GitBranch },
   { key: 'policies', label: 'Policies',  icon: Shield },
   { key: 'pricing',  label: 'Pricing',   icon: DollarSign },
 ]
-
-// ── Agents Tab ─────────────────────────────────────────────────────────────
-
-function AgentsTab() {
-  const navigate = useNavigate()
-  return (
-    <div className="p-4 text-sm" style={{ color: 'var(--content-muted)' }}>
-      Agent definitions are managed on the{' '}
-      <button
-        onClick={() => navigate('/agents')}
-        className="underline"
-        style={{ color: 'var(--content-primary)' }}
-      >
-        Agents page
-      </button>.
-    </div>
-  )
-}
 
 // ── Rules Tab ──────────────────────────────────────────────────────────────
 
@@ -138,42 +116,6 @@ function SkillsTab() {
           ))}
         </div>
       </div>
-    </div>
-  )
-}
-
-// ── Memory Tab ─────────────────────────────────────────────────────────────
-
-function MemoryTab() {
-  const navigate = useNavigate()
-  return (
-    <div className="p-4 text-sm" style={{ color: 'var(--content-muted)' }}>
-      Memory files are managed on the{' '}
-      <button
-        onClick={() => navigate('/memory')}
-        className="underline"
-        style={{ color: 'var(--content-primary)' }}
-      >
-        Memory page
-      </button>.
-    </div>
-  )
-}
-
-// ── Plans Tab ──────────────────────────────────────────────────────────────
-
-function PlansTab() {
-  const navigate = useNavigate()
-  return (
-    <div className="p-4 text-sm" style={{ color: 'var(--content-muted)' }}>
-      Plans are managed on the{' '}
-      <button
-        onClick={() => navigate('/plans')}
-        className="underline"
-        style={{ color: 'var(--content-primary)' }}
-      >
-        Plans page
-      </button>.
     </div>
   )
 }
@@ -845,7 +787,7 @@ function HealthSignalsSection() {
 // ── Main SystemView ────────────────────────────────────────────────────────
 
 export default function SystemView() {
-  const [activeTab, setActiveTab] = useState<SystemTab>('agents')
+  const [activeTab, setActiveTab] = useState<SystemTab>('rules')
   const { data: health, isLoading } = useSystemHealth()
 
   const statCards = health
@@ -895,11 +837,8 @@ export default function SystemView() {
 
       {/* Tab content */}
       <div className="min-h-[400px]">
-        {activeTab === 'agents' && <AgentsTab />}
         {activeTab === 'rules' && <RulesTab />}
         {activeTab === 'skills' && <SkillsTab />}
-        {activeTab === 'memory' && <MemoryTab />}
-        {activeTab === 'plans' && <PlansTab />}
         {activeTab === 'cron' && <CronTab />}
         {activeTab === 'chains' && <ChainMapTab />}
         {activeTab === 'policies' && <PoliciesTab />}

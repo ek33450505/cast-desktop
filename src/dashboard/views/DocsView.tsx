@@ -250,7 +250,7 @@ function SkillsSection() {
   return (
     <div className="bento-card p-6">
       <SectionHeader icon={Blocks} title="Skills" count={skills.length} />
-      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+      <div className="grid gap-2 max-h-[24rem] overflow-y-auto" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
         {skills.map(row => (
           <div
             key={row.name}

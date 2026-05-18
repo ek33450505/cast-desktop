@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { Routes, Route, Navigate, Link, Outlet, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Link, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { MotionConfig, motion, useReducedMotion } from 'framer-motion'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { listen } from '@tauri-apps/api/event'
@@ -102,6 +102,9 @@ function ShellLayout() {
     { enableOnFormTags: false, enableOnContentEditable: false },
   )
 
+  const location = useLocation()
+  const isTerminalPage = location.pathname === '/'
+
   const leftTargetPx = leftRailOpen ? (leftWidthPx || LEFT_RAIL_DEFAULT_PX) : COLLAPSED_PX
   const rightTargetPx = rightRailOpen ? (rightWidthPx || RIGHT_RAIL_DEFAULT_PX) : COLLAPSED_PX
 
@@ -144,16 +147,18 @@ function ShellLayout() {
           </Suspense>
         </main>
 
-        {/* ── Right Rail ────────────────────────────────────────────── */}
-        <motion.div
-          initial={false}
-          animate={{ width: rightTargetPx }}
-          transition={transition}
-          className="shrink-0 overflow-hidden"
-          style={{ borderLeft: '1px solid var(--stroke-regular)' }}
-        >
-          <RightRail open={rightRailOpen} onExpand={() => setRightRailOpen(true)} />
-        </motion.div>
+        {/* ── Right Rail — terminal page only ───────────────────────── */}
+        {isTerminalPage && (
+          <motion.div
+            initial={false}
+            animate={{ width: rightTargetPx }}
+            transition={transition}
+            className="shrink-0 overflow-hidden"
+            style={{ borderLeft: '1px solid var(--stroke-regular)' }}
+          >
+            <RightRail open={rightRailOpen} onExpand={() => setRightRailOpen(true)} />
+          </motion.div>
+        )}
       </div>
     </div>
   )

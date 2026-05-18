@@ -13,6 +13,7 @@ import {
   Clock,
   ShieldAlert,
   AlertTriangle,
+  Brain,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 
@@ -30,6 +31,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Sessions', path: '/sessions', icon: History },
   { label: 'Analytics', path: '/analytics', icon: BarChart2 },
   { label: 'Agents', path: '/agents', icon: Users },
+  { label: 'Memory', path: '/memory', icon: Brain },
+  { label: 'Plans', path: '/plans', icon: FileText },
   { label: 'Reliability', path: '/agents/reliability', icon: ShieldAlert },
   { label: 'Hook Failures', path: '/hook-failures', icon: AlertTriangle },
   { label: 'Routines', path: '/routines', icon: Clock },
