@@ -4,6 +4,7 @@ import type { LiveEvent } from '../../../types'
 import { ClipboardList } from 'lucide-react'
 import { usePaneBinding } from '../../../hooks/usePaneBinding'
 import { useTerminalStore } from '../../../stores/terminalStore'
+import Skeleton from '../Skeleton'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -62,11 +63,7 @@ function LoadingState() {
   return (
     <div className="flex flex-col gap-2 p-2" aria-label="Loading plan">
       {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="h-4 rounded animate-pulse"
-          style={{ background: 'var(--system-elevated)', opacity: 0.6 }}
-        />
+        <Skeleton key={i} height="1rem" className="opacity-60" />
       ))}
     </div>
   )

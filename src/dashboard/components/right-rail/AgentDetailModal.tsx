@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { X } from 'lucide-react'
+import Skeleton from '../Skeleton'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -215,11 +216,7 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
           {isLoading && (
             <div className="flex flex-col gap-2" aria-label="Loading agent run detail">
               {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-4 rounded animate-pulse"
-                  style={{ background: 'var(--system-elevated)', opacity: 0.6 }}
-                />
+                <Skeleton key={i} height="1rem" className="opacity-60" />
               ))}
             </div>
           )}

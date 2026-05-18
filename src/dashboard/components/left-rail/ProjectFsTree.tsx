@@ -4,6 +4,7 @@ import { useEvent } from '../../../lib/SseManager'
 import type { LiveEvent } from '../../../types'
 import { Folder, FolderOpen, File, ChevronRight, ChevronDown } from 'lucide-react'
 import type { PreviewTarget } from './CastFsTree'
+import Skeleton from '../Skeleton'
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -215,10 +216,10 @@ export default function ProjectFsTree({
     return (
       <div className="px-3 py-2 space-y-1" aria-label="Loading project tree">
         {[1, 2, 3].map(i => (
-          <div
+          <Skeleton
             key={i}
-            className="h-4 rounded bg-[var(--system-elevated)] animate-pulse"
-            style={{ width: `${40 + i * 14}%` }}
+            width={`${40 + i * 14}%`}
+            height="1rem"
             aria-hidden="true"
           />
         ))}

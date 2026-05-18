@@ -4,12 +4,11 @@ import {
   Play, Trash2, Plus, Check, ChevronRight, GitBranch, DollarSign, AlertTriangle
 } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAgents } from '../api/useAgents'
 import { useSystemHealth } from '../api/useSystem'
 import { useRules, useSkills, useCommands } from '../api/useKnowledge'
-import { useAgentMemory, useProjectMemory } from '../api/useMemory'
-import { usePlans } from '../api/usePlans'
 import { useChainMap, usePolicies, useModelPricing } from '../api/useCastData'
 import { useCostSummary } from '../api/useCostSummary'
 import { useParryGuard } from '../api/useParryGuard'
@@ -36,42 +35,18 @@ const SYSTEM_TABS: { key: SystemTab; label: string; icon: React.ComponentType<{ 
 // ── Agents Tab ─────────────────────────────────────────────────────────────
 
 function AgentsTab() {
-  const { data: agents, isLoading } = useAgents()
-  const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const triggerRef = useRef<HTMLElement | null>(null)
-
-  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading agents...</div>
-  if (!agents || agents.length === 0) return <div className="p-6 text-[var(--content-muted)]">No agents found.</div>
-
+  const navigate = useNavigate()
   return (
-    <>
-      <div className="space-y-1">
-        {agents.map(agent => (
-          <div key={agent.name} className="border border-[var(--border)] rounded-lg overflow-hidden">
-            <button
-              aria-label={`Open agent definition: ${agent.name}`}
-              onClick={e => {
-                triggerRef.current = e.currentTarget
-                setSelectedPath(agent.filePath)
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
-            >
-              <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
-              <span className="font-medium text-sm text-[var(--content-primary)]">{agent.name}</span>
-              <span className="text-xs text-[var(--content-muted)] ml-auto">{agent.model}</span>
-            </button>
-          </div>
-        ))}
-      </div>
-      {selectedPath && (
-        <PreviewModal
-          path={selectedPath}
-          source="cast"
-          onClose={() => setSelectedPath(null)}
-          triggerRef={triggerRef as React.RefObject<HTMLElement>}
-        />
-      )}
-    </>
+    <div className="p-4 text-sm" style={{ color: 'var(--content-muted)' }}>
+      Agent definitions are managed on the{' '}
+      <button
+        onClick={() => navigate('/agents')}
+        className="underline"
+        style={{ color: 'var(--content-primary)' }}
+      >
+        Agents page
+      </button>.
+    </div>
   )
 }
 
@@ -169,118 +144,37 @@ function SkillsTab() {
 
 // ── Memory Tab ─────────────────────────────────────────────────────────────
 
-const isPreviewable = (path?: string) => Boolean(path) && !path!.startsWith('cast-db:')
-
 function MemoryTab() {
-  const { data: agentMem, isLoading: loadingAgent } = useAgentMemory()
-  const { data: projectMem, isLoading: loadingProject } = useProjectMemory()
-  const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const triggerRef = useRef<HTMLElement | null>(null)
-
-  if (loadingAgent || loadingProject) return <div className="p-6 text-[var(--content-muted)]">Loading memory...</div>
-
-  const allMemories = [
-    ...(agentMem ?? []).map(m => ({ ...m, source: 'agent' as const })),
-    ...(projectMem ?? []).map(m => ({ ...m, source: 'project' as const })),
-  ]
-
-  if (allMemories.length === 0) return <div className="p-6 text-[var(--content-muted)]">No memory files found in agent-memory-local/.</div>
-
+  const navigate = useNavigate()
   return (
-    <>
-      <div className="space-y-1">
-        {allMemories.map((mem, i) => (
-          <div key={i} className="border border-[var(--border)] rounded-lg overflow-hidden">
-            {isPreviewable(mem.path) ? (
-              <button
-                aria-label={`Open memory file: ${mem.name ?? mem.filename ?? mem.agent}`}
-                onClick={e => {
-                  triggerRef.current = e.currentTarget
-                  setSelectedPath(mem.path)
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
-              >
-                <Brain className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <span className="font-mono text-sm text-[var(--content-primary)] block truncate">{mem.name ?? mem.filename ?? mem.agent}</span>
-                  {mem.description && (
-                    <span className="text-xs text-[var(--content-secondary)] line-clamp-1">{mem.description}</span>
-                  )}
-                </div>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--system-elevated)] text-[var(--content-muted)] shrink-0">
-                  {mem.source}
-                </span>
-              </button>
-            ) : (
-              <div className="w-full flex items-center gap-3 px-4 py-3">
-                <Brain className="w-4 h-4 text-[var(--accent)] shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <span className="font-mono text-sm text-[var(--content-primary)] block truncate">{mem.name ?? mem.filename ?? mem.agent}</span>
-                  {mem.description && (
-                    <span className="text-xs text-[var(--content-secondary)] line-clamp-1">{mem.description}</span>
-                  )}
-                </div>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--system-elevated)] text-[var(--content-muted)] shrink-0">
-                  {mem.source}
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      {selectedPath && (
-        <PreviewModal
-          path={selectedPath}
-          source="cast"
-          onClose={() => setSelectedPath(null)}
-          triggerRef={triggerRef as React.RefObject<HTMLElement>}
-        />
-      )}
-    </>
+    <div className="p-4 text-sm" style={{ color: 'var(--content-muted)' }}>
+      Memory files are managed on the{' '}
+      <button
+        onClick={() => navigate('/memory')}
+        className="underline"
+        style={{ color: 'var(--content-primary)' }}
+      >
+        Memory page
+      </button>.
+    </div>
   )
 }
 
 // ── Plans Tab ──────────────────────────────────────────────────────────────
 
 function PlansTab() {
-  const { data: plans, isLoading } = usePlans()
-  const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const triggerRef = useRef<HTMLElement | null>(null)
-
-  if (isLoading) return <div className="p-6 text-[var(--content-muted)]">Loading plans...</div>
-  if (!plans || plans.length === 0) return <div className="p-6 text-[var(--content-muted)]">No plans found.</div>
-
+  const navigate = useNavigate()
   return (
-    <>
-      <div className="space-y-1">
-        {plans.map(plan => (
-          <div key={plan.filename} className="border border-[var(--border)] rounded-lg overflow-hidden">
-            <button
-              aria-label={`Open plan: ${plan.title || plan.filename}`}
-              onClick={e => {
-                triggerRef.current = e.currentTarget
-                setSelectedPath(plan.path)
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--system-panel)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
-            >
-              <ChevronRight className="w-4 h-4 text-[var(--content-muted)] shrink-0" />
-              <div className="min-w-0 flex-1">
-                <span className="font-medium text-sm text-[var(--content-primary)] block truncate">{plan.title || plan.filename}</span>
-                {plan.date && <span className="text-xs text-[var(--content-muted)]">{plan.date}</span>}
-              </div>
-            </button>
-          </div>
-        ))}
-      </div>
-      {selectedPath && (
-        <PreviewModal
-          path={selectedPath}
-          source="cast"
-          onClose={() => setSelectedPath(null)}
-          triggerRef={triggerRef as React.RefObject<HTMLElement>}
-        />
-      )}
-    </>
+    <div className="p-4 text-sm" style={{ color: 'var(--content-muted)' }}>
+      Plans are managed on the{' '}
+      <button
+        onClick={() => navigate('/plans')}
+        className="underline"
+        style={{ color: 'var(--content-primary)' }}
+      >
+        Plans page
+      </button>.
+    </div>
   )
 }
 

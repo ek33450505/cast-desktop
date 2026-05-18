@@ -19,7 +19,7 @@ export default function Skeleton({
 
   return (
     <div
-      className={`animate-pulse bg-[var(--bg-tertiary)] ${shapeClasses[shape]} ${className}`}
+      className={`animate-pulse bg-[var(--bg-secondary)] ${shapeClasses[shape]} ${className}`}
       style={{
         width: shape === 'line' ? undefined : width,
         height: shape === 'line' ? undefined : height,

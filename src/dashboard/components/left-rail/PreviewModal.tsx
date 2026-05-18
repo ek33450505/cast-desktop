@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useReducedMotion } from 'framer-motion'
 import { X } from 'lucide-react'
 import PreviewBody from './PreviewBody'
+import Skeleton from '../Skeleton'
 
 function basename(p: string): string {
   return p.split('/').at(-1) ?? p
@@ -164,10 +165,10 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
           {isLoading && (
             <div className="p-4 space-y-2" aria-label="Loading preview">
               {[1, 2, 3, 4, 5].map(i => (
-                <div
+                <Skeleton
                   key={i}
-                  className="h-4 rounded bg-[var(--system-elevated)] animate-pulse"
-                  style={{ width: `${35 + i * 12}%` }}
+                  width={`${35 + i * 12}%`}
+                  height="1rem"
                   aria-hidden="true"
                 />
               ))}

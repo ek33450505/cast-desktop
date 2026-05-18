@@ -1,5 +1,6 @@
 import { Minimize2 } from 'lucide-react'
 import { useCompactionEvents } from '../../api/useCastData'
+import Skeleton from '../Skeleton'
 
 export default function CompactionTimeline() {
   const { data: events, isLoading } = useCompactionEvents()
@@ -7,8 +8,8 @@ export default function CompactionTimeline() {
   if (isLoading) {
     return (
       <div className="bento-card p-6">
-        <div className="h-6 w-40 bg-[var(--system-elevated)] rounded animate-pulse mb-4" />
-        <div className="h-32 bg-[var(--system-elevated)] rounded animate-pulse" />
+        <Skeleton width="10rem" height="1.5rem" className="mb-4" />
+        <Skeleton height="8rem" />
       </div>
     )
   }

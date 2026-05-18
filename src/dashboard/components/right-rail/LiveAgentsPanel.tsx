@@ -6,6 +6,7 @@ import { Bot } from 'lucide-react'
 import { usePaneBinding } from '../../../hooks/usePaneBinding'
 import { useTerminalStore } from '../../../stores/terminalStore'
 import AgentDetailModal from './AgentDetailModal'
+import Skeleton from '../Skeleton'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -208,11 +209,7 @@ export default function LiveAgentsPanel() {
     return (
       <div className="flex flex-col gap-2 p-2" aria-label="Loading agents">
         {[1, 2].map((i) => (
-          <div
-            key={i}
-            className="h-4 rounded animate-pulse"
-            style={{ background: 'var(--system-elevated)', opacity: 0.6 }}
-          />
+          <Skeleton key={i} height="1rem" className="opacity-60" />
         ))}
       </div>
     )

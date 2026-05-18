@@ -2,6 +2,7 @@ import { Shield, CheckCircle2, XCircle } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { useQualityGateStats } from '../../api/useCastData'
 import { useChartColors } from '../../hooks/useChartColors'
+import Skeleton from '../Skeleton'
 
 export default function QualityGatesPanel() {
   const { data, isLoading } = useQualityGateStats()
@@ -18,8 +19,8 @@ export default function QualityGatesPanel() {
   if (isLoading) {
     return (
       <div className="bento-card p-6">
-        <div className="h-6 w-40 bg-[var(--system-elevated)] rounded animate-pulse mb-4" />
-        <div className="h-48 bg-[var(--system-elevated)] rounded animate-pulse" />
+        <Skeleton width="10rem" height="1.5rem" className="mb-4" />
+        <Skeleton height="12rem" />
       </div>
     )
   }

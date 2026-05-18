@@ -17,6 +17,7 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import ProjectFsTree from './ProjectFsTree'
+import Skeleton from '../Skeleton'
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -193,10 +194,10 @@ function Section({ config, onPreview, expanded, onToggle, headerRef }: SectionPr
           {isLoading && (
             <div className="px-3 py-1 space-y-1" aria-label="Loading items">
               {[1, 2, 3].map(i => (
-                <div
+                <Skeleton
                   key={i}
-                  className="h-5 rounded bg-[var(--system-elevated)] animate-pulse"
-                  style={{ width: `${50 + i * 12}%` }}
+                  width={`${50 + i * 12}%`}
+                  height="1.25rem"
                   aria-hidden="true"
                 />
               ))}
