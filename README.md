@@ -1,81 +1,37 @@
-<!-- TODO: docs/cast-desktop-banner.png -->
+<!-- TODO: add banner screenshot -->
 
-# Cast Desktop — CAST v8 Desktop UI
+# Cast Desktop
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
-![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
-![Stack](https://img.shields.io/badge/stack-Tauri+React+Express-blue)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Version](https://img.shields.io/badge/version-1.0.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1075%20passing-brightgreen)
 
-> **Cast Desktop** brings the complete CAST observability surface into a single unified app — sessions, agents, hooks, memory, plans, token spend, database explorer, and a real PTY-backed terminal, all keyboard-driven, all local-first. If you're already using the CAST framework (claude-agent-team), this is the desktop companion you've been jumping between Claude Desktop and VS Code to fake. Watch your multi-agent workflows unfold in real time without context-switching.
+**Your agents, in the room.**
 
----
-
-## What Ships Today
-
-- **Complete CAST Dashboard** — Activity feed, sessions, agents, analytics, hooks, plans, memory browser, system health, token spend, database explorer, and docs view. All fed by your local `~/.claude/cast.db` (no cloud).
-- **Modern Terminal** — PTY-backed xterm with keyboard shortcuts (Cmd+F search, Cmd+K clear, Cmd+=/-, tab cycling, folder picker), theme-aware rendering, ANSI color, and proper signal handling. Terminal lives in a resizable drawer.
-- **Design Language Locked** — Forest-at-dusk (dark) and sunrise (light) themes applied across UI, with user-first eye comfort as the design north star.
-- **819 Tests** — Full Vitest + React Testing Library coverage for frontend and backend; verified on every commit.
+Cast Desktop is a Tauri 2 desktop app that brings real-time observability for the [CAST multi-agent framework](https://github.com/ek33450505/claude-agent-team) into a unified, keyboard-driven interface. Sessions, agents, hooks, memory, plans, token spend, database browser, and a fully featured terminal—all fed from your local `~/.claude/cast.db`, no cloud, no telemetry. If you're orchestrating Claude Code agents, Cast Desktop is the visual companion you've been jumping between terminals and VS Code to emulate.
 
 ---
 
-## Core Features
+## What's Included
 
-### Dashboards & Analytics
-
-| View | Purpose |
-|------|---------|
-| **Activity** | Real-time log of agent dispatches, tool calls, token spend, routing decisions. Streams via SSE from cast.db watchers. |
-| **Sessions** | Full session list with timestamp, status, agent count, token spend. Drill into session details with isolation per sessionId. |
-| **Analytics** | Agent run history, model tier distribution, cost breakdown by agent, thinking token allocation, success/error rates. |
-| **Agents** | Agent roster with model tier, status, memory pool, and per-agent performance metrics. |
-| **Hooks** | Hook event audit trail (SessionStart, PreToolUse, PostToolUse, PostCompact). Success/failure counts, latency histograms. |
-| **Plans** | Agent Dispatch Manifests (ADM) and orchestration history. View planned agent runs, status, and outcomes. |
-| **Memory** | Agent memory browser with FTS5 search. Filter by agent, type (user/feedback/project/reference), or keyword. Temporal validity tracking. |
-| **System** | CAST health dashboard. cast.db size, hook health, stale memories, cost trends with cast.db pricing data. |
-| **Token Spend** | Daily/weekly cost trends by agent, model tier, and session. Cost optimization recommendations. |
-| **Database** | SQLite browser for cast.db. Inspect rows, view schema, debug queries. |
-| **Docs** | Markdown viewer with frontmatter parsing for CAST documentation. Inline file links, modal previews. |
-
-### Terminal Features
-
-**Keyboard Shortcuts:**
-
-| Shortcut | Action |
-|----------|--------|
-| **Cmd+F** | Open search overlay (find text in terminal buffer) |
-| **Cmd+K** | Clear terminal (when xterm focused) |
-| **Cmd+** (equals) | Increase font size (persists to localStorage) |
-| **Cmd−** (minus) | Decrease font size (persists to localStorage) |
-| **Cmd+0** | Reset to default font size |
-| **Cmd+Shift+]** | Cycle to next terminal tab |
-| **Cmd+Shift+[** | Cycle to previous terminal tab |
-| **Cmd+T** | New tab (opens in home directory) |
-| **Cmd+Shift+T** | New tab with folder picker (Tauri dialog) |
-| **Cmd+W** | Close active tab |
-| **Cmd+D** | Toggle terminal visibility |
-
-**Terminal Capabilities:**
-- Real Forge PTY (portable-pty) for full shell support
-- xterm.js with search, link detection, and texture atlas optimization
-- Tab auto-titles from cwd/cmd/sessionId; inline rename (right-click/double-click)
-- Tab coloring via visual indicator
-- Theme-aware (dusk & dawn) with reactive appearance toggle
-- Bracketed paste confirmation for multi-line clipboard input
-- RAFrame-batched PTY writes for smooth rendering
-- Font size hotkeys with localStorage persistence
+- **10 Dashboard Views** — Activity feed, sessions, analytics, agents, hooks, plans, memory browser, system health, token spend, database explorer
+- **Real PTY-Backed Terminal** — xterm with tabs, Cmd+F search, font hotkeys, folder picker, theme-aware rendering, full ANSI support
+- **Two Themes** — forest-at-dusk (dark) and sunrise (light), designed for 8-hour daily use with eye comfort as the north star
+- **1075 Tests** — Full Vitest + React Testing Library coverage across frontend and backend, verified on every commit
+- **Keyboard-First** — Command palette (Cmd+K), global shortcuts, no mouse required for power users
+- **Local-First** — All data lives in `~/.claude/cast.db` (SQLite). No accounts, no cloud, no data collection
 
 ---
 
-## Installation & Running Locally
+## Quick Start
 
-**Prerequisites:**
-- Node.js 22+
-- Rust toolchain (for Tauri)
-- CAST installed locally — `cast status` should work in your terminal
+### Install via Homebrew (Recommended)
 
-**Clone & Install:**
+```bash
+brew install --cask ek33450505/cast-desktop/cast-desktop
+```
+
+The app opens to your local CAST database immediately. No configuration needed.
+
+### Build from Source
 
 ```bash
 git clone https://github.com/ek33450505/cast-desktop.git
@@ -85,22 +41,66 @@ cd server && npm install && npm rebuild better-sqlite3 && cd ..
 npm run dev
 ```
 
-**Open the app:**
-```bash
-# Browser dev mode (recommended for development)
-http://localhost:5173
+Then open http://localhost:5173 in your browser or run `cargo tauri dev` for the packaged desktop app.
 
-# Tauri desktop (packaged binary)
-cargo tauri dev
-```
+### Prerequisites
 
-The full dashboard + API surface is functional in both modes. All data reads from `~/.claude/cast.db` (your local CAST database).
+- **Node.js 22+**
+- **Rust 1.80+** (for Tauri compilation)
+- **Bun** (for sidecar builds)
+- **CAST installed** — `cast status` should work in your terminal
+- **typescript-language-server** in PATH (for LSP/IDE features):
+  ```bash
+  npm install -g typescript-language-server
+  ```
+
+---
+
+## Features
+
+### Dashboard Views
+
+| View | What it Does |
+|------|--------------|
+| **Activity** | Real-time log of agent dispatches, tool calls, token spend, routing decisions. Streams via SSE. |
+| **Sessions** | Full session list with status, agent count, and token spend. Drill into session details. |
+| **Analytics** | Agent run history, model distribution, cost breakdown, thinking token allocation, success rates. |
+| **Agents** | Agent roster with model tier, status, memory pool, and per-agent performance metrics. |
+| **Hooks** | Hook event audit trail (SessionStart, PreToolUse, PostToolUse, PostCompact) with latency histograms. |
+| **Plans** | Agent Dispatch Manifests and orchestration history. View planned runs and outcomes. |
+| **Memory** | Agent memory browser with FTS5 search. Filter by agent, type, or keyword. |
+| **System** | CAST health dashboard. Database size, hook health, cost trends. |
+| **Token Spend** | Daily/weekly cost trends by agent and model. Cost optimization recommendations. |
+| **Database** | SQLite browser for cast.db. Inspect rows, view schema, debug queries. |
+
+### Terminal Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| **Cmd+K** | Clear terminal |
+| **Cmd+F** | Find text in buffer |
+| **Cmd+=** / **Cmd−** | Increase / decrease font size |
+| **Cmd+0** | Reset font size |
+| **Cmd+Shift+]** / **Cmd+Shift+[** | Cycle to next / previous tab |
+| **Cmd+T** | New tab in home directory |
+| **Cmd+Shift+T** | New tab with folder picker |
+| **Cmd+W** | Close active tab |
+| **Cmd+D** | Toggle terminal visibility |
+
+**Terminal Capabilities:**
+- Real Forge PTY (portable-pty) for full shell support
+- xterm.js with search overlay, link detection, texture atlas optimization
+- Auto-title tabs from current working directory / command
+- Tab rename via right-click or double-click
+- Theme-aware rendering (dusk/dawn) with instant toggle
+- Bracketed paste confirmation for safe multi-line input
+- Font size persistence to localStorage
 
 ---
 
 ## Architecture
 
-Cast Desktop follows **Option C: Single In-Process Sidecar**. One Express 5 backend runs inside the Tauri app and serves both the built SPA and REST API endpoints.
+Cast Desktop runs as a single in-process application: a Tauri 2 shell with an embedded Express 5 backend, communicating with your local CAST database via better-sqlite3.
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -129,11 +129,10 @@ Cast Desktop follows **Option C: Single In-Process Sidecar**. One Express 5 back
   ~/.claude/cast.db (SQLite, local-only)
 ```
 
-**Frontend:** React 19, Vite 6, TypeScript, Tailwind CSS v4, shadcn/ui, TanStack Query v5, Recharts, Framer Motion, xterm.js, cmdk, react-resizable-panels.
-
-**Backend:** Express 5, better-sqlite3, chokidar, Tauri 2.10.3.
-
-**Tauri Plugins:** dialog (for folder picker), log.
+**Stack:**
+- **Frontend:** React 19, Vite 6, TypeScript, Tailwind CSS v4, shadcn/ui, TanStack Query v5, Recharts, Framer Motion, xterm.js, cmdk, react-resizable-panels
+- **Backend:** Express 5, better-sqlite3, chokidar, Tauri 2.10.3
+- **Tauri Plugins:** dialog (folder picker), log
 
 ---
 
@@ -179,46 +178,16 @@ cast-desktop/
 npm run dev              # Vite :5173 + Express :3001 (concurrent)
 npm run server:dev      # Express only (tsx watch)
 npm run build           # TypeScript compile + Vite build
-npm run build:app       # Full Tauri app build
-npm test                # Vitest
-npm test:watch          # Vitest watch mode
+npm run build:app       # Full Tauri app build (macOS binary)
+npm test                # Run all tests (Vitest)
+npm test:watch          # Watch mode
 ```
-
----
-
-## Roadmap
-
-| Phase | Goals | Status |
-|-------|-------|--------|
-| **Phase 3.5** | Broken button audit (Sessions delete, POST routes for editability) | ✓ Complete |
-| **Phase 4 (Slice 1)** | Terminal modernization (Cmd+F, Cmd+K clear, font hotkeys, tab cycling, folder picker) | ✓ Complete |
-| **Phase 4 (Slice 2)** | Native macOS menu bar, file editor, in-app agent run UI | In Progress |
-| **Phase 5** | Federal a11y audit, mobile responsive, file upload/edit capability | Planned |
-| **Phase 6** | Cross-platform (Linux, Windows) | Planned |
-
----
-
-## The CAST Ecosystem
-
-Cast Desktop is one piece of the broader CAST ecosystem. All are open-source and actively maintained.
-
-### Core Framework & Tools
-
-| Project | Purpose | Latest |
-|---------|---------|--------|
-| [**claude-agent-team**](https://github.com/ek33450505/claude-agent-team) | Local-first swarm control plane. Specialist agents, quality gates, hook enforcement. | v7.0 |
-| [**cast-hooks**](https://github.com/ek33450505/cast-hooks) | 13 auditable hook scripts — observability, safety guards, quality gates. | v0.1.0 |
-| [**cast-dash**](https://github.com/ek33450505/cast-dash) | Terminal UI dashboard for live swarm monitoring (Textual). | v0.1.0 |
-| [**cast-claudes_journal**](https://github.com/ek33450505/cast-claudes_journal) | Session continuity — Claude's Journal auto-injects prior-day context via SessionStart hook. | v0.1.0 |
-| [**claude-code-dashboard**](https://github.com/ek33450505/claude-code-dashboard) | React observability UI — sessions, agent analytics, memory browser, DB explorer, Constellation 3D graph. | v0.5.0 |
-
-**New to CAST?** Start with [claude-agent-team](https://github.com/ek33450505/claude-agent-team) — the core framework. Cast Desktop is the visual companion once you're running CAST workflows.
 
 ---
 
 ## Testing
 
-**61 test files with 819 test cases** across frontend dashboards, terminal components, server routes, and utilities. Verified on every commit with Vitest + React Testing Library.
+**1075 passing tests** across 88 test files — frontend dashboards, terminal components, server routes, utilities.
 
 ```bash
 npm test          # Run all tests
@@ -229,14 +198,25 @@ npm test:watch    # Watch mode
 
 ## Contributing
 
-We welcome contributions from frontend developers, Tauri enthusiasts, and folks interested in observability UIs.
+We welcome contributions. Good first issues: keyboard shortcut documentation, database explorer enhancements, new dashboard pages, accessibility improvements.
 
-**Good first issues:** Keyboard shortcut documentation, database explorer enhancements, new dashboard pages, a11y improvements.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-**Development help:**
-- Not sure how to start? Open an [issue](https://github.com/ek33450505/cast-desktop/issues).
-- Found a bug? File it with reproduction steps.
-- Want to add a feature? Check if an issue exists first; if not, open a discussion.
+---
+
+## The CAST Ecosystem
+
+Cast Desktop is one piece of the broader CAST multi-agent framework.
+
+| Project | Purpose | Latest |
+|---------|---------|--------|
+| [**claude-agent-team**](https://github.com/ek33450505/claude-agent-team) | Local-first multi-agent control plane. Specialist agents, quality gates, hook enforcement. | v7.0 |
+| [**cast-hooks**](https://github.com/ek33450505/cast-hooks) | 13 auditable hook scripts — observability, safety guards, quality gates. | v0.1.0 |
+| [**cast-dash**](https://github.com/ek33450505/cast-dash) | Terminal UI dashboard for live agent monitoring (Textual). | v0.1.0 |
+| [**cast-claudes_journal**](https://github.com/ek33450505/cast-claudes_journal) | Session continuity — Claude's Journal auto-injects prior-day context via SessionStart hook. | v0.1.0 |
+| [**claude-code-dashboard**](https://github.com/ek33450505/claude-code-dashboard) | React observability UI — sessions, analytics, memory browser, database explorer. | v0.5.0 |
+
+**New to CAST?** Start with [claude-agent-team](https://github.com/ek33450505/claude-agent-team) — the core framework. Cast Desktop is the visual companion once you're running CAST workflows.
 
 ---
 
@@ -252,12 +232,4 @@ MIT — see [LICENSE](LICENSE).
 
 - GitHub: [@ek33450505](https://github.com/ek33450505)
 - Web: [edwardkubiak.com](https://edwardkubiak.com)
-- CAST Framework: [castframework.dev](https://castframework.dev)
-
----
-
-## Related Reading
-
-- **[CAST Architecture](https://github.com/ek33450505/claude-agent-team/blob/main/docs/architecture/ARCHITECTURE.md)** — Deep dive into hook enforcement, swarm composition, audit trails
-- **[CAST Token Optimization](https://github.com/ek33450505/claude-agent-team/blob/main/docs/TOKEN-OPTIMIZATION.md)** — Cost reduction via model tiering, local routing, and response budgets
-- **[Cast Desktop Design Language](docs/design-language.md)** — Theme system, component tokens, accessibility (TBD)
+- CAST: [claude-agent-team](https://github.com/ek33450505/claude-agent-team)
