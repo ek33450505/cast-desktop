@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { getCastDbWritable } from './castDb.js'
+import { broadcast } from '../watchers/sse.js'
 
 export const hookEventsRouter = Router()
 
@@ -44,6 +45,19 @@ hookEventsRouter.post('/', (req: Request, res: Response) => {
     }
 
     addEvent(event)
+
+    // Broadcast via SSE so the live hook events feed (useHookEventsStream) receives it.
+    // Wrap in try/catch — a broken SSE client must not crash event ingestion.
+    try {
+      broadcast({
+        type: 'hook_event',
+        timestamp: event.timestamp,
+        hookEventName: event.hook_type,
+        hookAgentId: event.id,
+      })
+    } catch (err) {
+      console.error('[hookEvents] SSE broadcast failed:', err)
+    }
 
     // Write to cast.db stream_events if table exists — non-fatal if it doesn't
     try {

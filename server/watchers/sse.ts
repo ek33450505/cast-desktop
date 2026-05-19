@@ -49,7 +49,7 @@ function formatInputPreview(toolName: string, input: Record<string, unknown>): s
   }
 }
 
-function broadcast(event: LiveEvent) {
+export function broadcast(event: LiveEvent) {
   const data = `data: ${JSON.stringify(event)}\n\n`
   for (const client of clients) {
     client.write(data)

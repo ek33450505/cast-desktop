@@ -7,6 +7,19 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import { listen } from '@tauri-apps/api/event'
 import '@xterm/xterm/css/xterm.css'
 
+// Open URLs in the system browser via Tauri's shell plugin.
+// We import dynamically so this path only executes in the Tauri context
+// (web build falls back to browser window.open via the default handler).
+async function openExternal(url: string): Promise<void> {
+  try {
+    const { open } = await import('@tauri-apps/plugin-shell')
+    await open(url)
+  } catch {
+    // Fallback for browser / test environments
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+}
+
 import { useTerminal } from '../../hooks/useTerminal'
 import { useTerminalStore } from '../../stores/terminalStore'
 import { useAppearance, type Appearance } from '../../hooks/useAppearance'
@@ -121,7 +134,9 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
     const fitAddon = new FitAddon()
     const searchAddon = new SearchAddon()
     searchAddonRef.current = searchAddon
-    const webLinksAddon = new WebLinksAddon()
+    const webLinksAddon = new WebLinksAddon((_event, uri) => {
+      void openExternal(uri)
+    })
 
     xterm.loadAddon(fitAddon)
     xterm.loadAddon(searchAddon)
