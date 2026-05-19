@@ -86,6 +86,14 @@ function ShellLayout() {
     }
   }, [handleToggleLeft, handleToggleRight])
 
+  // Help → Documentation: open-docs falls through the Rust match to cast:menu bridge,
+  // which dispatches cast:open-docs here → opens the keyboard shortcut overlay (in-app docs).
+  useEffect(() => {
+    const handler = () => setShortcutsOpen(true)
+    window.addEventListener('cast:open-docs', handler)
+    return () => window.removeEventListener('cast:open-docs', handler)
+  }, [])
+
   // ── cast:navigate-claude — Help menu + palette ────────────────────────────────
   useEffect(() => {
     const handler = () => navigate('/claude')

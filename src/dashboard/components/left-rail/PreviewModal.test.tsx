@@ -21,6 +21,38 @@ vi.mock('./PreviewBody', () => ({
   ),
 }))
 
+// ── mock MarkdownEditor (JSDOM + CodeMirror is painful) ───────────────────────
+
+vi.mock('./MarkdownEditor', () => ({
+  MarkdownEditor: ({ initialContent, onChange, onSave }: {
+    initialContent: string
+    onChange: (v: string) => void
+    onSave: (v: string) => void
+  }) => (
+    <textarea
+      data-testid="markdown-editor"
+      defaultValue={initialContent}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault()
+          onSave((e.target as HTMLTextAreaElement).value)
+        }
+      }}
+      aria-label="Markdown editor"
+    />
+  ),
+}))
+
+// ── mock sonner ───────────────────────────────────────────────────────────────
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}))
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 const TEST_PATH = '/home/.claude/agents/code-writer.md'
@@ -45,6 +77,11 @@ function renderModal(
     ),
     client,
   }
+}
+
+/** Seed the QueryClient cache so the modal renders data immediately */
+function seedCache(client: QueryClient, path: string, source: 'cast' | 'project', content: string) {
+  client.setQueryData(['preview-modal', path, source], { path, content, mtime: 1000 })
 }
 
 // ── tests ─────────────────────────────────────────────────────────────────────
@@ -133,6 +170,105 @@ describe('PreviewModal', () => {
     })
   })
 
+  describe('Edit mode', () => {
+    it('renders read-only by default (no editor visible)', () => {
+      const client = makeQueryClient()
+      seedCache(client, TEST_PATH, 'cast', TEST_CONTENT)
+      renderModal(TEST_PATH, vi.fn(), 'cast', client)
+      expect(screen.queryByTestId('markdown-editor')).toBeNull()
+      expect(screen.getByTestId('preview-body')).toBeTruthy()
+    })
+
+    it('Edit button appears for cast .md files', () => {
+      const client = makeQueryClient()
+      seedCache(client, TEST_PATH, 'cast', TEST_CONTENT)
+      renderModal(TEST_PATH, vi.fn(), 'cast', client)
+      expect(screen.getByRole('button', { name: /edit file/i })).toBeTruthy()
+    })
+
+    it('Edit button is absent for project-source files', () => {
+      const client = makeQueryClient()
+      seedCache(client, TEST_PATH, 'project', TEST_CONTENT)
+      renderModal(TEST_PATH, vi.fn(), 'project', client)
+      expect(screen.queryByRole('button', { name: /edit file/i })).toBeNull()
+    })
+
+    it('Edit button is absent for non-.md cast files', () => {
+      const nonMdPath = '/home/.claude/agents/code-writer.sh'
+      const client = makeQueryClient()
+      seedCache(client, nonMdPath, 'cast', '#!/bin/bash\necho hello')
+      renderModal(nonMdPath, vi.fn(), 'cast', client)
+      expect(screen.queryByRole('button', { name: /edit file/i })).toBeNull()
+    })
+
+    it('clicking Edit switches to edit mode and renders MarkdownEditor', () => {
+      const client = makeQueryClient()
+      seedCache(client, TEST_PATH, 'cast', TEST_CONTENT)
+      renderModal(TEST_PATH, vi.fn(), 'cast', client)
+
+      fireEvent.click(screen.getByRole('button', { name: /edit file/i }))
+
+      expect(screen.getByTestId('markdown-editor')).toBeTruthy()
+      expect(screen.queryByTestId('preview-body')).toBeNull()
+    })
+
+    it('dirty indicator (•) appears in title after content changes in edit mode', () => {
+      const client = makeQueryClient()
+      seedCache(client, TEST_PATH, 'cast', TEST_CONTENT)
+      renderModal(TEST_PATH, vi.fn(), 'cast', client)
+
+      // Enter edit mode
+      fireEvent.click(screen.getByRole('button', { name: /edit file/i }))
+
+      // Change content in the mocked textarea
+      const editor = screen.getByTestId('markdown-editor')
+      fireEvent.change(editor, { target: { value: 'changed content' } })
+
+      // Dirty indicator should appear in the title
+      expect(screen.getByText(/^•/)).toBeTruthy()
+    })
+
+    it('Save button calls write mutation with correct path and content', async () => {
+      vi.restoreAllMocks()
+      const writeFetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+        if (typeof url === 'string' && url.includes('/api/cast-fs/write')) {
+          return Promise.resolve(
+            new Response(JSON.stringify({ path: TEST_PATH }), {
+              headers: { 'Content-Type': 'application/json' },
+            })
+          )
+        }
+        // Preview fetch
+        return Promise.resolve(
+          new Response(JSON.stringify({ path: TEST_PATH, content: TEST_CONTENT, mtime: 1000 }), {
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      })
+
+      const client = makeQueryClient()
+      seedCache(client, TEST_PATH, 'cast', TEST_CONTENT)
+      renderModal(TEST_PATH, vi.fn(), 'cast', client)
+
+      // Enter edit mode
+      fireEvent.click(screen.getByRole('button', { name: /edit file/i }))
+
+      // Change content
+      const editor = screen.getByTestId('markdown-editor')
+      fireEvent.change(editor, { target: { value: 'new content' } })
+
+      // Click Save
+      fireEvent.click(screen.getByRole('button', { name: /save file/i }))
+
+      await waitFor(() => {
+        expect(writeFetchSpy).toHaveBeenCalledWith(
+          '/api/cast-fs/write',
+          expect.objectContaining({ method: 'POST' })
+        )
+      })
+    })
+  })
+
   describe('Close button', () => {
     it('close button has aria-label="Close"', () => {
       renderModal()
@@ -185,9 +321,6 @@ describe('PreviewModal', () => {
     it('clicking inside the panel does not call onClose', () => {
       const onClose = vi.fn()
       renderModal(TEST_PATH, onClose)
-      const closeBtn = screen.getByRole('button', { name: /^close$/i })
-      // Click the close button — this is inside the panel, so backdrop handler should not fire
-      // (but the close button handler does fire; we test backdrop isolation here)
       const dialog = screen.getByRole('dialog')
       const panel = dialog.firstElementChild as HTMLElement
       fireEvent.click(panel)

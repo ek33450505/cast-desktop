@@ -158,15 +158,6 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
             #[allow(deprecated)]
             let _ = app.shell().open("https://github.com/ek33450505/cast-desktop", None);
         }
-        "open-docs" => {
-            // Phase D: until a dedicated marketing/docs site lands (Phase E),
-            // Documentation points at the repo README.
-            #[allow(deprecated)]
-            let _ = app.shell().open(
-                "https://github.com/ek33450505/cast-desktop#readme",
-                None,
-            );
-        }
         _ => {
             // All other actions are forwarded to the front-end as a single
             // "cast:menu" event with the action id as payload.
