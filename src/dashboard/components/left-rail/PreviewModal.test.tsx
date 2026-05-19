@@ -72,10 +72,10 @@ describe('PreviewModal', () => {
     it('dialog references a labelling element via aria-labelledby with the file basename', () => {
       renderModal()
       const dialog = screen.getByRole('dialog')
-      const labelId = dialog.getAttribute('aria-labelledby')
-      expect(labelId).toBeTruthy()
-      const labelEl = document.getElementById(labelId!)
-      expect(labelEl?.textContent).toMatch(/code-writer\.md/i)
+      // PreviewModal uses aria-label (not aria-labelledby) — ModalHeader renders the
+      // title as a <p> element without an id; the dialog label is set via aria-label.
+      const ariaLabel = dialog.getAttribute('aria-label')
+      expect(ariaLabel).toMatch(/code-writer\.md/i)
     })
 
     it('shows file basename in header', () => {
@@ -134,15 +134,17 @@ describe('PreviewModal', () => {
   })
 
   describe('Close button', () => {
-    it('close button has aria-label="Close preview"', () => {
+    it('close button has aria-label="Close"', () => {
       renderModal()
-      expect(screen.getByRole('button', { name: /close preview/i })).toBeTruthy()
+      // ModalHeader uses a generic aria-label="Close" for reusability across
+      // PreviewModal, AboutDialog, and DispatchModal.
+      expect(screen.getByRole('button', { name: /^close$/i })).toBeTruthy()
     })
 
     it('clicking close button calls onClose', () => {
       const onClose = vi.fn()
       renderModal(TEST_PATH, onClose)
-      fireEvent.click(screen.getByRole('button', { name: /close preview/i }))
+      fireEvent.click(screen.getByRole('button', { name: /^close$/i }))
       expect(onClose).toHaveBeenCalledOnce()
     })
   })
@@ -161,7 +163,7 @@ describe('PreviewModal', () => {
       const dialog = screen.getByRole('dialog')
       // The only known focusable element in the modal is the close button (PreviewBody is mocked as non-interactive)
       // With a single focusable, last === first, so Tab should wrap back to it
-      const closeBtn = screen.getByRole('button', { name: /close preview/i })
+      const closeBtn = screen.getByRole('button', { name: /^close$/i })
       closeBtn.focus()
       expect(document.activeElement).toBe(closeBtn)
       fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: false })
@@ -183,7 +185,7 @@ describe('PreviewModal', () => {
     it('clicking inside the panel does not call onClose', () => {
       const onClose = vi.fn()
       renderModal(TEST_PATH, onClose)
-      const closeBtn = screen.getByRole('button', { name: /close preview/i })
+      const closeBtn = screen.getByRole('button', { name: /^close$/i })
       // Click the close button — this is inside the panel, so backdrop handler should not fire
       // (but the close button handler does fire; we test backdrop isolation here)
       const dialog = screen.getByRole('dialog')

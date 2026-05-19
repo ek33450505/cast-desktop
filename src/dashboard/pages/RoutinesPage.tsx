@@ -20,7 +20,7 @@ function RoutineSkeleton() {
   return (
     <div role="region" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-busy="true" aria-label="Loading routines">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="bento-card p-5 space-y-3">
+        <div key={i} className="bento-card p-6 space-y-3">
           <div className="h-4 w-32 rounded animate-pulse bg-[var(--system-elevated)]" />
           <div className="h-3 w-24 rounded animate-pulse bg-[var(--system-elevated)]" />
           <div className="h-3 w-20 rounded animate-pulse bg-[var(--system-elevated)]" />
@@ -79,7 +79,7 @@ function RoutineCard({ routine }: { routine: RoutineRow }) {
   return (
     <article
       aria-label={`Routine: ${routine.name}`}
-      className="bento-card p-5 flex flex-col gap-2"
+      className="bento-card p-6 flex flex-col gap-2"
     >
       {/* Header row: name + status badge */}
       <div className="flex items-start justify-between gap-2">

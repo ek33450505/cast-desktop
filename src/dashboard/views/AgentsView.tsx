@@ -10,24 +10,14 @@ import { useInjectionLog } from '../api/useInjectionLog'
 import { timeAgo, formatDuration } from '../utils/time'
 import { formatCost } from '../utils/costEstimate'
 import { modelBadgeClasses } from '../utils/modelBadge'
-
-// ── Status badge color ────────────────────────────────────────────────────────
-function statusBadge(status: string) {
-  const s = status?.toUpperCase() ?? ''
-  if (s === 'DONE') return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-  if (s === 'DONE_WITH_CONCERNS') return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-  if (s === 'BLOCKED') return 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-  if (s === 'NEEDS_CONTEXT') return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-  if (s === 'IN_PROGRESS' || s === 'RUNNING') return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-  return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
-}
+import { AgentStatusBadge } from '../components/ui/AgentStatusBadge'
 
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 function RegistrySkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bento-card p-4 space-y-3">
+        <div key={i} className="bento-card p-6 space-y-3">
           <div className="h-4 w-24 rounded animate-pulse bg-[var(--system-elevated)]" />
           <div className="h-3 w-16 rounded animate-pulse bg-[var(--system-elevated)]" />
           <div className="h-3 w-full rounded animate-pulse bg-[var(--system-elevated)]" />
@@ -351,7 +341,7 @@ export default function AgentsView() {
                 <motion.div
                   layout
                   key={agent.name}
-                  className={`bento-card p-4 space-y-2 transition-all duration-300 ${
+                  className={`bento-card p-6 space-y-2 transition-all duration-300 ${
                     activeNames.has(agent.name)
                       ? 'border-emerald-500/40 shadow-emerald-500/10 shadow-lg'
                       : ''
@@ -482,11 +472,7 @@ export default function AgentsView() {
               >
                 {run.agent}
               </span>
-              <span
-                className={`inline-block px-2 py-0.5 rounded-full border text-[10px] font-medium shrink-0 ${statusBadge(run.status)}`}
-              >
-                {run.status ?? 'unknown'}
-              </span>
+              <AgentStatusBadge status={run.status ?? 'unknown'} />
               <span className="text-[var(--content-muted)] tabular-nums shrink-0 w-14 text-right">
                 {runDuration(run)}
               </span>
