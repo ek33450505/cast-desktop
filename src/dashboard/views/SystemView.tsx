@@ -233,17 +233,19 @@ function CronTab() {
                   onClick={() => triggerEntry(entry)}
                   disabled={triggering === entry}
                   title="Run now"
+                  aria-label="Run cron entry now"
                   className="p-1 rounded text-[var(--content-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-40"
                 >
-                  <Play className="w-3 h-3" />
+                  <Play className="w-3 h-3" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => deleteEntry(entry)}
                   disabled={deleting === entry}
                   title="Delete entry"
+                  aria-label="Delete cron entry"
                   className="p-1 rounded text-[var(--content-muted)] hover:text-rose-400 hover:bg-rose-400/10 transition-colors disabled:opacity-40"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-3 h-3" aria-hidden="true" />
                 </button>
               </div>
             </li>

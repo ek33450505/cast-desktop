@@ -319,7 +319,7 @@ export default function SessionsView() {
                     {extractProjectName(session.projectPath)}
                   </div>
                   {compactedSessionIds.has(session.id) && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 shrink-0">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 shrink-0">
                       Compacted
                     </span>
                   )}
@@ -413,7 +413,7 @@ export default function SessionsView() {
                     <div className="px-4 py-3 font-semibold text-[var(--content-primary)] flex items-center gap-2 min-w-0">
                       <span className="truncate">{extractProjectName(session.projectPath)}</span>
                       {compactedSessionIds.has(session.id) && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 shrink-0">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 shrink-0">
                           Compacted
                         </span>
                       )}

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -112,7 +112,60 @@ async function renderSystemView() {
   )
 }
 
+// ── Cron fetch mock helpers ───────────────────────────────────────────────────
+
+function mockCronFetch(entries: string[]) {
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+    if (url === '/api/castd/status') {
+      return {
+        ok: true,
+        json: async () => ({ entries, count: entries.length, running: false, pid: null }),
+      } as Response
+    }
+    return { ok: true, json: async () => ({}) } as Response
+  }))
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe('SystemView — CronTab → aria-labels on cron control buttons', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  async function openCronTab(entries: string[] = ['0 * * * * /usr/bin/cast daily']) {
+    mockCronFetch(entries)
+    await renderSystemView()
+    const cronTab = await screen.findByRole('button', { name: /cron/i })
+    fireEvent.click(cronTab)
+  }
+
+  it('Play button has aria-label "Run cron entry now"', async () => {
+    await openCronTab()
+    const playBtn = await screen.findByRole('button', { name: 'Run cron entry now' })
+    expect(playBtn).toBeInTheDocument()
+  })
+
+  it('Delete button has aria-label "Delete cron entry"', async () => {
+    await openCronTab()
+    const deleteBtn = await screen.findByRole('button', { name: 'Delete cron entry' })
+    expect(deleteBtn).toBeInTheDocument()
+  })
+
+  it('shows no cron control buttons when entry list is empty', async () => {
+    await openCronTab([])
+    // Wait for the cron tab content to load (loading state resolves)
+    await waitFor(() => {
+      expect(screen.queryByText('Loading cron status...')).not.toBeInTheDocument()
+    }, { timeout: 3000 })
+    expect(screen.queryByRole('button', { name: 'Run cron entry now' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete cron entry' })).not.toBeInTheDocument()
+  })
+})
 
 describe('SystemView — AgentsTab → PreviewModal', () => {
   beforeEach(() => {

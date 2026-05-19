@@ -551,6 +551,28 @@ function TabSwitcher({ activeTab, onChange }: TabSwitcherProps) {
     { id: 'rows', label: 'Rows' },
     { id: 'schema', label: 'Schema' },
   ]
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    const currentIdx = tabs.findIndex(t => t.id === activeTab)
+    let nextIdx: number | null = null
+
+    if (e.key === 'ArrowRight') {
+      nextIdx = (currentIdx + 1) % tabs.length
+    } else if (e.key === 'ArrowLeft') {
+      nextIdx = (currentIdx - 1 + tabs.length) % tabs.length
+    } else if (e.key === 'Home') {
+      nextIdx = 0
+    } else if (e.key === 'End') {
+      nextIdx = tabs.length - 1
+    }
+
+    if (nextIdx !== null) {
+      e.preventDefault()
+      onChange(tabs[nextIdx].id)
+      tabRefs.current[nextIdx]?.focus()
+    }
+  }
 
   return (
     <div
@@ -558,15 +580,18 @@ function TabSwitcher({ activeTab, onChange }: TabSwitcherProps) {
       aria-label="Table view"
       className="flex"
       style={{ borderBottom: '1px solid var(--border)' }}
+      onKeyDown={handleKeyDown}
     >
-      {tabs.map(tab => (
+      {tabs.map((tab, idx) => (
         <button
           key={tab.id}
+          ref={el => { tabRefs.current[idx] = el }}
           role="tab"
           type="button"
           id={`db-tab-${tab.id}`}
           aria-selected={activeTab === tab.id}
           aria-controls={`db-tabpanel-${tab.id}`}
+          tabIndex={activeTab === tab.id ? 0 : -1}
           onClick={() => onChange(tab.id)}
           className={[
             'px-4 py-2.5 text-sm font-medium relative motion-safe:transition-colors',
