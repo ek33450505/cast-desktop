@@ -145,13 +145,12 @@ export function KeyboardShortcutOverlay({ open, onClose }: KeyboardShortcutOverl
         }}
         data-testid="keyboard-shortcut-overlay"
       >
-        <div id={headingId}>
-          <ModalHeader
-            icon={Keyboard}
-            title="Keyboard Shortcuts"
-            onClose={onClose}
-          />
-        </div>
+        <ModalHeader
+          id={headingId}
+          icon={Keyboard}
+          title="Keyboard Shortcuts"
+          onClose={onClose}
+        />
 
         {/* Content */}
         <div className="p-6 grid grid-cols-2 gap-6">

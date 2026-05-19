@@ -73,3 +73,19 @@ describe('ModalHeader — structure', () => {
     expect(header.className).toContain('extra-class')
   })
 })
+
+describe('ModalHeader — id prop', () => {
+  it('applies id to the title element when provided', () => {
+    render(<ModalHeader title="Labelled Header" id="my-heading-id" />)
+    const titleEl = document.getElementById('my-heading-id')
+    expect(titleEl).toBeInTheDocument()
+    expect(titleEl?.textContent).toBe('Labelled Header')
+  })
+
+  it('omits id attribute on title element when not provided', () => {
+    const { container } = render(<ModalHeader title="No Id" />)
+    // The title paragraph should not carry any id
+    const titleEl = container.querySelector('p')
+    expect(titleEl?.getAttribute('id')).toBeNull()
+  })
+})
