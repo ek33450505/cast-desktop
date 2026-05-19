@@ -15,6 +15,7 @@
  * - Pass `id` to expose the title as an aria-labelledby target without a wrapper div
  */
 
+import type React from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -27,11 +28,13 @@ export interface ModalHeaderProps {
   onClose?: () => void
   className?: string
   id?: string
+  /** Optional action buttons rendered between the title and close button */
+  actions?: React.ReactNode
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export function ModalHeader({ icon: Icon, title, onClose, className, id }: ModalHeaderProps) {
+export function ModalHeader({ icon: Icon, title, onClose, className, id, actions }: ModalHeaderProps) {
   return (
     <header
       className={cn(
@@ -48,6 +51,12 @@ export function ModalHeader({ icon: Icon, title, onClose, className, id }: Modal
       <p id={id} className="text-sm font-medium text-[var(--content-primary)] truncate min-w-0 flex-1">
         {title}
       </p>
+
+      {actions && (
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {actions}
+        </div>
+      )}
 
       {onClose && (
         <button

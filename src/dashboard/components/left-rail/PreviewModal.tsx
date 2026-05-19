@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useReducedMotion } from 'framer-motion'
+import { toast } from 'sonner'
+import { Pencil, Eye } from 'lucide-react'
 import PreviewBody from './PreviewBody'
+import { MarkdownEditor } from './MarkdownEditor'
 import Skeleton from '../Skeleton'
 import { ModalHeader } from '../ui/ModalHeader'
+import { useFileWrite } from '../../hooks/useFileWrite'
 
 function basename(p: string): string {
   return p.split('/').at(-1) ?? p
@@ -50,7 +54,42 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
     retry: false,
   })
 
+  // ── Edit mode state ───────────────────────────────────────────────────────
+  const [mode, setMode] = useState<'read' | 'edit'>('read')
+  const [editorContent, setEditorContent] = useState<string>('')
+  const fileWrite = useFileWrite()
+
+  // Only cast .md files are editable
+  const isEditable = source === 'cast' && filePath.endsWith('.md')
+
+  // Dirty when editor content differs from loaded content
+  const isDirty = mode === 'edit' && data !== undefined && editorContent !== data.content
+
+  function enterEditMode() {
+    if (data) {
+      setEditorContent(data.content)
+      setMode('edit')
+    }
+  }
+
+  function handleSave(content: string) {
+    fileWrite.mutate(
+      { path: filePath, content },
+      {
+        onSuccess: () => {
+          setMode('read')
+          setEditorContent('')
+          toast.success('Saved')
+        },
+        onError: (err) => {
+          toast.error(`Save failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
+        },
+      },
+    )
+  }
+
   const fileName = basename(filePath)
+  const titleText = isDirty ? `• ${fileName}` : fileName
 
   // Focus panel on open
   useEffect(() => {
@@ -67,12 +106,21 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
     }
   }, [triggerRef])
 
-  // Escape closes; Tab traps focus inside dialog
+  // Escape closes (with dirty guard); Tab traps focus inside dialog
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation()
+        if (isDirty) {
+          if (!window.confirm('Discard unsaved changes?')) return
+        }
         onClose()
+        return
+      }
+      // Cmd+S in edit mode saves
+      if (e.key === 's' && (e.metaKey || e.ctrlKey) && mode === 'edit') {
+        e.preventDefault()
+        handleSave(editorContent)
         return
       }
       if (e.key === 'Tab' && dialogRef.current) {
@@ -87,13 +135,11 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
         const active = document.activeElement as HTMLElement
 
         if (e.shiftKey) {
-          // Shift+Tab at first element → wrap to last
           if (active === first || !dialogRef.current.contains(active)) {
             e.preventDefault()
             last.focus()
           }
         } else {
-          // Tab at last element → wrap to first
           if (active === last || !dialogRef.current.contains(active)) {
             e.preventDefault()
             first.focus()
@@ -101,20 +147,68 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
         }
       }
     },
-    [onClose],
+    [onClose, isDirty, mode, editorContent],
   )
 
-  // Backdrop click closes
+  // Backdrop click closes (with dirty guard)
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (e.target === e.currentTarget) onClose()
+    if (e.target !== e.currentTarget) return
+    if (isDirty) {
+      if (!window.confirm('Discard unsaved changes?')) return
+    }
+    onClose()
   }
+
+  // ── Header actions ────────────────────────────────────────────────────────
+  const headerActions = isEditable ? (
+    mode === 'read' ? (
+      <button
+        type="button"
+        onClick={enterEditMode}
+        disabled={!data}
+        aria-label="Edit file"
+        title="Edit"
+        className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1 disabled:opacity-40 disabled:pointer-events-none"
+      >
+        <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+        Edit
+      </button>
+    ) : (
+      <>
+        <button
+          type="button"
+          onClick={() => {
+            if (isDirty && !window.confirm('Discard unsaved changes?')) return
+            setMode('read')
+            setEditorContent('')
+          }}
+          aria-label="Switch to read mode"
+          title="Preview"
+          className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1"
+        >
+          <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+          Preview
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSave(editorContent)}
+          disabled={fileWrite.isPending}
+          aria-label="Save file"
+          title="Save (Cmd+S)"
+          className="flex items-center gap-1.5 px-2 py-1 rounded text-xs bg-[var(--accent)] text-[var(--accent-fg, #fff)] hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1 disabled:opacity-50 disabled:pointer-events-none"
+        >
+          {fileWrite.isPending ? 'Saving…' : 'Save'}
+        </button>
+      </>
+    )
+  ) : null
 
   return (
     <div
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label={`Preview: ${fileName}`}
+      aria-label={`${mode === 'edit' ? 'Edit' : 'Preview'}: ${fileName}`}
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
         background: 'var(--system-vibrancy-base)',
@@ -140,7 +234,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <ModalHeader title={fileName} onClose={onClose} />
+        <ModalHeader title={titleText} onClose={onClose} actions={headerActions} />
 
         {/* Body */}
         <div className="flex-1 overflow-hidden flex flex-col">
@@ -163,8 +257,16 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
             </div>
           )}
 
-          {data && (
+          {data && mode === 'read' && (
             <PreviewBody filePath={filePath} content={data.content} />
+          )}
+
+          {data && mode === 'edit' && (
+            <MarkdownEditor
+              initialContent={editorContent}
+              onChange={setEditorContent}
+              onSave={handleSave}
+            />
           )}
         </div>
       </div>
