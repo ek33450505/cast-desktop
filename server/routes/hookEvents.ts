@@ -37,7 +37,7 @@ hookEventsRouter.post('/', (req: Request, res: Response) => {
     const event: HookEvent = {
       id: `${Date.now()}-${++bufferSeq}`,
       timestamp: (body.timestamp as string | undefined) ?? new Date().toISOString(),
-      hook_type: (body.hook_type as string | undefined) ?? (body.event_type as string | undefined) ?? 'unknown',
+      hook_type: (body.hook_type as string | undefined) ?? (body.event_type as string | undefined) ?? (body.hook_event_name as string | undefined) ?? 'unknown',
       tool_name: (body.tool_name as string | null | undefined) ?? null,
       result: (body.result as string | null | undefined) ?? null,
       duration_ms: typeof body.duration_ms === 'number' ? body.duration_ms : null,

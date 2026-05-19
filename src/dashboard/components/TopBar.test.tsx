@@ -88,3 +88,44 @@ describe('TopBar', () => {
     expect(screen.getByTestId('topbar-app-icon')).toBeInTheDocument()
   })
 })
+
+// ── Regression: showRightRailToggle prop (Bug 3) ──────────────────────────────
+// Before the fix, the right-rail toggle appeared on every page even though the
+// right rail itself only renders on the terminal page.
+
+describe('TopBar — showRightRailToggle prop (bug regression)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-05-13T20:47:00.000Z'))
+  })
+  afterEach(() => { vi.useRealTimers() })
+
+  it('renders the right-rail toggle by default (showRightRailToggle omitted)', () => {
+    render(<TopBar {...DEFAULT_PROPS} rightRailOpen={false} />)
+    expect(
+      screen.getByRole('button', { name: /expand right rail/i })
+    ).toBeInTheDocument()
+  })
+
+  it('renders the right-rail toggle when showRightRailToggle={true}', () => {
+    render(<TopBar {...DEFAULT_PROPS} rightRailOpen={false} showRightRailToggle={true} />)
+    expect(
+      screen.getByRole('button', { name: /expand right rail/i })
+    ).toBeInTheDocument()
+  })
+
+  it('hides the right-rail toggle when showRightRailToggle={false}', () => {
+    // Core regression guard: non-terminal pages must not show this button
+    render(<TopBar {...DEFAULT_PROPS} showRightRailToggle={false} />)
+    expect(
+      screen.queryByRole('button', { name: /right rail/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('left-rail toggle remains visible when showRightRailToggle={false}', () => {
+    render(<TopBar {...DEFAULT_PROPS} showRightRailToggle={false} />)
+    expect(
+      screen.getByRole('button', { name: /left rail/i })
+    ).toBeInTheDocument()
+  })
+})

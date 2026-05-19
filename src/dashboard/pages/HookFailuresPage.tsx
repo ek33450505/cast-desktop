@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 import { useHookFailures } from '../api/useHookFailures'
 import type { HookFailureRow } from '../api/useHookFailures'
@@ -27,7 +27,10 @@ export default function HookFailuresPage() {
   const [last24h, setLast24h] = useState(true)
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
-  const since = last24h ? new Date(Date.now() - 86_400_000).toISOString() : undefined
+  const since = useMemo(
+    () => last24h ? new Date(Date.now() - 86_400_000).toISOString() : undefined,
+    [last24h]
+  )
   const { data, isLoading } = useHookFailures(since)
   const failures = data?.failures ?? []
   const grouped = groupByHook(failures)

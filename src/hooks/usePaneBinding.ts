@@ -40,7 +40,8 @@ export function usePaneBinding(paneId: string | undefined): PaneBinding {
     queryKey: ['paneBinding', paneId],
     queryFn: () => fetchPaneBinding(paneId!),
     enabled: !!paneId,
-    staleTime: 60_000,
+    staleTime: 5_000,
+    refetchInterval: (query) => (query.state.data?.sessionId ? false : 5_000),
   })
 
   useEvent<LiveEvent>('pane_binding_updated', (e) => {
