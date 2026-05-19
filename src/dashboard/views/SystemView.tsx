@@ -583,6 +583,9 @@ function PricingTab() {
                   (pricing as { models?: Record<string, Record<string, number>> }).models ?? {}
                 ).map(([model, rates]) => {
                   const r = rates as Record<string, number>
+                  // model-pricing.json fields use cost_per_million_* in the canonical format,
+                  // but older snapshots use `input`/`output` or `input_per_1m`/`output_per_1m`.
+                  // Keep the fallback chain until pricing config stabilizes across all environments.
                   const inputRate = r.cost_per_million_input ?? r.input ?? r.input_per_1m ?? '--'
                   const outputRate = r.cost_per_million_output ?? r.output ?? r.output_per_1m ?? '--'
                   return (

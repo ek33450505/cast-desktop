@@ -6,11 +6,13 @@
  * - title: string (visible title text)
  * - onClose?: () => void (close button — omitted when undefined)
  * - className?: string
+ * - id?: string (applied to the title element — allows consumers to use aria-labelledby)
  *
  * a11y:
  * - Icon is aria-hidden="true" (decorative)
  * - Close button has aria-label="Close"
  * - Semantic <header> element with border-b separator
+ * - Pass `id` to expose the title as an aria-labelledby target without a wrapper div
  */
 
 import type { LucideIcon } from 'lucide-react'
@@ -24,11 +26,12 @@ export interface ModalHeaderProps {
   title: string
   onClose?: () => void
   className?: string
+  id?: string
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export function ModalHeader({ icon: Icon, title, onClose, className }: ModalHeaderProps) {
+export function ModalHeader({ icon: Icon, title, onClose, className, id }: ModalHeaderProps) {
   return (
     <header
       className={cn(
@@ -42,7 +45,7 @@ export function ModalHeader({ icon: Icon, title, onClose, className }: ModalHead
         </span>
       )}
 
-      <p className="text-sm font-medium text-[var(--content-primary)] truncate min-w-0 flex-1">
+      <p id={id} className="text-sm font-medium text-[var(--content-primary)] truncate min-w-0 flex-1">
         {title}
       </p>
 
