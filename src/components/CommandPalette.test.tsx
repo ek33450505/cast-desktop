@@ -119,6 +119,19 @@ describe('CommandPalette', () => {
     expect(items.length).toBe(16)
   })
 
+  it('Terminal is in nav items', () => {
+    renderPalette(true)
+    expect(screen.getByRole('option', { name: /terminal/i })).toBeInTheDocument()
+  })
+
+  it('redirect-alias items are NOT in nav items', () => {
+    renderPalette(true)
+    expect(screen.queryByRole('option', { name: /^Activity/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /dispatch log/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /token spend/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /quality gates/i })).not.toBeInTheDocument()
+  })
+
   it('focus trap: Tab from last focusable element wraps to first (search input)', async () => {
     const user = userEvent.setup()
     renderPalette(true)
