@@ -24,16 +24,30 @@ jobs:
         with:
           targets: aarch64-apple-darwin
 
+      # Cache Rust build artifacts — cuts subsequent runs from ~20min to ~5min
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      # Bun is required for build:sidecars (cast-server + cast-lsp-ts sidecar binaries)
+      - uses: oven-sh/setup-bun@v2
+
+      # cargo-binstall downloads pre-built tauri-cli binary (~30s vs ~10min for cargo install)
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install tauri-cli
+        run: cargo binstall tauri-cli@^2 --no-confirm
+
+      - name: Install Node dependencies
         run: npm ci
 
       - name: Build macOS app
-        run: cargo tauri build
+        run: cargo tauri build --target aarch64-apple-darwin
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -41,8 +55,9 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
+      # When --target is specified, Tauri outputs to target/<triple>/release/bundle/
       - name: Upload release
         uses: softprops/action-gh-release@v2
         with:
-          files: src-tauri/target/release/bundle/dmg/*.dmg
+          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
           generate_release_notes: true
