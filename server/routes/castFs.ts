@@ -17,6 +17,54 @@ import {
 } from '../constants.js'
 import { TreeNode, safeResolve } from '../utils/fsHelpers.js'
 
+// ── write-route path validation ───────────────────────────────────────────────
+
+const ALLOWED_ROOT = path.resolve(os.homedir(), '.claude')
+
+/**
+ * Validates that an input path resolves inside ~/.claude.
+ * Accepts absolute paths and ~/... expansions.
+ * Returns the resolved absolute path, or null if the path escapes the allowed root.
+ *
+ * Symlink bypass defense:
+ * - For existing paths: resolves symlinks via realpathSync and re-checks the root.
+ * - For new paths (ENOENT): resolves the parent directory's realpath and re-checks.
+ *   If the parent also doesn't exist, rejects (we don't auto-create arbitrary dirs).
+ */
+function validateWritePath(input: string): string | null {
+  if (typeof input !== 'string' || !input) return null
+  const expanded = input.startsWith('~/')
+    ? path.join(os.homedir(), input.slice(2))
+    : input
+  const resolved = path.resolve(expanded)
+  if (resolved !== ALLOWED_ROOT && !resolved.startsWith(ALLOWED_ROOT + path.sep)) {
+    return null
+  }
+
+  // Symlink resolution: re-check after following symlinks
+  try {
+    const real = fs.realpathSync(resolved)
+    if (real !== ALLOWED_ROOT && !real.startsWith(ALLOWED_ROOT + path.sep)) {
+      return null
+    }
+    return resolved
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code
+    if (code !== 'ENOENT') return null
+    // Path doesn't exist yet — resolve the parent to detect symlink escapes
+    try {
+      const parentReal = fs.realpathSync(path.dirname(resolved))
+      if (parentReal !== ALLOWED_ROOT && !parentReal.startsWith(ALLOWED_ROOT + path.sep)) {
+        return null
+      }
+      return resolved
+    } catch {
+      // Parent also doesn't exist — reject
+      return null
+    }
+  }
+}
+
 const router = Router()
 
 const PROJECTS_MEMORY_DIR = path.join(CLAUDE_DIR, 'projects')
@@ -330,6 +378,112 @@ router.get('/preview', (req, res) => {
   const safePath = safeResolve(CLAUDE_ROOT, rawPath)
   if (!safePath) {
     res.status(403).json({ error: 'path outside allowed root' })
+    return
+  }
+
+  try {
+    const stat = fs.statSync(safePath)
+    if (stat.size > MAX_PREVIEW_SIZE) {
+      res.status(413).json({ error: 'file too large' })
+      return
+    }
+    const content = fs.readFileSync(safePath, 'utf-8')
+    res.json({ path: safePath, content, mtime: stat.mtimeMs })
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code
+    if (code === 'ENOENT') {
+      res.status(404).json({ error: 'file not found' })
+    } else {
+      res.status(500).json({ error: 'failed to read file' })
+    }
+  }
+})
+
+// ── write routes ─────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/cast-fs/write
+ * Body: { path: string, content: string }
+ * Atomically writes content to a file within ~/.claude.
+ */
+router.post('/write', (req, res) => {
+  const { path: rawPath, content } = req.body as { path?: unknown; content?: unknown }
+
+  if (typeof rawPath !== 'string' || !rawPath) {
+    res.status(400).json({ error: 'path is required' })
+    return
+  }
+  if (typeof content !== 'string') {
+    res.status(400).json({ error: 'content must be a string' })
+    return
+  }
+
+  const safePath = validateWritePath(rawPath)
+  if (!safePath) {
+    res.status(403).json({ error: 'path not allowed' })
+    return
+  }
+
+  const tmpPath = `${safePath}.tmp`
+  try {
+    fs.mkdirSync(path.dirname(safePath), { recursive: true })
+    fs.writeFileSync(tmpPath, content, 'utf-8')
+    fs.renameSync(tmpPath, safePath)
+    res.json({ path: safePath })
+  } catch (err) {
+    // Clean up tmp file on error
+    try { fs.unlinkSync(tmpPath) } catch { /* ignore */ }
+    res.status(500).json({ error: 'failed to write file' })
+  }
+})
+
+/**
+ * DELETE /api/cast-fs/delete
+ * Body: { path: string }
+ * Deletes a file within ~/.claude.
+ */
+router.delete('/delete', (req, res) => {
+  const { path: rawPath } = req.body as { path?: unknown }
+
+  if (typeof rawPath !== 'string' || !rawPath) {
+    res.status(400).json({ error: 'path is required' })
+    return
+  }
+
+  const safePath = validateWritePath(rawPath)
+  if (!safePath) {
+    res.status(403).json({ error: 'path not allowed' })
+    return
+  }
+
+  try {
+    fs.unlinkSync(safePath)
+    res.json({ path: safePath })
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code
+    if (code === 'ENOENT') {
+      res.status(404).json({ error: 'file not found' })
+    } else {
+      res.status(500).json({ error: 'failed to delete file' })
+    }
+  }
+})
+
+/**
+ * GET /api/cast-fs/read
+ * Query: ?path=...
+ * Reads a file within ~/.claude (alias for /preview; added for write-layer symmetry).
+ */
+router.get('/read', (req, res) => {
+  const rawPath = req.query['path']
+  if (typeof rawPath !== 'string' || !rawPath) {
+    res.status(400).json({ error: 'path query param required' })
+    return
+  }
+
+  const safePath = validateWritePath(rawPath) ?? safeResolve(CLAUDE_ROOT, rawPath)
+  if (!safePath) {
+    res.status(403).json({ error: 'path not allowed' })
     return
   }
 

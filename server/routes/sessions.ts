@@ -4,8 +4,26 @@ import path from 'path'
 import { listSessions, loadSession } from '../parsers/sessions.js'
 import { estimateCost } from '../utils/costEstimate.js'
 import { PROJECTS_DIR } from '../constants.js'
-import { getCastDb } from './castDb.js'
+import { getCastDb, getCastDbWritable } from './castDb.js'
 import type { LogEntry, ContentBlock } from '../../src/types/index.js'
+
+// ── schema migration: add deleted_at to sessions table ───────────────────────
+// Idempotent — ALTER TABLE is wrapped to tolerate duplicate-column errors.
+;(function migrateSessions() {
+  try {
+    const db = getCastDbWritable()
+    if (!db) return
+    try {
+      db.exec("ALTER TABLE sessions ADD COLUMN deleted_at TIMESTAMP NULL")
+    } catch {
+      // Column already exists — safe to ignore
+    } finally {
+      db.close()
+    }
+  } catch {
+    // cast.db unavailable — skip migration silently
+  }
+})()
 
 const router = Router()
 
@@ -195,7 +213,8 @@ router.delete('/:projectEncoded/:sessionId', (req, res) => {
     return
   }
 
-  // Path traversal guard: resolve and verify the file is inside PROJECTS_DIR
+  // Path traversal guard: verify the jsonl path stays inside PROJECTS_DIR.
+  // We don't delete the file — soft delete records deleted_at in cast.db.
   const resolvedBase = path.resolve(PROJECTS_DIR)
   const filePath = path.resolve(resolvedBase, projectEncoded, `${sessionId}.jsonl`)
   if (!filePath.startsWith(resolvedBase + path.sep)) {
@@ -203,16 +222,33 @@ router.delete('/:projectEncoded/:sessionId', (req, res) => {
     return
   }
 
-  try {
-    fs.unlinkSync(filePath)
-    res.json({ deleted: true })
-  } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      res.status(404).json({ error: 'Session not found' })
-    } else {
-      res.status(500).json({ error: 'Failed to delete session' })
-    }
+  // Verify the session file exists before recording a soft delete
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: 'Session not found' })
+    return
   }
+
+  // Soft delete: record deleted_at in cast.db.
+  // If cast.db is unavailable we still succeed — the file exists, just not tracked.
+  const deletedAt = new Date().toISOString()
+  try {
+    const db = getCastDbWritable()
+    if (db) {
+      try {
+        // Upsert: insert if missing, update if present (handles sessions not yet in cast.db)
+        db.prepare(
+          `INSERT INTO sessions (id, deleted_at) VALUES (?, ?)
+           ON CONFLICT(id) DO UPDATE SET deleted_at = excluded.deleted_at`
+        ).run(sessionId, deletedAt)
+      } finally {
+        db.close()
+      }
+    }
+  } catch {
+    // cast.db write failed — not a hard error for the HTTP response
+  }
+
+  res.json({ id: sessionId, deleted_at: deletedAt })
 })
 
 export { router as sessionsRouter }

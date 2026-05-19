@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach } from 'vitest'
 import express from 'express'
 import request from 'supertest'
 import path from 'path'
@@ -141,3 +141,141 @@ describe('GET /api/cast-fs/preview', () => {
 
 // /api/cast-fs/stream removed in Wave 2.13 SSE multiplex refactor.
 // FS change events are now broadcast via the single /api/events SseManager endpoint.
+
+// ── write / delete / read routes (write-layer, Phase 4) ──────────────────────
+
+import fsSync from 'fs'
+
+describe('POST /api/cast-fs/write', () => {
+  const testPath = path.join(os.homedir(), '.claude', `test-tmp-${process.pid}.md`)
+
+  afterEach(() => {
+    try { fsSync.unlinkSync(testPath) } catch { /* already gone */ }
+  })
+
+  it('writes a file inside ~/.claude and returns 200', async () => {
+    const res = await request(app)
+      .post('/api/cast-fs/write')
+      .send({ path: testPath, content: 'x' })
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty('path')
+    expect(fsSync.existsSync(testPath)).toBe(true)
+    expect(fsSync.readFileSync(testPath, 'utf-8')).toBe('x')
+  })
+
+  it('returns 403 when path is /etc/passwd', async () => {
+    const res = await request(app)
+      .post('/api/cast-fs/write')
+      .send({ path: '/etc/passwd', content: 'evil' })
+    expect(res.status).toBe(403)
+  })
+
+  it('returns 403 for tilde-expansion path traversal (~/.claude/../../etc/passwd)', async () => {
+    const res = await request(app)
+      .post('/api/cast-fs/write')
+      .send({ path: '~/.claude/../../etc/passwd', content: 'evil' })
+    expect(res.status).toBe(403)
+  })
+
+  it('returns 400 when path is missing', async () => {
+    const res = await request(app)
+      .post('/api/cast-fs/write')
+      .send({ content: 'x' })
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 400 when content is missing', async () => {
+    const res = await request(app)
+      .post('/api/cast-fs/write')
+      .send({ path: testPath })
+    expect(res.status).toBe(400)
+  })
+})
+
+describe('DELETE /api/cast-fs/delete', () => {
+  const testPath = path.join(os.homedir(), '.claude', `test-tmp-del-${process.pid}.md`)
+
+  afterEach(() => {
+    try { fsSync.unlinkSync(testPath) } catch { /* already gone */ }
+  })
+
+  it('returns 404 for a non-existent file', async () => {
+    const res = await request(app)
+      .delete('/api/cast-fs/delete')
+      .send({ path: testPath })
+    expect(res.status).toBe(404)
+  })
+
+  it('deletes a real file and returns 200 with path', async () => {
+    fsSync.writeFileSync(testPath, 'to-delete', 'utf-8')
+    const res = await request(app)
+      .delete('/api/cast-fs/delete')
+      .send({ path: testPath })
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty('path')
+    expect(fsSync.existsSync(testPath)).toBe(false)
+  })
+
+  it('returns 403 for path outside ~/.claude', async () => {
+    const res = await request(app)
+      .delete('/api/cast-fs/delete')
+      .send({ path: '/etc/passwd' })
+    expect(res.status).toBe(403)
+  })
+})
+
+describe('POST /api/cast-fs/write — symlink bypass', () => {
+  const symlinkPath = path.join(os.homedir(), '.claude', `test-symlink-${process.pid}`)
+
+  afterEach(() => {
+    try { fsSync.unlinkSync(symlinkPath) } catch { /* already gone */ }
+  })
+
+  it('returns 403 when path points through a symlink that escapes ~/.claude', async () => {
+    // Create a symlink inside ~/.claude that points to /tmp/
+    try {
+      fsSync.symlinkSync('/tmp', symlinkPath)
+    } catch {
+      // If symlink creation fails (permissions etc.), skip test
+      return
+    }
+    const escapePath = path.join(symlinkPath, 'escape.txt')
+    const res = await request(app)
+      .post('/api/cast-fs/write')
+      .send({ path: escapePath, content: 'evil' })
+    expect(res.status).toBe(403)
+    // Ensure no file was written to /tmp/escape.txt
+    expect(fsSync.existsSync('/tmp/escape.txt')).toBe(false)
+  })
+})
+
+describe('GET /api/cast-fs/read', () => {
+  const testPath = path.join(os.homedir(), '.claude', `test-tmp-read-${process.pid}.md`)
+
+  beforeEach(() => {
+    fsSync.writeFileSync(testPath, '# test content', 'utf-8')
+  })
+
+  afterEach(() => {
+    try { fsSync.unlinkSync(testPath) } catch { /* already gone */ }
+  })
+
+  it('returns 200 with content for a valid file in ~/.claude', async () => {
+    const encoded = encodeURIComponent(testPath)
+    const res = await request(app).get(`/api/cast-fs/read?path=${encoded}`)
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveProperty('content', '# test content')
+    expect(res.body).toHaveProperty('path')
+  })
+
+  it('returns 403 for path outside ~/.claude', async () => {
+    const encoded = encodeURIComponent('/etc/passwd')
+    const res = await request(app).get(`/api/cast-fs/read?path=${encoded}`)
+    expect(res.status).toBe(403)
+  })
+
+  it('returns 400 when path param is missing', async () => {
+    const res = await request(app).get('/api/cast-fs/read')
+    expect(res.status).toBe(400)
+  })
+})

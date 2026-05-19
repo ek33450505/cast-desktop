@@ -69,6 +69,7 @@ app.use('/api/constellation', controlLimiter)
 app.use('/api/dispatch', destructiveLimiter)
 app.use('/api/routines', controlLimiter)
 app.use('/api/agent-hallucinations', controlLimiter)
+app.use('/api/cast-fs', destructiveLimiter)
 
 app.use('/api', router)
 attachSSE(app)
@@ -79,10 +80,16 @@ app.get(/.*/, (_req, res) => {
 })
 
 // Global error handler — must be last middleware
+// Known HttpErrors (with a .status field set by route code) surface their message
+// to the client; unhandled generic throws are logged server-side only and return
+// a generic message so internal details don't leak.
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  const message = err instanceof Error ? err.message : 'Internal server error'
   const status = (err as { status?: number }).status ?? 500
-  console.error(`[${new Date().toISOString()}] ${req.method} ${req.path} → ${status}: ${message}`)
+  const isHttpError = typeof (err as { status?: unknown }).status === 'number'
+  const message = isHttpError && err instanceof Error
+    ? err.message
+    : 'internal server error'
+  console.error(`[${new Date().toISOString()}] ${req.method} ${req.path} → ${status}:`, err)
   if (!res.headersSent) {
     res.status(status).json({ error: message })
   }
