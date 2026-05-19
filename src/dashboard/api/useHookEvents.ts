@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useEvent } from '../../lib/SseManager'
+import { useEvent, sseManager } from '../../lib/SseManager'
 import type { LiveEvent } from '../types'
 import { apiFetch } from './apiFetch'
 
@@ -22,8 +22,14 @@ export function useHookEventsStream(maxEvents = 50) {
   const [events, setEvents] = useState<HookEvent[]>([])
   const [connected, setConnected] = useState(false)
 
+  useEffect(() => {
+    const tick = () => setConnected(sseManager.connectionState === EventSource.OPEN)
+    tick()
+    const id = setInterval(tick, 1_000)
+    return () => clearInterval(id)
+  }, [])
+
   useEvent<LiveEvent>('hook_event', (e) => {
-    setConnected(true)
     const hookEvent: HookEvent = {
       id: e.hookAgentId ?? String(Date.now()),
       timestamp: e.timestamp,

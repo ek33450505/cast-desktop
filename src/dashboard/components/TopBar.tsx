@@ -53,6 +53,8 @@ interface TopBarProps {
   rightRailOpen: boolean
   /** When false the left-rail toggle button is hidden (e.g. on the terminal page). */
   showLeftRailToggle?: boolean
+  /** When false the right-rail toggle button is hidden (only relevant on terminal page). */
+  showRightRailToggle?: boolean
   onToggleLeft: () => void
   onToggleRight: () => void
   onOpenPalette: () => void
@@ -62,6 +64,7 @@ export default function TopBar({
   leftRailOpen,
   rightRailOpen,
   showLeftRailToggle = true,
+  showRightRailToggle = true,
   onToggleLeft,
   onToggleRight,
   onOpenPalette,
@@ -126,18 +129,20 @@ export default function TopBar({
           </button>
         )}
 
-        <button
-          type="button"
-          onClick={onToggleRight}
-          aria-label={rightRailOpen ? 'Collapse right rail (⌘⌥B)' : 'Expand right rail (⌘⌥B)'}
-          title={rightRailOpen ? 'Collapse right rail (⌘⌥B)' : 'Expand right rail (⌘⌥B)'}
-          className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
-          style={{ width: '36px', height: '36px' }}
-        >
-          {rightRailOpen
-            ? <PanelRightClose className="w-4 h-4" aria-hidden="true" />
-            : <PanelRightOpen className="w-4 h-4" aria-hidden="true" />}
-        </button>
+        {showRightRailToggle !== false && (
+          <button
+            type="button"
+            onClick={onToggleRight}
+            aria-label={rightRailOpen ? 'Collapse right rail (⌘⌥B)' : 'Expand right rail (⌘⌥B)'}
+            title={rightRailOpen ? 'Collapse right rail (⌘⌥B)' : 'Expand right rail (⌘⌥B)'}
+            className="flex items-center justify-center rounded-md text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-2"
+            style={{ width: '36px', height: '36px' }}
+          >
+            {rightRailOpen
+              ? <PanelRightClose className="w-4 h-4" aria-hidden="true" />
+              : <PanelRightOpen className="w-4 h-4" aria-hidden="true" />}
+          </button>
+        )}
 
         <AppearanceToggle />
       </div>

@@ -139,6 +139,7 @@ function ShellLayout() {
       <TopBar
         leftRailOpen={leftRailOpen}
         rightRailOpen={rightRailOpen}
+        showRightRailToggle={isTerminalPage}
         onToggleLeft={handleToggleLeft}
         onToggleRight={handleToggleRight}
         onOpenPalette={() => setPaletteOpen(true)}
