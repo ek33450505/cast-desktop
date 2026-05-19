@@ -54,7 +54,12 @@ jobs:
         run: cd server && npm install
 
       - name: Build macOS app
-        run: cargo tauri build --target aarch64-apple-darwin --bundles dmg
+        shell: bash
+        run: |
+          # Unset signing vars when empty — passing empty strings causes Tauri to
+          # attempt `security import` with no certificate and fail. Unset = skip signing.
+          [[ -z "$APPLE_CERTIFICATE" ]] && unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID
+          cargo tauri build --target aarch64-apple-darwin --bundles dmg
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
