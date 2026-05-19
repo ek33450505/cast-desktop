@@ -52,6 +52,7 @@ import { routinesRouter } from './routines.js'
 import { agentHallucinationsRouter } from './agentHallucinations.js'
 import { hookFailuresRouter } from './hookFailures.js'
 import { incidentsRouter } from './incidents.js'
+import { gitRouter } from './git.js'
 
 export const router = Router()
 
@@ -139,6 +140,8 @@ router.use('/routines', routinesRouter)
 router.use('/agent-hallucinations', agentHallucinationsRouter)
 router.use('/hook-failures', hookFailuresRouter)
 router.use('/incidents', incidentsRouter)
+// Phase 4 — git branch for StatusBar
+router.use('/git', gitRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {

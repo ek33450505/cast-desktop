@@ -23,11 +23,17 @@ vi.mock('../api/useCostSummary', () => ({
   useCostSummary: vi.fn(),
 }))
 
+vi.mock('../api/useGitBranch', () => ({
+  useGitBranch: vi.fn(),
+}))
+
 import { useSystemHealth } from '../api/useSystem'
 import { useCostSummary } from '../api/useCostSummary'
+import { useGitBranch } from '../api/useGitBranch'
 
 const mockUseSystemHealth = useSystemHealth as ReturnType<typeof vi.fn>
 const mockUseCostSummary = useCostSummary as ReturnType<typeof vi.fn>
+const mockUseGitBranch = useGitBranch as ReturnType<typeof vi.fn>
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -77,6 +83,7 @@ describe('StatusBar', () => {
   beforeEach(() => {
     mockUseSystemHealth.mockReturnValue({ data: MOCK_HEALTH, isLoading: false })
     mockUseCostSummary.mockReturnValue({ data: MOCK_COST, isLoading: false })
+    mockUseGitBranch.mockReturnValue({ data: { branch: 'main' } })
   })
 
   afterEach(() => {
@@ -103,9 +110,9 @@ describe('StatusBar', () => {
   it('shows "—" for model during loading', () => {
     mockUseSystemHealth.mockReturnValue({ data: undefined, isLoading: true })
     render(<StatusBar />, { wrapper: makeWrapper() })
-    // Model shows "—" when loading; branch also shows "—"
+    // Model shows "—" when loading (at least 1 dash visible)
     const dashes = screen.getAllByText('—')
-    expect(dashes.length).toBeGreaterThanOrEqual(2)
+    expect(dashes.length).toBeGreaterThanOrEqual(1)
   })
 
   it('shows "—" for cost during loading', () => {
@@ -120,9 +127,22 @@ describe('StatusBar', () => {
     expect(screen.getByText('$3.47')).toBeTruthy()
   })
 
-  it('shows "—" for branch (no branch API yet)', () => {
+  it('shows live branch name when useGitBranch returns data', () => {
+    mockUseGitBranch.mockReturnValue({ data: { branch: 'feature/phase-4-terminal-keybinds' } })
     render(<StatusBar />, { wrapper: makeWrapper() })
-    // Branch always shows "—" until Phase 4 adds the server endpoint
+    expect(screen.getByText('feature/phase-4-terminal-keybinds')).toBeTruthy()
+  })
+
+  it('shows "—" for branch when useGitBranch returns null', () => {
+    mockUseGitBranch.mockReturnValue({ data: { branch: null } })
+    render(<StatusBar />, { wrapper: makeWrapper() })
+    const dashes = screen.getAllByText('—')
+    expect(dashes.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('shows "—" for branch when useGitBranch data is undefined (loading)', () => {
+    mockUseGitBranch.mockReturnValue({ data: undefined })
+    render(<StatusBar />, { wrapper: makeWrapper() })
     const dashes = screen.getAllByText('—')
     expect(dashes.length).toBeGreaterThanOrEqual(1)
   })
