@@ -1,6 +1,6 @@
 {
   "productName": "Cast Desktop",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "identifier": "com.cast-desktop.app",
   "build": {
     "beforeBuildCommand": "npm run build && npm run build:sidecars",

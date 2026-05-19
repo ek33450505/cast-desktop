@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] — 2026-05-19
+
+### New Features
+
+- **Markdown editor in PreviewModal** — Edit any `~/.claude/**/*.md` file (agent definitions, plans, rules, memory, skills) directly in Cast Desktop with CodeMirror 6. Syntax highlighting, Cmd+S to save, dirty-state indicator, Save/Preview mode toggle. ([781cbcc](https://github.com/ek33450505/cast-desktop/commit/781cbcc))
+- **Write layer** — `POST /api/cast-fs/write` and `DELETE /api/cast-fs/delete` routes scoped to `~/.claude/**`. Atomic writes (tmp → rename), symlink traversal guard, rate-limited. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+- **Native macOS menu bar** — Full Cast Desktop / File / Edit / View / Tabs / Window / Help menus with accelerators wired to in-app actions. Cmd+T new tab, Cmd+Shift+]/[ tab navigation, Cmd+B rail toggle, Cmd+, preferences. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+- **Live git branch in status bar** — `/api/git/branch` endpoint feeds status bar with current repo branch in real time. ([39cc3bf](https://github.com/ek33450505/cast-desktop/commit/39cc3bf))
+- **Keyboard shortcuts overlay** — Press `?` anywhere to open two-column overlay of all global keyboard shortcuts. Help → Documentation in the menu bar opens the same overlay. ([09618a2](https://github.com/ek33450505/cast-desktop/commit/09618a2))
+- **Command palette Terminal action** — Cmd+K now includes a "Terminal" action to jump directly to the terminal page. ([09618a2](https://github.com/ek33450505/cast-desktop/commit/09618a2))
+- **Hover previews** — Agent names and plan names in list views show a content preview card on hover. ([70d490e](https://github.com/ek33450505/cast-desktop/commit/70d490e))
+- **Persistent status bar** — Always-visible status bar across all pages showing connection state, active agent, and git branch. ([d57c9fb](https://github.com/ek33450505/cast-desktop/commit/d57c9fb))
+
+### Improvements
+
+- **Terminal keybinds** — Ctrl+L to clear, Cmd+1–9 to jump to tab N, Cmd+Shift+]/[ for next/previous tab, Cmd++/- to scale font, Cmd+0 to reset. ([39cc3bf](https://github.com/ek33450505/cast-desktop/commit/39cc3bf))
+- **Terminal SSE broadcast** — Terminal output events now broadcast over SSE for right-rail live binding. ([ace99f4](https://github.com/ek33450505/cast-desktop/commit/ace99f4))
+- **Web-links in terminal** — URLs in terminal output are clickable (opens system browser via Tauri shell). ([ace99f4](https://github.com/ek33450505/cast-desktop/commit/ace99f4))
+- **Tab rename affordance** — Pencil icon appears on tab hover as a discoverability cue for double-click/right-click rename. ([ace99f4](https://github.com/ek33450505/cast-desktop/commit/ace99f4))
+- **Phase 2 UI primitives** — Introduced `PageHeader`, `BentoCard`, `SectionLabel`, `EmptyState`, and `InlineCode` primitives with p-6 padding standard across all dashboard views. ([7904ec7](https://github.com/ek33450505/cast-desktop/commit/7904ec7))
+- **Toaster theme binding** — Sonner toast notifications now follow dawn/dusk appearance automatically. ([99b2c8a](https://github.com/ek33450505/cast-desktop/commit/99b2c8a))
+- **Soft-delete sessions** — Sessions now receive a `deleted_at` timestamp rather than being hard-deleted, preserving history. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+
+### Security
+
+- **Symlink traversal guard** on all write routes — resolves paths and blocks any path outside `~/.claude/`. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+- **Rate limiting** on write endpoints. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+- **Error sanitization** — server errors no longer leak internal paths or stack traces to the client. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+- **Express server bound to 127.0.0.1** — confirmed in place. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+
+### Accessibility
+
+- Aria-labels on all icon-only buttons across dashboard views. ([9850331](https://github.com/ek33450505/cast-desktop/commit/9850331))
+- Status badge contrast fixed to meet WCAG 4.5:1. ([9850331](https://github.com/ek33450505/cast-desktop/commit/9850331))
+- Full keyboard navigation on tab strip (arrow keys, Home/End). ([9850331](https://github.com/ek33450505/cast-desktop/commit/9850331))
+
+### Internal
+
+- `ModalHeader` `actions` prop for injecting header controls. ([781cbcc](https://github.com/ek33450505/cast-desktop/commit/781cbcc))
+- `useFileWrite` TanStack Query mutation hook for atomic file writes. ([781cbcc](https://github.com/ek33450505/cast-desktop/commit/781cbcc))
+- `apiFetch` adopted across all GET hooks for consistency. ([7904ec7](https://github.com/ek33450505/cast-desktop/commit/7904ec7))
+- `withTable` server helper to reduce route boilerplate. ([5f0a702](https://github.com/ek33450505/cast-desktop/commit/5f0a702))
+- Phase 3 cleanup: dead `CastFsTree.tsx` component removed, `ModalHeader.id` improvements, HoverPreview focus handling. ([d83c799](https://github.com/ek33450505/cast-desktop/commit/d83c799))
+- session.rs dead-code cleanup (3 unused Tauri commands removed). ([d83c799](https://github.com/ek33450505/cast-desktop/commit/d83c799))
+- Test suite: 1075 → 1222 passing tests across 101 files. ([169f6b3](https://github.com/ek33450505/cast-desktop/commit/169f6b3))
+
+---
+
+## [1.0.0] — 2026-05-17
+
+Public release bundling Phases 1–4 of development.
+
+---
+
 ## [0.1.0] — 2026-05-14
 
 Cast Desktop v0.1.0 is the initial public release of Cast Desktop, a Tauri 2 desktop application for the CAST observability framework. This release bundles Phases 1–4 of development, including terminal multiplexing, file browser integration, real-time activity panels, design language lock-in, and terminal modernization.
