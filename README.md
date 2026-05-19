@@ -2,8 +2,6 @@
 
 ![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1253%20passing-brightgreen)
 
-[⬇ Download Cast Desktop v1.2.0 for macOS](https://github.com/ek33450505/cast-desktop/releases/download/v1.2.0/Cast.Desktop_1.2.0_aarch64.dmg) · [All Releases](https://github.com/ek33450505/cast-desktop/releases)
-
 **Your agents, in the room.**
 
 Cast Desktop is a Tauri 2 desktop app that brings real-time observability for the [CAST multi-agent framework](https://github.com/ek33450505/claude-agent-team) into a unified, keyboard-driven interface. Sessions, agents, hooks, memory, plans, token spend, database browser, and a fully featured terminal—all fed from your local `~/.claude/cast.db`, no cloud, no telemetry. If you're orchestrating Claude Code agents, Cast Desktop is the visual companion you've been jumping between terminals and VS Code to emulate.
@@ -25,22 +23,14 @@ Cast Desktop is a Tauri 2 desktop app that brings real-time observability for th
 
 ## Quick Start
 
-### Install via Homebrew (Recommended)
+### Install via Homebrew
 
 ```bash
 brew tap ek33450505/cast
 brew install --cask ek33450505/cast/cast-desktop
 ```
 
-The app opens to your local CAST database immediately. No configuration needed.
-
-**Security note:** macOS Gatekeeper blocks apps that aren't notarized. Cast Desktop v1.2.0 shipped unsigned — if you see **"Cast Desktop is damaged and can't be opened"**, run:
-```bash
-xattr -cr /Applications/Cast\ Desktop.app
-```
-Then relaunch. (This removes the quarantine flag set by your browser/OS when downloading.) Alternatively, right-click the app *inside the DMG before dragging it* and choose Open — macOS will prompt for confirmation instead of blocking. Cast Desktop v1.3.0+ is ad-hoc signed; you'll see the softer "unidentified developer" prompt with an **Open Anyway** button in System Settings → Privacy & Security instead.
-
-Or download the `.dmg` directly from [GitHub Releases](https://github.com/ek33450505/cast-desktop/releases).
+The app opens to your local CAST database immediately. No configuration needed. The cask handles macOS Gatekeeper automatically — no extra steps required.
 
 ### Build from Source
 
