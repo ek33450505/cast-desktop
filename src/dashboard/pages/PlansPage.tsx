@@ -4,6 +4,7 @@ import { usePlans } from '../api/usePlans'
 import type { PlanFile } from '../../types/index'
 import PreviewModal from '../components/left-rail/PreviewModal'
 import { formatShortDate } from '../utils/time'
+import { HoverPreview } from '../components/HoverPreview'
 
 function SkeletonRows() {
   return (
@@ -40,9 +41,18 @@ function PlanRow({ plan, onClick }: PlanRowProps) {
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate" style={{ color: 'var(--content-primary)' }}>
-            {plan.title || plan.filename}
-          </p>
+          <HoverPreview
+            trigger={
+              <span className="text-sm font-medium truncate" style={{ color: 'var(--content-primary)' }}>
+                {plan.title || plan.filename}
+              </span>
+            }
+            title={plan.title || plan.filename}
+            items={[
+              { label: 'Path', value: plan.path ?? '—' },
+              { label: 'Modified', value: formatShortDate(plan.modifiedAt) ?? '—' },
+            ]}
+          />
           {plan.preview && (
             <p className="text-xs truncate mt-0.5" style={{ color: 'var(--content-muted)' }}>
               {plan.preview}
