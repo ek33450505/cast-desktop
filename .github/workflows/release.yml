@@ -46,6 +46,10 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+      # server/ has its own package.json with @types/express — needed for tsc -b
+      - name: Install server dependencies
+        run: cd server && npm install
+
       - name: Build macOS app
         run: cargo tauri build --target aarch64-apple-darwin
         env:
