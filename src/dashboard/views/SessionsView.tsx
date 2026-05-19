@@ -1,10 +1,11 @@
 import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Radio, AlertTriangle, CheckCircle, Layers } from 'lucide-react'
+import { Search, Radio, AlertTriangle, CheckCircle, Layers, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { PageSkeleton } from '../components/ui/PageSkeleton'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useSessions } from '../api/useSessions'
+import { useSessions, useDeleteSession } from '../api/useSessions'
 import { timeAgo, formatDuration } from '../utils/time'
 import { estimateCost, formatTokens, formatCost } from '../utils/costEstimate'
 import { useRoutingEventsByType } from '../api/useRoutingEventsByType'
@@ -170,9 +171,18 @@ const COL_HEADERS = [
 export default function SessionsView() {
   const navigate = useNavigate()
   const { data: sessions, isLoading, error } = useSessions(undefined, 500)
+  const { mutate: deleteSession } = useDeleteSession()
   const parentRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [projectFilter, setProjectFilter] = useState<string>('')
+
+  function handleDelete(e: React.MouseEvent, projectEncoded: string, sessionId: string) {
+    e.stopPropagation()
+    deleteSession({ projectEncoded, sessionId }, {
+      onSuccess: () => toast.success('Session deleted'),
+      onError: () => toast.error('Failed to delete session'),
+    })
+  }
 
   const { data: compactedEvents } = useRoutingEventsByType('context_compacted', 500)
   const compactedSessionIds = useMemo(() => {
@@ -322,6 +332,13 @@ export default function SessionsView() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <ModelBadge model={session.model} />
+                  <button
+                    aria-label="Delete session"
+                    onClick={(e) => handleDelete(e, session.projectEncoded, session.id)}
+                    className="p-1 rounded text-[var(--content-muted)] hover:text-rose-400 hover:bg-rose-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
                 </div>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--content-secondary)]">
@@ -397,7 +414,7 @@ export default function SessionsView() {
                     tabIndex={0}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/sessions/${session.projectEncoded}/${session.id}`) }}
                     aria-label={`Session: ${extractProjectName(session.projectPath)}, ${timeAgo(session.startedAt)}`}
-                    className="grid grid-cols-9 border-b border-[var(--border)] hover:bg-[var(--system-elevated)] transition-colors cursor-pointer text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+                    className="group grid grid-cols-9 border-b border-[var(--border)] hover:bg-[var(--system-elevated)] transition-colors cursor-pointer text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)] focus-visible:outline-none"
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -435,6 +452,15 @@ export default function SessionsView() {
                     </div>
                     <div className="px-4 py-3">
                       <ModelBadge model={session.model} />
+                    </div>
+                    <div className="px-4 py-3 flex items-center justify-end">
+                      <button
+                        aria-label="Delete session"
+                        onClick={(e) => handleDelete(e, session.projectEncoded, session.id)}
+                        className="p-1 rounded text-[var(--content-muted)] hover:text-rose-400 hover:bg-rose-400/10 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      </button>
                     </div>
                   </div>
                 )

@@ -1,12 +1,38 @@
 import fs from 'fs'
 import path from 'path'
-import { PROJECTS_DIR } from '../constants.js'
+import Database from 'better-sqlite3'
+import { PROJECTS_DIR, CAST_DB } from '../constants.js'
 import { safeResolve } from '../utils/safeResolve.js'
 import { decodeProjectPath } from './projectPath.js'
 import type { Session, LogEntry, ContentBlock } from '../../src/types/index.js'
 
+/**
+ * Returns a Set of session IDs that have been soft-deleted (deleted_at IS NOT NULL).
+ * Falls back to empty set if cast.db is unavailable.
+ */
+function getSoftDeletedIds(): Set<string> {
+  const ids = new Set<string>()
+  try {
+    if (!fs.existsSync(CAST_DB)) return ids
+    const db = new Database(CAST_DB, { readonly: true, fileMustExist: true })
+    try {
+      const rows = db.prepare(
+        "SELECT id FROM sessions WHERE deleted_at IS NOT NULL"
+      ).all() as Array<{ id: string }>
+      for (const row of rows) ids.add(row.id)
+    } finally {
+      db.close()
+    }
+  } catch {
+    // cast.db unavailable — return empty set (no sessions filtered)
+  }
+  return ids
+}
+
 export function listSessions(): Session[] {
   if (!fs.existsSync(PROJECTS_DIR)) return []
+
+  const softDeleted = getSoftDeletedIds()
 
   const sessions: Session[] = []
   const projectDirs = fs.readdirSync(PROJECTS_DIR).filter(d => {
@@ -26,6 +52,9 @@ export function listSessions(): Session[] {
     for (const jsonlFile of jsonlFiles) {
       const filePath = path.join(projPath, jsonlFile)
       const sessionId = path.basename(jsonlFile, '.jsonl')
+
+      // Skip soft-deleted sessions
+      if (softDeleted.has(sessionId)) continue
 
       try {
         const content = fs.readFileSync(filePath, 'utf-8')
