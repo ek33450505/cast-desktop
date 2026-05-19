@@ -2,6 +2,8 @@
 
 ![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1253%20passing-brightgreen)
 
+[⬇ Download Cast Desktop v1.2.0 for macOS](https://github.com/ek33450505/cast-desktop/releases/download/v1.2.0/Cast.Desktop_1.2.0_aarch64.dmg) · [All Releases](https://github.com/ek33450505/cast-desktop/releases)
+
 **Your agents, in the room.**
 
 Cast Desktop is a Tauri 2 desktop app that brings real-time observability for the [CAST multi-agent framework](https://github.com/ek33450505/claude-agent-team) into a unified, keyboard-driven interface. Sessions, agents, hooks, memory, plans, token spend, database browser, and a fully featured terminal—all fed from your local `~/.claude/cast.db`, no cloud, no telemetry. If you're orchestrating Claude Code agents, Cast Desktop is the visual companion you've been jumping between terminals and VS Code to emulate.
