@@ -7,6 +7,7 @@ import { listen } from '@tauri-apps/api/event'
 import { useDbChangeInvalidation } from './api/useDbChangeInvalidation'
 import { AboutDialog } from './components/AboutDialog'
 import { WhatsNewDialog } from './components/WhatsNewDialog'
+import { KeyboardShortcutOverlay } from './components/KeyboardShortcutOverlay'
 import ErrorBoundary from './components/ErrorBoundary'
 import TopBar from './components/TopBar'
 import LeftRail from './components/LeftRail'
@@ -61,6 +62,7 @@ function ShellLayout() {
 
   const shouldReduceMotion = useReducedMotion()
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const navigate = useNavigate()
 
   // Toggle handlers — pure state flips, the DOM follows via width animation
@@ -101,6 +103,15 @@ function ShellLayout() {
     },
     { enableOnFormTags: false, enableOnContentEditable: false },
   )
+  // ? — keyboard shortcut overlay
+  useHotkeys(
+    '?',
+    (e) => {
+      e.preventDefault()
+      setShortcutsOpen(true)
+    },
+    { enableOnFormTags: false, enableOnContentEditable: false },
+  )
 
   const location = useLocation()
   const isTerminalPage = location.pathname === '/'
@@ -123,6 +134,7 @@ function ShellLayout() {
         onOpenPalette={() => setPaletteOpen(true)}
       />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <KeyboardShortcutOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <div className="flex-1 min-h-0 flex">
         {/* ── Left Rail — visible on every page (D.8: rail is now primary nav) ── */}
         <motion.div
