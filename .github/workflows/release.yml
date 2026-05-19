@@ -11,8 +11,9 @@ on:
 #   APPLE_ID                   - Apple Developer account email
 #   APPLE_PASSWORD             - App-specific password for notarization
 #   APPLE_TEAM_ID              - Apple Developer Team ID
-# Without these, the build will be unsigned. Users will need to allow it
-# in System Settings → Privacy & Security → "Open Anyway".
+# Without these, the build is ad-hoc signed (identity "-") — free, no cert required.
+# Ad-hoc signing avoids the hard "damaged" Gatekeeper error; users see the softer
+# "unidentified developer" prompt and can Open Anyway in System Settings → Privacy & Security.
 
 permissions:
   contents: write
@@ -66,6 +67,11 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Falls back to ad-hoc signing (-) when no Developer ID cert is wired.
+          # Ad-hoc replaces the hard "damaged" Gatekeeper error with the softer
+          # "unidentified developer" prompt that has an Open Anyway path.
+          # Set APPLE_SIGNING_IDENTITY secret to a real identity when you have a cert.
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY || '-' }}
 
       # When --target is specified, Tauri outputs to target/<triple>/release/bundle/
       - name: Upload release

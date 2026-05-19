@@ -34,7 +34,11 @@ brew install --cask ek33450505/cast/cast-desktop
 
 The app opens to your local CAST database immediately. No configuration needed.
 
-**Security note (unsigned builds):** macOS Gatekeeper may block the app on first launch. Go to System Settings → Privacy & Security and click "Open Anyway" if prompted.
+**Security note:** macOS Gatekeeper blocks apps that aren't notarized. Cast Desktop v1.2.0 shipped unsigned — if you see **"Cast Desktop is damaged and can't be opened"**, run:
+```bash
+xattr -cr /Applications/Cast\ Desktop.app
+```
+Then relaunch. (This removes the quarantine flag set by your browser/OS when downloading.) Alternatively, right-click the app *inside the DMG before dragging it* and choose Open — macOS will prompt for confirmation instead of blocking. Cast Desktop v1.3.0+ is ad-hoc signed; you'll see the softer "unidentified developer" prompt with an **Open Anyway** button in System Settings → Privacy & Security instead.
 
 Or download the `.dmg` directly from [GitHub Releases](https://github.com/ek33450505/cast-desktop/releases).
 
