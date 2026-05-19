@@ -722,6 +722,30 @@ export function TerminalTabs() {
     { enableOnFormTags: true, enableOnContentEditable: true },
   )
 
+  // Ctrl+L — clear active terminal (traditional shell clear; ⌘K is palette)
+  useHotkeys(
+    'ctrl+l',
+    (e) => {
+      e.preventDefault()
+      getActiveHandle()?.clear()
+    },
+    { enableOnFormTags: false, enableOnContentEditable: false, preventDefault: true },
+  )
+
+  // ⌘1..9 — jump to tab by index (1-indexed; 9 always jumps to last tab)
+  useHotkeys(
+    'mod+1,mod+2,mod+3,mod+4,mod+5,mod+6,mod+7,mod+8,mod+9',
+    (e) => {
+      e.preventDefault()
+      const key = e.key
+      const n = parseInt(key, 10)
+      if (isNaN(n)) return
+      const target = n === 9 ? tabs[tabs.length - 1] : tabs[n - 1]
+      if (target) setActiveTab(target.id)
+    },
+    { enableOnFormTags: false, enableOnContentEditable: false, preventDefault: true },
+  )
+
   // Arrow key navigation within the tablist
   const handleTabKeyDown = useCallback(
     (e: React.KeyboardEvent, tabId: string) => {

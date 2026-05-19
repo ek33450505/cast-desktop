@@ -1,10 +1,7 @@
 import { GitBranch } from 'lucide-react'
 import { useSystemHealth } from '../api/useSystem'
 import { useCostSummary } from '../api/useCostSummary'
-
-// TODO Phase 4: Add a git branch API endpoint to the server so this field
-// can show the current branch instead of "—". No server route for branch exists yet.
-const BRANCH_PLACEHOLDER = '—'
+import { useGitBranch } from '../api/useGitBranch'
 
 function formatCost(costUsd: number | undefined, loading: boolean): string {
   if (loading) return '—'
@@ -15,9 +12,11 @@ function formatCost(costUsd: number | undefined, loading: boolean): string {
 export function StatusBar() {
   const { data: health, isLoading: healthLoading } = useSystemHealth()
   const { data: cost, isLoading: costLoading } = useCostSummary(30)
+  const { data: gitData } = useGitBranch()
 
   const model = healthLoading ? '—' : (health?.model ?? '—')
   const sessionCost = formatCost(cost?.totals.costUsd, costLoading)
+  const branch = gitData?.branch ?? '—'
 
   return (
     <div
@@ -33,7 +32,7 @@ export function StatusBar() {
       {/* Git branch */}
       <span className="flex items-center gap-1.5">
         <GitBranch className="w-3 h-3" aria-hidden="true" />
-        <span>{BRANCH_PLACEHOLDER}</span>
+        <span>{branch}</span>
       </span>
 
       <span aria-hidden="true">·</span>
