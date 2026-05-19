@@ -26,10 +26,15 @@ Cast Desktop is a Tauri 2 desktop app that brings real-time observability for th
 ### Install via Homebrew (Recommended)
 
 ```bash
-brew install --cask ek33450505/cast-desktop/cast-desktop
+brew tap ek33450505/cast
+brew install --cask ek33450505/cast/cast-desktop
 ```
 
 The app opens to your local CAST database immediately. No configuration needed.
+
+**Security note (unsigned builds):** macOS Gatekeeper may block the app on first launch. Go to System Settings → Privacy & Security and click "Open Anyway" if prompted.
+
+Or download the `.dmg` directly from [GitHub Releases](https://github.com/ek33450505/cast-desktop/releases).
 
 ### Build from Source
 

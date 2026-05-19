@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0] — 2026-05-19
+
+### Added
+- GitHub Actions release workflow — `.dmg` builds attach automatically on version tag push
+- Homebrew cask formula (`ek33450505/cast/cast-desktop`) for one-command install
+- Standalone onboarding screen for users without CAST installed
+- `GET /api/system/cast-status` endpoint for CAST installation detection
+
+### Fixed
+- Right-rail session binding now recovers from missed SSE `pane_binding_updated` events via adaptive polling
+
+---
+
 All notable changes to Cast Desktop are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

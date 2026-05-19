@@ -53,6 +53,7 @@ import { agentHallucinationsRouter } from './agentHallucinations.js'
 import { hookFailuresRouter } from './hookFailures.js'
 import { incidentsRouter } from './incidents.js'
 import { gitRouter } from './git.js'
+import systemRouter from './system.js'
 
 export const router = Router()
 
@@ -142,6 +143,8 @@ router.use('/hook-failures', hookFailuresRouter)
 router.use('/incidents', incidentsRouter)
 // Phase 4 — git branch for StatusBar
 router.use('/git', gitRouter)
+// System health — CAST installation status
+router.use('/system', systemRouter)
 
 // Top-level health shortcut
 router.get('/health', (req, res, next) => {

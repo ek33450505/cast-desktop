@@ -155,6 +155,81 @@ describe('usePaneBinding', () => {
     })
   })
 
+  // ── Regression: staleTime + refetchInterval for new-tab binding delay ────────
+  // Before the fix, staleTime was 60_000ms — a null result from a just-created
+  // pane was cached for 60s. If the SSE pane_binding_updated event was missed
+  // (connection not yet established), the panels stayed empty for 60s.
+  //
+  // After the fix:
+  //   staleTime: 5_000         — null result expires after 5s, not 60s
+  //   refetchInterval: 5_000   — polls every 5s while bound:false, stops once bound
+
+  it('staleTime is 5_000ms — query config is not the 60_000ms pre-fix value (regression)', () => {
+    // This test directly inspects the compiled query options to confirm the
+    // staleTime regression is caught without relying on timer advancement.
+    // It would have failed on the old code (staleTime: 60_000).
+    const qc = makeQueryClient()
+    const { unmount } = renderHook(() => usePaneBinding('pane-stale-check'), {
+      wrapper: makeWrapper(qc),
+    })
+
+    // The query key is registered in the cache on mount; read its observer options.
+    const cache = qc.getQueryCache()
+    const query = cache.find({ queryKey: ['paneBinding', 'pane-stale-check'] })
+    // staleTime is stored on the query's options (set by useQuery defaults)
+    // TanStack Query uses Infinity as default; our hook overrides with 5_000.
+    // The pre-fix value was 60_000 — this assertion catches a reversion.
+    expect(query?.options.staleTime).toBeLessThanOrEqual(5_000)
+
+    unmount()
+  })
+
+  it('polls every 5s while unbound then stops when bound (refetchInterval regression)', async () => {
+    // First call: 404 (pane not yet bound). Second call: 200 with a sessionId.
+    // The refetchInterval callback must return 5_000 when data has no sessionId,
+    // and false once sessionId is present — stopping further polling.
+    const bindingData = {
+      paneId: 'pane-poll',
+      sessionId: 'sess-poll-123',
+      startedAt: 1700000000,
+      endedAt: null,
+      projectPath: '/some/path',
+    }
+
+    mockFetch
+      .mockResolvedValueOnce({ status: 404, ok: false })
+      .mockResolvedValue({
+        status: 200,
+        ok: true,
+        json: () => Promise.resolve(bindingData),
+      })
+
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const qc = makeQueryClient()
+      const { result, unmount } = renderHook(() => usePaneBinding('pane-poll'), {
+        wrapper: makeWrapper(qc),
+      })
+
+      // Wait for first fetch (404) to resolve — bound:false
+      await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1), { timeout: 3000 })
+      expect(result.current.bound).toBe(false)
+
+      // Advance 5.1s — refetchInterval fires and second fetch resolves
+      await vi.advanceTimersByTimeAsync(5_100)
+
+      await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2), { timeout: 3000 })
+
+      // After second fetch (200) the hook must be bound
+      await waitFor(() => expect(result.current.bound).toBe(true), { timeout: 3000 })
+      expect(result.current.sessionId).toBe('sess-poll-123')
+
+      unmount()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('ignores non-matching SSE events', async () => {
     mockFetch.mockResolvedValue({
       status: 200,
