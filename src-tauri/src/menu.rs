@@ -2,8 +2,10 @@ use tauri::{
     menu::{
         Menu, MenuBuilder, MenuEvent, MenuItem, PredefinedMenuItem, SubmenuBuilder,
     },
-    AppHandle, Emitter, Manager, Runtime,
+    AppHandle, Emitter, Runtime,
 };
+#[cfg(debug_assertions)]
+use tauri::Manager;
 use tauri_plugin_shell::ShellExt;
 
 /// Build the full native macOS menu for Cast Desktop.
@@ -142,11 +144,10 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
 
     match action {
         "toggle-devtools" => {
-            // DevTools must be opened from the Rust side.
+            // open_devtools is only available in debug builds (Tauri gates it on
+            // cfg(any(debug_assertions, feature = "devtools"))). No-op in release.
+            #[cfg(debug_assertions)]
             if let Some(window) = app.get_webview_window("main") {
-                #[cfg(debug_assertions)]
-                window.open_devtools();
-                #[cfg(not(debug_assertions))]
                 window.open_devtools();
             }
         }
