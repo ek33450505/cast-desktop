@@ -1,6 +1,6 @@
 # Cast Desktop
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1222%20passing-brightgreen)
+![Version](https://img.shields.io/badge/version-1.2.0-blue) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1253%20passing-brightgreen)
 
 **Your agents, in the room.**
 
@@ -50,14 +50,21 @@ Then open http://localhost:5173 in your browser or run `cargo tauri dev` for the
 
 ### Prerequisites
 
+**To install and run Cast Desktop (binary):**
+- macOS (Apple Silicon) — no other dependencies required
+- Cast Desktop v1.2.0 includes an onboarding screen that guides you through CAST setup if it isn't installed yet
+
+**To build from source:**
 - **Node.js 22+**
 - **Rust 1.80+** (for Tauri compilation)
 - **Bun** (for sidecar builds)
-- **CAST installed** — `cast status` should work in your terminal
 - **typescript-language-server** in PATH (for LSP/IDE features):
   ```bash
   npm install -g typescript-language-server
   ```
+
+**For full functionality** (live agent data, session tracking):
+- **CAST installed** — `cast status` should work in your terminal. See [claude-agent-team](https://github.com/ek33450505/claude-agent-team).
 
 ---
 
