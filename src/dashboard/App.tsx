@@ -16,6 +16,7 @@ import { useRailState, LEFT_RAIL_DEFAULT_PX, RIGHT_RAIL_DEFAULT_PX } from './hoo
 import { TerminalTabs } from '../components/terminal/TerminalTabs'
 import CommandPalette from '../components/CommandPalette'
 import { EditorShellLayout } from './components/EditorShellLayout'
+import { StatusBar } from './components/StatusBar'
 import { useAppearance } from '../hooks/useAppearance'
 import {
   HooksPage,
@@ -172,6 +173,7 @@ function ShellLayout() {
           </motion.div>
         )}
       </div>
+      <StatusBar />
     </div>
   )
 }

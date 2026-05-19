@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useModelPricing } from '../api/useCastData'
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,11 @@ vi.mock('../api/useCastData', () => ({
   useChainMap: vi.fn(() => ({ data: null, isLoading: false })),
   usePolicies: vi.fn(() => ({ data: null, isLoading: false })),
   useModelPricing: vi.fn(() => ({ data: null, isLoading: false })),
+}))
+
+// useCostSummary is used by PricingTab — provide a default mock
+vi.mock('../api/useCostSummary', () => ({
+  useCostSummary: vi.fn(() => ({ data: null, isLoading: false, isError: false })),
 }))
 
 vi.mock('../api/useParryGuard', () => ({
@@ -132,6 +138,59 @@ describe('SystemView — CronTab → aria-labels on cron control buttons', () =>
     }, { timeout: 3000 })
     expect(screen.queryByRole('button', { name: 'Run cron entry now' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Delete cron entry' })).not.toBeInTheDocument()
+  })
+})
+
+// ── Rate Card Bug Fix Tests ────────────────────────────────────────────────────
+
+const MOCK_PRICING_WITH_ENVELOPE = {
+  _comment: 'CAST model pricing config.',
+  _note: 'Cloud costs reflect Anthropic published pricing.',
+  models: {
+    'claude-opus-4-5': { cost_per_million_input: 15, cost_per_million_output: 75, tier: 'cloud', provider: 'anthropic' },
+    'claude-sonnet-4-6': { cost_per_million_input: 3, cost_per_million_output: 15, tier: 'cloud', provider: 'anthropic' },
+  },
+}
+
+describe('SystemView — PricingTab rate card', () => {
+  const mockUseModelPricing = useModelPricing as ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockCronFetch([])
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  async function openPricingTab() {
+    await renderSystemView()
+    const pricingTab = await screen.findByRole('button', { name: /pricing/i })
+    fireEvent.click(pricingTab)
+  }
+
+  it('renders real model names (not _comment / _note / models keys)', async () => {
+    mockUseModelPricing.mockReturnValue({ data: MOCK_PRICING_WITH_ENVELOPE, isLoading: false })
+    await openPricingTab()
+    expect(await screen.findByText('claude-opus-4-5')).toBeInTheDocument()
+    expect(await screen.findByText('claude-sonnet-4-6')).toBeInTheDocument()
+  })
+
+  it('does not render _comment as a table row', async () => {
+    mockUseModelPricing.mockReturnValue({ data: MOCK_PRICING_WITH_ENVELOPE, isLoading: false })
+    await openPricingTab()
+    // Wait for pricing content to settle
+    await screen.findByText('claude-opus-4-5')
+    expect(screen.queryByText('_comment')).not.toBeInTheDocument()
+    expect(screen.queryByText('_note')).not.toBeInTheDocument()
+    expect(screen.queryByText('models')).not.toBeInTheDocument()
+  })
+
+  it('shows "No pricing data" when pricing is empty', async () => {
+    mockUseModelPricing.mockReturnValue({ data: {}, isLoading: false })
+    await openPricingTab()
+    expect(await screen.findByText(/No pricing data/i)).toBeInTheDocument()
   })
 })
 
