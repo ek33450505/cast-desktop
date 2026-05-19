@@ -115,8 +115,8 @@ describe('CommandPalette', () => {
   it('shows current set of nav items when no search', () => {
     renderPalette(true)
     const items = screen.getAllByRole('option')
-    // 8 original nav items + 1 Open Editor item added in IDE-1 + 1 ~/.claude/ Vault + 1 DB Browser + 1 Reliability + 1 Routines + 1 Hook Failures (Phase 3.5 delta)
-    expect(items.length).toBe(14)
+    // NAV_ITEMS count — update this when navItems.ts changes
+    expect(items.length).toBe(16)
   })
 
   it('focus trap: Tab from last focusable element wraps to first (search input)', async () => {
