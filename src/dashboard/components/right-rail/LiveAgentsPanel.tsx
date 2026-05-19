@@ -7,6 +7,7 @@ import { usePaneBinding } from '../../../hooks/usePaneBinding'
 import { useTerminalStore } from '../../../stores/terminalStore'
 import AgentDetailModal from './AgentDetailModal'
 import Skeleton from '../Skeleton'
+import { HoverPreview } from '../HoverPreview'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -106,13 +107,22 @@ function AgentRow({ agent, nowMs, onClick }: AgentRowProps) {
     >
       {/* Agent name */}
       <td className="py-1.5 pr-2 align-top">
-        <span
-          className="text-xs font-semibold truncate block max-w-[80px]"
-          style={{ color: 'var(--content-primary)' }}
+        <HoverPreview
+          trigger={
+            <span
+              className="text-xs font-semibold truncate block max-w-[80px]"
+              style={{ color: 'var(--content-primary)' }}
+            >
+              {agent.name}
+            </span>
+          }
           title={agent.name}
-        >
-          {agent.name}
-        </span>
+          items={[
+            { label: 'Model', value: tier },
+            { label: 'Elapsed', value: formatElapsed(agent.startedAt, nowMs) },
+            { label: 'Prompt', value: agent.prompt?.slice(0, 80) || '—' },
+          ]}
+        />
       </td>
 
       {/* Model badge */}

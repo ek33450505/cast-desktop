@@ -11,6 +11,7 @@ import { timeAgo, formatDuration } from '../utils/time'
 import { formatCost } from '../utils/costEstimate'
 import { modelBadgeClasses } from '../utils/modelBadge'
 import { AgentStatusBadge } from '../components/ui/AgentStatusBadge'
+import { HoverPreview } from '../components/HoverPreview'
 
 // ── Loading skeleton ──────────────────────────────────────────────────────────
 function RegistrySkeleton() {
@@ -348,7 +349,18 @@ export default function AgentsView() {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-[var(--content-primary)]">{agent.name}</span>
+                    <HoverPreview
+                      trigger={
+                        <span className="font-bold text-sm text-[var(--content-primary)]">{agent.name}</span>
+                      }
+                      title={agent.name}
+                      description={agent.description?.slice(0, 80) || undefined}
+                      items={[
+                        { label: 'Model', value: agent.model },
+                        { label: 'Memory', value: agent.memory },
+                        { label: 'Tools', value: agent.tools.length > 0 ? agent.tools.join(', ').slice(0, 60) : '—' },
+                      ]}
+                    />
                     {activeNames.has(agent.name) && (
                       <span className="relative flex h-2 w-2 shrink-0">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -406,7 +418,17 @@ export default function AgentsView() {
             <tbody>
               {sortedScorecard.map((row) => (
                 <tr key={row.agent} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--system-elevated)] transition-colors">
-                  <td className="px-3 py-2 font-medium text-[var(--content-primary)]">{row.agent}</td>
+                  <td className="px-3 py-2 font-medium text-[var(--content-primary)]">
+                    <HoverPreview
+                      trigger={<span>{row.agent}</span>}
+                      title={row.agent}
+                      items={[
+                        { label: 'Total runs', value: String(row.totalRuns) },
+                        { label: 'Success rate', value: `${row.successRate.toFixed(0)}%` },
+                        { label: 'Last run', value: row.lastRun ? timeAgo(row.lastRun) : '—' },
+                      ]}
+                    />
+                  </td>
                   <td className="px-3 py-2 tabular-nums text-[var(--content-secondary)]">{row.totalRuns}</td>
                   <td className={`px-3 py-2 tabular-nums font-medium ${rateColor(row.successRate)}`}>
                     {row.successRate.toFixed(0)}%
