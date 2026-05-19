@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion, AnimatePresence } from 'framer-motion'
-import { FolderOpen } from 'lucide-react'
+import { FolderOpen, Pencil } from 'lucide-react'
 import { useTerminalStore, Tab, TabColor } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
 import type { TerminalPaneHandle } from './TerminalPane'
@@ -294,6 +294,24 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
           ) : (
             <TabLabel tab={tab} />
           )}
+        </span>
+
+        {/* Pencil affordance — visible on hover to signal double-click / right-click rename */}
+        <span
+          aria-hidden="true"
+          title="Double-click or right-click to rename"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--text-muted)',
+            opacity: isTabHovered && !isRenaming ? 1 : 0,
+            transition: shouldReduceMotion ? 'none' : 'opacity 0.1s ease',
+            pointerEvents: 'none',
+            flexShrink: 0,
+          }}
+        >
+          <Pencil size={10} aria-hidden="true" />
         </span>
 
         {/* More (···) button — hover/focus only, keyboard-reachable entry for context menu */}

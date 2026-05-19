@@ -1,8 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { TerminalPane, buildTerminalTheme } from './TerminalPane'
 import { useTerminalStore } from '../../stores/terminalStore'
 import { useTerminal } from '../../hooks/useTerminal'
+import type { Appearance } from '../../hooks/useAppearance'
+
+// vi.hoisted() values are safe to use inside vi.mock() factory closures because
+// they are initialized before the hoisted mock factories execute.
+const { mockFitFn, mockClearTextureAtlas, mockRefresh, xtermOptions, mockUseAppearance } =
+  vi.hoisted(() => {
+    const xtermOptions: { theme: unknown } = { theme: null }
+    const mockUseAppearance = vi.fn(() => ({
+      appearance: 'dusk' as Appearance,
+      setAppearance: vi.fn(),
+      toggle: vi.fn(),
+    }))
+    return {
+      mockFitFn: vi.fn(),
+      mockClearTextureAtlas: vi.fn(),
+      mockRefresh: vi.fn(),
+      xtermOptions,
+      mockUseAppearance,
+    }
+  })
 
 // jsdom doesn't implement matchMedia — stub it so useAppearance doesn't throw
 Object.defineProperty(window, 'matchMedia', {
@@ -19,8 +39,6 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
-const mockFit = vi.fn()
-
 // Mock the useTerminal hook so we control `supported` without touching Tauri
 vi.mock('../../hooks/useTerminal', () => ({
   useTerminal: vi.fn(() => ({
@@ -33,26 +51,47 @@ vi.mock('../../hooks/useTerminal', () => ({
   })),
 }))
 
-// Mock xterm addons — they require a real DOM canvas which jsdom can't provide
-vi.mock('@xterm/xterm', () => ({
-  Terminal: vi.fn().mockImplementation(() => ({
-    loadAddon: vi.fn(),
-    open: vi.fn(),
-    onData: vi.fn(),
-    dispose: vi.fn(),
-    attachCustomKeyEventHandler: vi.fn(),
-    cols: 80,
-    rows: 24,
-  })),
+// Controllable appearance via vi.hoisted — safe for use in the mock factory
+vi.mock('../../hooks/useAppearance', () => ({
+  useAppearance: mockUseAppearance,
 }))
-vi.mock('@xterm/addon-fit', () => ({ FitAddon: vi.fn().mockImplementation(() => ({ fit: mockFit })) }))
+
+// Mock xterm addons — they require a real DOM canvas which jsdom can't provide.
+// options is a stable shared object; the theme effect writes options.theme so
+// tests can assert on it without needing to capture the constructor instance.
+vi.mock('@xterm/xterm', () => ({
+  Terminal: vi.fn().mockImplementation(() => {
+    xtermOptions.theme = null
+    return {
+      loadAddon: vi.fn(),
+      open: vi.fn(),
+      onData: vi.fn(),
+      dispose: vi.fn(),
+      attachCustomKeyEventHandler: vi.fn(),
+      clearTextureAtlas: mockClearTextureAtlas,
+      refresh: mockRefresh,
+      options: xtermOptions,
+      cols: 80,
+      rows: 24,
+    }
+  }),
+}))
+vi.mock('@xterm/addon-fit', () => ({ FitAddon: vi.fn().mockImplementation(() => ({ fit: mockFitFn })) }))
 vi.mock('@xterm/addon-search', () => ({ SearchAddon: vi.fn().mockImplementation(() => ({})) }))
 vi.mock('@xterm/addon-web-links', () => ({ WebLinksAddon: vi.fn().mockImplementation(() => ({})) }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn() }))
 vi.mock('@xterm/xterm/css/xterm.css', () => ({}))
 
 beforeEach(() => {
-  mockFit.mockClear()
+  mockFitFn.mockClear()
+  mockClearTextureAtlas.mockClear()
+  mockRefresh.mockClear()
+  // Reset appearance mock to dusk default
+  mockUseAppearance.mockReturnValue({
+    appearance: 'dusk' as Appearance,
+    setAppearance: vi.fn(),
+    toggle: vi.fn(),
+  })
   // Ensure no __TAURI_INTERNALS__ in jsdom
   if ('__TAURI_INTERNALS__' in window) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -182,10 +221,73 @@ describe('TerminalPane', () => {
       const tab = useTerminalStore.getState().addTab('~')
       render(<TerminalPane tabId={tab.id} />)
       // fit() must NOT have fired — fonts.ready is still pending
-      expect(mockFit).not.toHaveBeenCalled()
+      expect(mockFitFn).not.toHaveBeenCalled()
     } finally {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (window as any).__TAURI_INTERNALS__
+      if (originalFonts) {
+        Object.defineProperty(document, 'fonts', originalFonts)
+      }
+    }
+  })
+
+  // Theme reactivity test: when appearance changes, the appearance effect must
+  // assign the new theme to xtermRef.current.options.theme, invalidate the
+  // texture atlas, and repaint — WITHOUT recreating the terminal instance.
+  it('updates options.theme and invalidates texture atlas on appearance change', () => {
+    vi.mocked(useTerminal).mockReturnValueOnce({
+      supported: true,
+      create: vi.fn(() => Promise.resolve({ ptyId: 'test-pty', paneId: 'test-pane' })),
+      write: vi.fn(),
+      resize: vi.fn(),
+      kill: vi.fn(),
+      getDefaultShell: vi.fn(() => Promise.resolve('/bin/zsh')),
+    })
+
+    // Block fonts.ready so the PTY async init path is never reached —
+    // we only care about the appearance effect, not PTY creation.
+    const originalFonts = Object.getOwnPropertyDescriptor(document, 'fonts')
+    Object.defineProperty(document, 'fonts', {
+      value: { ready: new Promise<FontFaceSet>(() => {}) },
+      configurable: true,
+      writable: true,
+    })
+
+    // Start with dusk
+    mockUseAppearance.mockReturnValue({
+      appearance: 'dusk' as Appearance,
+      setAppearance: vi.fn(),
+      toggle: vi.fn(),
+    })
+
+    try {
+      const tab = useTerminalStore.getState().addTab('~')
+      const { rerender } = render(<TerminalPane tabId={tab.id} />)
+
+      // On first mount, the appearance effect fires before xtermRef.current is set
+      // (effects run in declaration order; the appearance effect is declared first).
+      // The initial theme is applied via the Terminal constructor option, not via
+      // options.theme assignment. So we only check the POST-toggle assignment.
+
+      // Switch to dawn — simulate the appearance toggle
+      mockUseAppearance.mockReturnValue({
+        appearance: 'dawn' as Appearance,
+        setAppearance: vi.fn(),
+        toggle: vi.fn(),
+      })
+
+      // Re-render with the new appearance value — this causes the appearance effect
+      // to fire again, this time with xtermRef.current set from the mount effect.
+      act(() => {
+        rerender(<TerminalPane tabId={tab.id} />)
+      })
+
+      // The effect must update the theme to dawn
+      expect(xtermOptions.theme).toEqual(buildTerminalTheme('dawn'))
+      // Texture atlas must have been invalidated to avoid stale glyph rendering
+      expect(mockClearTextureAtlas).toHaveBeenCalled()
+      expect(mockRefresh).toHaveBeenCalled()
+    } finally {
       if (originalFonts) {
         Object.defineProperty(document, 'fonts', originalFonts)
       }
