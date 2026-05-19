@@ -25,7 +25,7 @@ function modelBadgeLabel(model: string | null): string {
 
 function WorkLogCardSkeleton() {
   return (
-    <div className="bento-card p-5 space-y-3">
+    <div className="bento-card p-6 space-y-3">
       <div className="flex items-center gap-3">
         <div className="h-4 w-32 rounded bg-[var(--bg-secondary)] animate-pulse" />
         <div className="h-4 w-16 rounded bg-[var(--bg-secondary)] animate-pulse" />
@@ -50,7 +50,7 @@ function WorkLogCard({ entry }: { entry: WorkLogEntry }) {
     <article
       role="article"
       aria-labelledby={headingId}
-      className="bento-card p-5 space-y-3"
+      className="bento-card p-6 space-y-3"
     >
       {/* Header row */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -163,7 +163,7 @@ export default function WorkLogFeed({ entries, isLoading, error }: WorkLogFeedPr
 
   if (error) {
     return (
-      <div className="bento-card p-5">
+      <div className="bento-card p-6">
         <p className="text-sm text-[var(--error)]">
           Failed to load work logs: {error.message}
         </p>

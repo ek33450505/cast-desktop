@@ -5,6 +5,8 @@ import { SwarmCard } from '../components/SwarmView/SwarmCard'
 import { TeammateRow } from '../components/SwarmView/TeammateRow'
 import { MessageFeed } from '../components/SwarmView/MessageFeed'
 import { TokenChart } from '../components/SwarmView/TokenChart'
+import { PageSkeleton } from '../components/ui/PageSkeleton'
+import { EmptyState } from '../components/ui/EmptyState'
 import type { SwarmSession } from '../types'
 
 // ── Section header ────────────────────────────────────────────────────────────
@@ -114,19 +116,6 @@ function SwarmDetailPanel({ swarmId }: { swarmId: string }) {
   )
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-function EmptyState() {
-  return (
-    <div className="bento-card p-10 flex flex-col items-center justify-center gap-3 text-center col-span-full">
-      <Network className="w-10 h-10 text-[var(--content-muted)] opacity-40" />
-      <p className="text-sm font-medium text-[var(--content-muted)]">No swarms yet</p>
-      <p className="text-xs text-[var(--content-muted)] max-w-xs">
-        Start a swarm with <code className="bg-[var(--system-elevated)] px-1 rounded">/swarm &lt;team&gt; &quot;&lt;task&gt;&quot;</code> in Claude Code.
-      </p>
-    </div>
-  )
-}
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 
@@ -153,21 +142,12 @@ export default function SwarmView() {
       </div>
 
       {isError && (
-        <div className="bento-card p-4 border-rose-500/30 bg-rose-500/10">
+        <div className="bento-card p-6 border-rose-500/30 bg-rose-500/10">
           <p className="text-xs text-rose-400">Failed to load swarm sessions. Is the server running?</p>
         </div>
       )}
 
-      {isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2].map(i => (
-            <div key={i} className="bento-card p-5 animate-pulse">
-              <div className="h-4 w-32 bg-[var(--system-panel)] rounded mb-3" />
-              <div className="h-3 w-24 bg-[var(--system-panel)] rounded" />
-            </div>
-          ))}
-        </div>
-      )}
+      {isLoading && <PageSkeleton variant="grid" cols={2} rows={1} />}
 
       {!isLoading && (
         <>
@@ -201,7 +181,12 @@ export default function SwarmView() {
           <section>
             <SectionHeader label="Past Swarms" count={past.length} />
             {past.length === 0 && active.length === 0 ? (
-              <EmptyState />
+              <EmptyState
+                icon={Network}
+                title="No swarms yet"
+                message={`Start a swarm with /swarm <team> "<task>" in Claude Code.`}
+                className="col-span-full"
+              />
             ) : past.length === 0 ? (
               <p className="text-xs text-[var(--content-muted)]">No past swarms</p>
             ) : (

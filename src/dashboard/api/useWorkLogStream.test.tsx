@@ -151,7 +151,8 @@ describe('useWorkLogStream', () => {
     })
 
     expect(result.current.error).toBeDefined()
-    expect(result.current.error?.message).toBe('Failed to fetch work log stream')
+    // apiFetch throws `API error ${status}: ${url}` — use toContain to avoid brittle URL coupling
+    expect(result.current.error?.message).toContain('API error 500')
   })
 
   it('sets error state when fetch throws', async () => {

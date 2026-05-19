@@ -31,18 +31,18 @@ function PageSkeleton() {
       {/* Stat cards skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="bento-card p-5 space-y-2">
+          <div key={i} className="bento-card p-6 space-y-2">
             <div className="h-3 w-20 rounded animate-pulse bg-[var(--system-elevated)]" />
             <div className="h-6 w-12 rounded animate-pulse bg-[var(--system-elevated)]" />
           </div>
         ))}
       </div>
       {/* Chart skeleton */}
-      <div className="bento-card p-5">
+      <div className="bento-card p-6">
         <div className="h-[320px] rounded animate-pulse bg-[var(--system-elevated)]" />
       </div>
       {/* Table skeleton */}
-      <div className="bento-card p-5 space-y-3">
+      <div className="bento-card p-6 space-y-3">
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="h-4 w-full rounded animate-pulse bg-[var(--system-elevated)]" />
         ))}
@@ -60,7 +60,7 @@ interface StatCardProps {
 
 function StatCard({ label, value }: StatCardProps) {
   return (
-    <div className="bento-card p-5 flex flex-col gap-1">
+    <div className="bento-card p-6 flex flex-col gap-1">
       <p className="text-xs text-[var(--content-muted)]">{label}</p>
       <p className="text-2xl font-semibold text-[var(--content-primary)]">{value}</p>
     </div>
@@ -305,7 +305,7 @@ export default function AgentReliabilityPage() {
           </div>
 
           {/* ── Per-agent bar chart ──────────────────────────────────── */}
-          <div className="bento-card p-5">
+          <div className="bento-card p-6">
             <h2 className="text-sm font-semibold text-[var(--content-primary)] mb-4">
               Claims per agent
             </h2>
@@ -353,7 +353,7 @@ export default function AgentReliabilityPage() {
           </div>
 
           {/* ── Filters ──────────────────────────────────────────────── */}
-          <div className="bento-card p-4">
+          <div className="bento-card p-6">
             <div className="flex flex-wrap items-end gap-4">
               {/* Agent dropdown */}
               <div className="flex flex-col gap-1 min-w-[160px]">

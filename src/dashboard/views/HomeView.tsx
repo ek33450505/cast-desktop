@@ -8,6 +8,8 @@ import { useQualityGateStats, useToolFailureStats, useDbMemories, useResearchCac
 import { formatCost, formatTokens } from '../utils/costEstimate'
 import { timeAgo } from '../utils/time'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { PageSkeleton } from '../components/ui/PageSkeleton'
+import { EmptyState } from '../components/ui/EmptyState'
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -27,7 +29,7 @@ function StatCard({
   accent?: string
 }) {
   const inner = (
-    <div className="bento-card p-5 flex items-start gap-4 hover:border-[var(--accent)]/30 transition-colors">
+    <div className="bento-card p-6 flex items-start gap-4 hover:border-[var(--accent)]/30 transition-colors">
       <div className={`p-2.5 rounded-lg ${accent ?? 'bg-[var(--accent-muted)]'} shrink-0`}>
         <Icon className="w-5 h-5 text-[var(--accent)]" />
       </div>
@@ -42,14 +44,6 @@ function StatCard({
   return to ? <Link to={to} className="block no-underline">{inner}</Link> : inner
 }
 
-function StatCardSkeleton() {
-  return (
-    <div className="bento-card p-5">
-      <div className="h-4 w-24 rounded bg-[var(--system-panel)] animate-pulse mb-2" />
-      <div className="h-8 w-16 rounded bg-[var(--system-panel)] animate-pulse" />
-    </div>
-  )
-}
 
 // ─── Mini Activity Feed ────────────────────────────────────────────────────────
 
@@ -73,20 +67,15 @@ function MiniActivityFeed() {
   }
 
   if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-8 rounded bg-[var(--system-panel)] animate-pulse" />
-        ))}
-      </div>
-    )
+    return <PageSkeleton variant="list" rows={5} />
   }
 
   if (runs.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-[var(--content-muted)] font-mono">
-        No agent runs today
-      </div>
+      <EmptyState
+        icon={Activity}
+        title="No agent runs today"
+      />
     )
   }
 
@@ -278,12 +267,9 @@ export default function HomeView() {
       {/* Top stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {runsLoading ? (
-          <>
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-          </>
+          <div className="col-span-2 lg:col-span-4">
+            <PageSkeleton variant="grid" cols={4} rows={1} />
+          </div>
         ) : (
           <>
             <StatCard
@@ -318,7 +304,7 @@ export default function HomeView() {
       {/* Middle: activity feed + cost sparkline */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Mini activity feed */}
-        <div className="bento-card p-5">
+        <div className="bento-card p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[var(--accent)]" />
@@ -335,7 +321,7 @@ export default function HomeView() {
         </div>
 
         {/* Cost sparkline */}
-        <div className="bento-card p-5">
+        <div className="bento-card p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-[var(--accent)]" />
@@ -356,7 +342,7 @@ export default function HomeView() {
       <CastObservabilityRow />
 
       {/* Bottom: system health */}
-      <div className="bento-card p-5">
+      <div className="bento-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-[var(--content-primary)]">System Health</h2>
           <Link

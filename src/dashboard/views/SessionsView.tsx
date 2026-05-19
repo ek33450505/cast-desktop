@@ -1,6 +1,8 @@
 import { useState, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Radio, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Search, Radio, AlertTriangle, CheckCircle, Layers } from 'lucide-react'
+import { PageSkeleton } from '../components/ui/PageSkeleton'
+import { EmptyState } from '../components/ui/EmptyState'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useSessions } from '../api/useSessions'
 import { timeAgo, formatDuration } from '../utils/time'
@@ -281,18 +283,12 @@ export default function SessionsView() {
 
       {/* Mobile card list — shown below md breakpoint */}
       <div className="md:hidden space-y-3">
-        {isLoading && (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-[var(--system-panel)] border border-[var(--border)] rounded-xl p-4 animate-pulse space-y-2">
-              <div className="h-4 w-1/2 rounded bg-[var(--system-elevated)]" />
-              <div className="h-3 w-1/3 rounded bg-[var(--system-elevated)]" />
-            </div>
-          ))
-        )}
+        {isLoading && <PageSkeleton variant="list" rows={4} />}
         {!isLoading && filtered.length === 0 && (
-          <div className="px-4 py-12 text-center text-[var(--content-muted)]">
-            {searchQuery || projectFilter ? 'No matching sessions' : 'No sessions found'}
-          </div>
+          <EmptyState
+            icon={Layers}
+            title={searchQuery || projectFilter ? 'No matching sessions' : 'No sessions found'}
+          />
         )}
         {!isLoading && filtered.map((session) => {
           const tokens = (session.inputTokens || 0) + (session.outputTokens || 0)
@@ -368,9 +364,10 @@ export default function SessionsView() {
 
           {/* Empty state */}
           {!isLoading && filtered.length === 0 && (
-            <div className="px-4 py-12 text-center text-[var(--content-muted)]">
-              {searchQuery || projectFilter ? 'No matching sessions' : 'No sessions found'}
-            </div>
+            <EmptyState
+              icon={Layers}
+              title={searchQuery || projectFilter ? 'No matching sessions' : 'No sessions found'}
+            />
           )}
 
           {/* Virtual rows */}

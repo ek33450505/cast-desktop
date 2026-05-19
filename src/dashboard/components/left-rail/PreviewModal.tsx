@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useReducedMotion } from 'framer-motion'
-import { X } from 'lucide-react'
 import PreviewBody from './PreviewBody'
 import Skeleton from '../Skeleton'
+import { ModalHeader } from '../ui/ModalHeader'
 
 function basename(p: string): string {
   return p.split('/').at(-1) ?? p
@@ -114,7 +114,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="preview-modal-title"
+      aria-label={`Preview: ${fileName}`}
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
         background: 'var(--system-vibrancy-base)',
@@ -140,25 +140,7 @@ export default function PreviewModal({ path: filePath, source = 'cast', onClose,
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--stroke-regular)] flex-shrink-0">
-          <div className="min-w-0 flex-1">
-            <p id="preview-modal-title" className="text-sm font-medium text-[var(--content-primary)] truncate" title={fileName}>
-              {fileName}
-            </p>
-            <p className="text-[11px] text-[var(--content-muted)] truncate" title={filePath}>
-              {filePath}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close preview"
-            className="flex items-center justify-center rounded text-[var(--content-secondary)] hover:text-[var(--content-primary)] hover:bg-[var(--accent-muted)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--stroke-focus)] focus-visible:outline-offset-1 flex-shrink-0"
-            style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px' }}
-          >
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
-        </div>
+        <ModalHeader title={fileName} onClose={onClose} />
 
         {/* Body */}
         <div className="flex-1 overflow-hidden flex flex-col">

@@ -4,7 +4,9 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { Activity, Coins, TrendingUp, Clock, Zap, AlertTriangle, RefreshCw } from 'lucide-react'
+import { Activity, Coins, TrendingUp, Clock, Zap, AlertTriangle, RefreshCw, Database } from 'lucide-react'
+import { PageSkeleton } from '../components/ui/PageSkeleton'
+import { EmptyState } from '../components/ui/EmptyState'
 import { useAnalytics } from '../api/useAnalytics'
 import type { DelegationSavings } from '../api/useAnalytics'
 import { useSeed } from '../api/useSeed'
@@ -30,10 +32,8 @@ function TokenSpendInline() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="bento-card p-5 h-24 animate-pulse" />)}
-        </div>
-        <div className="bento-card p-6 h-64 animate-pulse" />
+        <PageSkeleton variant="grid" cols={4} rows={1} />
+        <PageSkeleton variant="list" rows={1} />
       </div>
     )
   }
@@ -54,7 +54,7 @@ function TokenSpendInline() {
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bento-card p-5">
+        <div className="bento-card p-6">
           <div className="text-2xl font-bold text-[var(--content-primary)] tabular-nums">{formatCost(totals.costUsd)}</div>
           <div className="text-xs text-[var(--content-muted)] mt-0.5">Total Cost (30d)</div>
           {budget?.daily_limit != null && (
@@ -63,15 +63,15 @@ function TokenSpendInline() {
             </div>
           )}
         </div>
-        <div className="bento-card p-5">
+        <div className="bento-card p-6">
           <div className="text-2xl font-bold text-[var(--content-primary)] tabular-nums">{formatTokens(totals.inputTokens)}</div>
           <div className="text-xs text-[var(--content-muted)] mt-0.5">Input Tokens</div>
         </div>
-        <div className="bento-card p-5">
+        <div className="bento-card p-6">
           <div className="text-2xl font-bold text-[var(--content-primary)] tabular-nums">{formatTokens(totals.outputTokens)}</div>
           <div className="text-xs text-[var(--content-muted)] mt-0.5">Output Tokens</div>
         </div>
-        <div className="bento-card p-5">
+        <div className="bento-card p-6">
           <div className="text-2xl font-bold text-[var(--content-primary)] tabular-nums">{totals.sessionCount}</div>
           <div className="text-xs text-[var(--content-muted)] mt-0.5">Sessions</div>
         </div>
@@ -95,7 +95,7 @@ function TokenSpendInline() {
 
       {/* Cache token info */}
       {(totals.cacheCreationTokens > 0 || totals.cacheReadTokens > 0) && (
-        <div className="bento-card p-5">
+        <div className="bento-card p-6">
           <h3 className="text-sm font-semibold text-[var(--content-primary)] mb-2">Cache Tokens</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -119,12 +119,7 @@ function AgentScorecard() {
   const agents = data?.agents ?? []
 
   if (loading) {
-    return (
-      <div className="bento-card p-6 space-y-3">
-        <div className="h-4 w-40 rounded bg-[var(--system-panel)] animate-pulse" />
-        {[...Array(4)].map((_, i) => <div key={i} className="h-8 rounded bg-[var(--system-panel)] animate-pulse" />)}
-      </div>
-    )
+    return <PageSkeleton variant="list" rows={5} />
   }
 
   if (error) {
@@ -133,9 +128,11 @@ function AgentScorecard() {
 
   if (!agents.length) {
     return (
-      <div className="bento-card p-6 text-center text-[var(--content-muted)] text-sm">
-        No agent runs in cast.db yet.
-      </div>
+      <EmptyState
+        icon={Database}
+        title="No agent runs in cast.db yet."
+        message="Run some Cast agents to populate analytics data."
+      />
     )
   }
 
@@ -420,7 +417,7 @@ const ANALYTICS_TABS: { key: AnalyticsTab; label: string }[] = [
 
 function StatCard({ icon: Icon, label, value, sub }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; sub?: string }) {
   return (
-    <div className="bento-card p-5 flex items-start gap-4">
+    <div className="bento-card p-6 flex items-start gap-4">
       <div className="p-2.5 rounded-lg bg-[var(--accent-muted)] shrink-0">
         <Icon className="w-5 h-5 text-[var(--accent)]" />
       </div>
@@ -513,14 +510,7 @@ export default function AnalyticsView() {
     return (
       <div className="space-y-6 animate-in">
         <div><h1 className="text-2xl font-bold">Analytics</h1></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bento-card p-5 animate-pulse">
-              <div className="h-8 w-20 bg-[var(--system-elevated)] rounded mb-2" />
-              <div className="h-4 w-28 bg-[var(--system-elevated)] rounded" />
-            </div>
-          ))}
-        </div>
+        <PageSkeleton variant="grid" cols={4} rows={1} />
       </div>
     )
   }
