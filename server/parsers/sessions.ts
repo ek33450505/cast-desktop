@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import Database from 'better-sqlite3'
+import Database from '../utils/sqlite-shim.js'
 import { PROJECTS_DIR, CAST_DB } from '../constants.js'
 import { safeResolve } from '../utils/safeResolve.js'
 import { decodeProjectPath } from './projectPath.js'
@@ -14,7 +14,7 @@ function getSoftDeletedIds(): Set<string> {
   const ids = new Set<string>()
   try {
     if (!fs.existsSync(CAST_DB)) return ids
-    const db = new Database(CAST_DB, { readonly: true, fileMustExist: true })
+    const db = new Database(CAST_DB, { readonly: true })
     try {
       const rows = db.prepare(
         "SELECT id FROM sessions WHERE deleted_at IS NOT NULL"

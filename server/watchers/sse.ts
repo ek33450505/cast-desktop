@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import type { Express, Request, Response } from 'express'
 import chokidar from 'chokidar'
-import Database from 'better-sqlite3'
+import Database from '../utils/sqlite-shim.js'
 import { PROJECTS_DIR, DASHBOARD_COMMANDS_DIR, CAST_DB, CLAUDE_DIR, PLANS_DIR } from '../constants.js'
 import { decodeProjectPath } from '../parsers/projectPath.js'
 import type { LiveEvent, LogEntry } from '../../src/types/index.js'
@@ -239,7 +239,7 @@ export function attachSSE(app: Express) {
     // and emit sessionIds that are done so the client can clear stale 'running' states.
     try {
       if (fs.existsSync(CAST_DB)) {
-        const db = new Database(CAST_DB, { readonly: true, fileMustExist: true })
+        const db = new Database(CAST_DB, { readonly: true })
         try {
           const rows = db.prepare(`
             SELECT DISTINCT session_id

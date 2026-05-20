@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
-import Database from 'better-sqlite3'
+import Database from '../utils/sqlite-shim.js'
 import {
   AGENT_MEMORY_DIR,
   PROJECTS_DIR,
@@ -64,7 +64,7 @@ export function loadProjectMemory(): MemoryFile[] {
   if (fs.existsSync(CAST_DB)) {
     let db: ReturnType<typeof Database> | null = null
     try {
-      db = new Database(CAST_DB, { readonly: true, fileMustExist: true })
+      db = new Database(CAST_DB, { readonly: true })
       const rows = db.prepare(`
         SELECT id, agent, type, project, name, content, updated_at
         FROM agent_memories

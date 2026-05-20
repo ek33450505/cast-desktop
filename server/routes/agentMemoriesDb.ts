@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import Database from 'better-sqlite3'
+import Database from '../utils/sqlite-shim.js'
 import { getCastDb } from './castDb.js'
 import { CAST_DB } from '../constants.js'
 import fs from 'fs'
@@ -62,7 +62,7 @@ agentMemoriesDbRouter.delete('/:id', (req, res) => {
   }
   let db: ReturnType<typeof Database> | null = null
   try {
-    db = new Database(CAST_DB, { fileMustExist: true })
+    db = new Database(CAST_DB)
     const result = db.prepare('DELETE FROM agent_memories WHERE id = ?').run(id)
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Memory not found' })

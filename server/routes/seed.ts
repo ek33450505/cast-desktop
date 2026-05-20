@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { Router } from 'express'
-import Database from 'better-sqlite3'
+import Database from '../utils/sqlite-shim.js'
 import { CAST_DB, PROJECTS_DIR } from '../constants.js'
 import { listSessions, loadSession } from '../parsers/sessions.js'
 import { safeResolve } from '../utils/safeResolve.js'
