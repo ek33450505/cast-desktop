@@ -60,7 +60,7 @@ jobs:
           # Unset signing vars when empty — passing empty strings causes Tauri to
           # attempt `security import` with no certificate and fail. Unset = skip signing.
           [[ -z "$APPLE_CERTIFICATE" ]] && unset APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID
-          cargo tauri build --target aarch64-apple-darwin --bundles dmg
+          cargo tauri build --target aarch64-apple-darwin --bundles app
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -68,14 +68,18 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # Falls back to ad-hoc signing (-) when no Developer ID cert is wired.
-          # Ad-hoc replaces the hard "damaged" Gatekeeper error with the softer
-          # "unidentified developer" prompt that has an Open Anyway path.
-          # Set APPLE_SIGNING_IDENTITY secret to a real identity when you have a cert.
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY || '-' }}
 
-      # When --target is specified, Tauri outputs to target/<triple>/release/bundle/
+      # Package the .app as a tar.gz for homebrew cask install (no DMG, no Apple signing fee)
+      - name: Package as tar.gz
+        run: |
+          APP_DIR="src-tauri/target/aarch64-apple-darwin/release/bundle/macos"
+          cd "$APP_DIR"
+          tar czf "Cast-Desktop-aarch64-darwin.tar.gz" "Cast Desktop.app"
+          echo "SHA256: $(shasum -a 256 Cast-Desktop-aarch64-darwin.tar.gz)"
+
       - name: Upload release
         uses: softprops/action-gh-release@v2
         with:
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          files: src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Cast-Desktop-aarch64-darwin.tar.gz
           generate_release_notes: true

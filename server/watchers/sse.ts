@@ -315,6 +315,13 @@ export function attachSSE(app: Express) {
     }
   })
 
+  // Defer all file watcher setup to avoid blocking the event loop during server startup.
+  // In Bun compiled binaries, chokidar's initial directory scan executes synchronously,
+  // which prevents the HTTP server listen callback from firing when watching large
+  // directories like ~/.claude/ (13k+ files depth-3). Route handlers above are set up
+  // synchronously since they're needed immediately; watchers can start a tick later.
+  setTimeout(() => {
+
   // Watch for JSONL changes
   const watcher = chokidar.watch(PROJECTS_DIR, {
     ignored: [
@@ -536,46 +543,11 @@ export function attachSSE(app: Express) {
   // Start cast.db change watcher — polls every 3s and broadcasts db_change_* SSE events
   startCastDbWatcher(broadcast)
 
-  // ── cast_fs_change: watch CAST root (~/.claude) depth 3 ───────────────────
-  const castFsWatcher = chokidar.watch(CLAUDE_DIR, {
-    persistent: true,
-    ignoreInitial: true,
-    depth: 3,
-    ignored: ['**/node_modules/**', '**/.git/**'],
-    followSymlinks: false,
-  })
-
-  for (const evt of ['add', 'change', 'unlink'] as const) {
-    castFsWatcher.on(evt, (filePath: string) => {
-      broadcast({
-        type: 'cast_fs_change',
-        timestamp: new Date().toISOString(),
-        fsPath: filePath.slice(0, 512),
-        fsEvent: evt,
-      })
-    })
-  }
-
-  // ── project_fs_change: watch project root (cwd) depth 2 ──────────────────
-  const projectRoot = process.cwd()
-  const projectFsWatcher = chokidar.watch(projectRoot, {
-    persistent: true,
-    ignoreInitial: true,
-    depth: 2,
-    ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**'],
-    followSymlinks: false,
-  })
-
-  for (const evt of ['add', 'change', 'unlink'] as const) {
-    projectFsWatcher.on(evt, (filePath: string) => {
-      broadcast({
-        type: 'project_fs_change',
-        timestamp: new Date().toISOString(),
-        fsPath: filePath.slice(0, 512),
-        fsEvent: evt,
-      })
-    })
-  }
+  // cast_fs_change and project_fs_change watchers are disabled in the compiled sidecar.
+  // Watching ~/.claude/ depth-3 (13k+ files) and process.cwd() depth-2 causes Bun's
+  // compiled binary event loop to freeze before the HTTP server can accept requests.
+  // These SSE event types will be re-enabled in a future release with a targeted
+  // watch implementation that doesn't scan thousands of files at startup.
 
   // ── plan_progress_updated: watch PLANS_DIR depth 0 ───────────────────────
   const plansWatcher = chokidar.watch(PLANS_DIR, {
@@ -608,11 +580,11 @@ export function attachSSE(app: Express) {
     idleTimers.clear()
     clearInterval(staleInterval)
     commandsWatcher.close()
-    castFsWatcher.close()
-    projectFsWatcher.close()
     plansWatcher.close()
     stopCastDbWatcher()
   }
   process.on('SIGTERM', shutdown)
   process.on('SIGINT', shutdown)
+
+  }, 0) // end deferred watcher setup
 }
