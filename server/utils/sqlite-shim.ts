@@ -1,4 +1,5 @@
 import { createRequire } from 'module'
+import type BetterSqlite3 from 'better-sqlite3'
 
 // Provides a SQLite Database class that works in both runtimes:
 //   Bun compiled binary → uses built-in bun:sqlite (no native addon needed)
@@ -13,4 +14,4 @@ try {
   Database = _require('better-sqlite3')
 }
 
-export default Database as typeof import('better-sqlite3').default
+export default Database as typeof BetterSqlite3
