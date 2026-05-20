@@ -16,11 +16,9 @@ Thank you for your interest in contributing to Cast Desktop — a terminal UI an
 git clone https://github.com/ek33450505/cast-desktop.git
 cd cast-desktop
 npm install
-cd server && npm install && npm run build:sqlite
+cd server && npm install
 cd ..
 ```
-
-The `npm run build:sqlite` step rebuilds the `better-sqlite3` native module for your platform.
 
 ## Dev Commands
 

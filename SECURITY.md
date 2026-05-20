@@ -4,8 +4,9 @@
 
 | Version | Support Status |
 |---------|---------------|
-| 1.0.x (current) | Full support — security and bug fixes |
-| < 1.0 | Not yet released |
+| 1.2.x (current) | Full support — security and bug fixes |
+| 1.1.x | Bug fixes only |
+| < 1.1 | No support — please upgrade |
 
 ## Reporting a Vulnerability
 
