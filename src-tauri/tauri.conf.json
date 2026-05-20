@@ -16,7 +16,7 @@
         "height": 800,
         "resizable": true,
         "fullscreen": false,
-        "url": "http://localhost:5173/"
+        "url": "http://localhost:3001/"
       }
     ],
     "security": {
@@ -24,6 +24,7 @@
     }
   },
   "bundle": {
+    "resources": { "../dist": "dist" },
     "externalBin": ["binaries/cast-server", "binaries/cast-lsp-ts"],
     "icon": [
       "icons/32x32.png",

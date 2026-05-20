@@ -37,7 +37,13 @@ pub fn run() {
 
             // Spawn the Express sidecar server
             // TODO(phase-3): dynamic port selection — currently hardcoded to 3001 in server/constants.ts
-            let sidecar = app.shell().sidecar("cast-server").expect("failed to create sidecar");
+            let resource_dir = app.path().resource_dir()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let sidecar = app.shell()
+                .sidecar("cast-server")
+                .expect("failed to create sidecar")
+                .env("CAST_RESOURCE_DIR", &resource_dir);
             let (_rx, _child) = sidecar.spawn().expect("failed to spawn cast-server sidecar");
             app.manage(_child);
             Ok(())

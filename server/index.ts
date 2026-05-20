@@ -10,6 +10,12 @@ import { attachSSE } from './watchers/sse.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+// In the installed .app, Tauri sets CAST_RESOURCE_DIR to Contents/Resources/.
+// The dev fallback uses __dirname (server/) → ../dist (project root dist/).
+const distPath = process.env.CAST_RESOURCE_DIR
+  ? path.join(process.env.CAST_RESOURCE_DIR, 'dist')
+  : path.join(__dirname, '../dist')
+
 // Ensure dashboard commands directory exists before watchers start
 fs.mkdirSync(DASHBOARD_COMMANDS_DIR, { recursive: true })
 
@@ -58,7 +64,7 @@ const destructiveLimiter = rateLimit({
 })
 
 // Serve built frontend assets (Option C: Express serves dist/ directly)
-app.use(express.static(path.join(__dirname, '../dist')))
+app.use(express.static(distPath))
 
 app.use('/api/seed', controlLimiter)
 app.use('/api/control', destructiveLimiter)
@@ -76,7 +82,7 @@ attachSSE(app)
 
 // SPA fallback — must be after all /api route mounts
 app.get(/.*/, (_req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'))
+  res.sendFile(path.join(distPath, 'index.html'))
 })
 
 // Global error handler — must be last middleware
