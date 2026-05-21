@@ -31,7 +31,6 @@ import {
 
 // ── Lazy-loaded route views ───────────────────────────────────────────────────
 
-const HomeView = lazy(() => import('./views/HomeView'))
 const SessionsView = lazy(() => import('./views/SessionsView'))
 const SessionDetailView = lazy(() => import('./views/SessionDetailView'))
 const AnalyticsView = lazy(() => import('./views/AnalyticsView'))
@@ -159,15 +158,33 @@ function ShellLayout() {
         </motion.div>
 
         {/* ── Center ────────────────────────────────────────────────── */}
-        <main id="main-content" className="flex-1 min-w-0 overflow-auto"
-              style={{ background: 'var(--system-canvas)' }}>
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">
-              Loading…
+        <main id="main-content" className="flex-1 min-w-0 overflow-hidden"
+              style={{ background: 'var(--system-canvas)', position: 'relative' }}>
+          {/* Terminal — always mounted so PTY sessions survive navigation */}
+          <div
+            style={{
+              display: isTerminalPage ? 'flex' : 'none',
+              flexDirection: 'column',
+              height: '100%',
+            }}
+          >
+            <ErrorBoundary>
+              <TerminalTabs />
+            </ErrorBoundary>
+          </div>
+
+          {/* All other routes */}
+          {!isTerminalPage && (
+            <div className="h-full overflow-auto">
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">
+                  Loading…
+                </div>
+              }>
+                <Outlet />
+              </Suspense>
             </div>
-          }>
-            <Outlet />
-          </Suspense>
+          )}
         </main>
 
         {/* ── Right Rail — terminal page only ───────────────────────── */}
@@ -262,7 +279,7 @@ export default function App() {
 
         {/* ── Shell wraps all other routes ── */}
         <Route element={<ShellLayout />}>
-          <Route path="/" element={<ErrorBoundary><TerminalTabs /></ErrorBoundary>} />
+          <Route path="/" element={null} />
           <Route path="/sessions" element={<ErrorBoundary><SessionsView /></ErrorBoundary>} />
           <Route path="/sessions/:project/:sessionId" element={<ErrorBoundary><SessionDetailView /></ErrorBoundary>} />
           <Route path="/analytics" element={<ErrorBoundary><AnalyticsView /></ErrorBoundary>} />
