@@ -68,7 +68,7 @@ vi.mock('../constants.js', () => {
     EMAIL_SUMMARIES_DIR: '/nonexistent-email-summaries-dir',
     DASHBOARD_COMMANDS_DIR: '/nonexistent-dashboard-commands-dir',
     CAST_SCRIPTS_DIR: '/nonexistent-cast-scripts-dir',
-    PORT: 3001,
+    PREFERRED_PORT: 49301,
   }
 })
 
