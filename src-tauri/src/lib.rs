@@ -55,6 +55,7 @@ pub fn run() {
                         let url = format!("http://127.0.0.1:{}/", port);
                         if let Some(window) = app_handle.get_webview_window("main") {
                             let _ = window.navigate(url.parse::<tauri::Url>().expect("valid server url"));
+                            let _ = window.show();
                         }
                     }
                     Err(e) => {

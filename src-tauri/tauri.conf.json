@@ -1,6 +1,6 @@
 {
   "productName": "Cast Desktop",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "identifier": "com.cast-desktop.app",
   "build": {
     "beforeBuildCommand": "npm run build && npm run build:sidecars",
@@ -16,6 +16,7 @@
         "height": 800,
         "resizable": true,
         "fullscreen": false,
+        "visible": false,
         "url": "about:blank"
       }
     ],
