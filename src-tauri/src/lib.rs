@@ -8,7 +8,6 @@ mod session;
 
 use lsp::LspState;
 use session::SessionStore;
-#[cfg(not(debug_assertions))]
 use tauri::Manager;
 #[cfg(not(debug_assertions))]
 use tauri_plugin_shell::ShellExt;
@@ -37,18 +36,18 @@ pub fn run() {
             let app_menu = menu::build_menu(app.handle())?;
             app.set_menu(app_menu)?;
 
+            // Dev mode: visible:false in the config keeps the window hidden until
+            // Tauri is fully initialised. Show it now so devUrl loads in the WebView.
+            #[cfg(debug_assertions)]
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.show();
+            }
+
             // Production only: spawn the Express sidecar and navigate the WebView.
-            // In dev mode Tauri uses devUrl and the tsx server runs via beforeDevCommand.
+            // visible:false in config is the reliable hide gate; navigate()+show() below
+            // reveal the window only after the sidecar is ready.
             #[cfg(not(debug_assertions))]
             {
-                // Hide immediately — navigate() + show() fire after the TCP probe.
-                // Prevents the window from flashing frontendDist content before the
-                // sidecar is ready. (visible:false was removed from the config to fix
-                // dev mode, so we enforce the hidden state here instead.)
-                if let Some(win) = app.get_webview_window("main") {
-                    let _ = win.hide();
-                }
-
                 let resource_dir = app.path().resource_dir()
                     .map(|p| p.to_string_lossy().to_string())
                     .unwrap_or_default();
