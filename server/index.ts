@@ -3,7 +3,8 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import rateLimit from 'express-rate-limit'
-import { PORT, DASHBOARD_COMMANDS_DIR } from './constants.js'
+import { PREFERRED_PORT, DASHBOARD_COMMANDS_DIR } from './constants.js'
+import type { AddressInfo } from 'net'
 import { router } from './routes/index.js'
 import { attachSSE } from './watchers/sse.js'
 
@@ -104,17 +105,39 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
 // Bind to loopback only — the API exposes local CAST observability and must
 // never be reachable from LAN/Wi-Fi peers. Combined with the Host-header guard
 // above, this defeats both naive remote access and DNS-rebinding attempts.
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`Claude Dashboard server on :${PORT}`)
-
-  // Non-blocking auto-seed on startup: backfill tokens without user action.
-  // Fire-and-forget — never delays the process start.
-  setImmediate(() => {
-    fetch(`http://localhost:${PORT}/api/cast/seed`, { method: 'POST' })
-      .then(r => r.json())
-      .then(body => {
-        if (process.env.DEBUG) console.debug('[auto-seed]', JSON.stringify(body))
+// Dynamic port selection: tries PREFERRED_PORT first, falls back to OS-assigned
+// port 0 on EADDRINUSE so Cast Desktop starts even when 49301 is taken.
+async function startListening(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const tryPort = (port: number) => {
+      const server = app.listen(port, '127.0.0.1')
+      server.on('listening', () => {
+        const addr = server.address() as AddressInfo
+        const actualPort = addr.port
+        process.stdout.write(`CAST_SERVER_PORT=${actualPort}\n`)
+        console.log(`Cast Desktop server on :${actualPort}`)
+        setImmediate(() => {
+          fetch(`http://localhost:${actualPort}/api/cast/seed`, { method: 'POST' })
+            .then(r => r.json())
+            .then(body => {
+              if (process.env.DEBUG) console.debug('[auto-seed]', JSON.stringify(body))
+            })
+            .catch(err => console.error('[auto-seed] failed:', err))
+        })
+        resolve()
       })
-      .catch(err => console.error('[auto-seed] failed:', err))
+      server.on('error', (err: NodeJS.ErrnoException) => {
+        if (err.code === 'EADDRINUSE' && port !== 0) {
+          console.warn(`[cast-server] port ${port} in use, using OS-assigned port`)
+          server.close()
+          tryPort(0)
+        } else {
+          reject(err)
+        }
+      })
+    }
+    tryPort(PREFERRED_PORT)
   })
-})
+}
+
+await startListening()
