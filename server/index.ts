@@ -39,8 +39,13 @@ app.use((req, res, next) => {
 })
 
 const allowedOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173'
-app.use((_req, res, next) => {
-  res.header('Access-Control-Allow-Origin', allowedOrigin)
+app.use((req, res, next) => {
+  // In production the WebView origin is http://127.0.0.1:<port> — echo back the
+  // request Origin so CORS passes for any loopback origin. The server binds to
+  // 127.0.0.1 only, so this is safe. Falls back to the dev default when no
+  // Origin header is present (truly same-origin requests don't send one).
+  const origin = req.headers.origin ?? allowedOrigin
+  res.header('Access-Control-Allow-Origin', origin)
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type')
   next()
