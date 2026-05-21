@@ -8,7 +8,9 @@ mod session;
 
 use lsp::LspState;
 use session::SessionStore;
+#[cfg(not(debug_assertions))]
 use tauri::Manager;
+#[cfg(not(debug_assertions))]
 use tauri_plugin_shell::ShellExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
