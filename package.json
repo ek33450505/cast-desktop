@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run server:dev\" \"vite\"",
+    "dev": "concurrently --kill-others-on-fail \"npm run server:dev\" \"vite\"",
     "server:dev": "cd server && npm run dev",
     "build": "tsc -b && vite build",
     "build:server": "cd server && npm install && npm run build",

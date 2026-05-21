@@ -41,6 +41,14 @@ pub fn run() {
             // In dev mode Tauri uses devUrl and the tsx server runs via beforeDevCommand.
             #[cfg(not(debug_assertions))]
             {
+                // Hide immediately — navigate() + show() fire after the TCP probe.
+                // Prevents the window from flashing frontendDist content before the
+                // sidecar is ready. (visible:false was removed from the config to fix
+                // dev mode, so we enforce the hidden state here instead.)
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.hide();
+                }
+
                 let resource_dir = app.path().resource_dir()
                     .map(|p| p.to_string_lossy().to_string())
                     .unwrap_or_default();
