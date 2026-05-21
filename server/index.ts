@@ -128,8 +128,18 @@ async function startListening(): Promise<void> {
       })
       server.on('error', (err: NodeJS.ErrnoException) => {
         if (err.code === 'EADDRINUSE' && port !== 0) {
-          console.warn(`[cast-server] port ${port} in use, using OS-assigned port`)
           server.close()
+          // In dev mode CAST_SERVER_PORT_OVERRIDE is unset and the Vite proxy is
+          // hardcoded to PREFERRED_PORT — a silent fallback to a random port breaks
+          // all API calls. Fail fast so the zombie holding the port is obvious.
+          if (!process.env.CAST_SERVER_PORT_OVERRIDE) {
+            console.error(
+              `[cast-server] port ${port} is already in use.\n` +
+              `Run: lsof -ti:${port} | xargs kill -9\nthen restart the dev server.`
+            )
+            process.exit(1)
+          }
+          console.warn(`[cast-server] port ${port} in use, using OS-assigned port`)
           tryPort(0)
         } else {
           reject(err)
