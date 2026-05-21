@@ -1,6 +1,6 @@
 # Cast Desktop
 
-[![Version](https://img.shields.io/github/v/release/ek33450505/cast-desktop?color=blue&label=version)](https://github.com/ek33450505/cast-desktop/releases/latest) [![CI](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml/badge.svg)](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1222%20passing-brightgreen)
+[![Version](https://img.shields.io/github/v/release/ek33450505/cast-desktop?color=blue&label=version)](https://github.com/ek33450505/cast-desktop/releases/latest) [![CI](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml/badge.svg)](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1251%20passing-brightgreen)
 
 **Your agents, in the room.**
 

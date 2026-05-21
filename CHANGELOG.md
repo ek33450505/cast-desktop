@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.3] — 2026-05-21
+
+### Fixed
+- Cast Desktop no longer conflicts with other local servers (e.g. claude-code-dashboard dev) that use port 3001. The sidecar now picks port 49301 by default and falls back to any free OS-assigned port on conflict.
+- App window stays hidden until the server is ready — eliminates the blank white flash on launch.
+
+### Changed
+- Vitest config moved to its own `vitest.config.ts` — clean separation from the Vite build config.
+
+---
+
+## [1.2.2] — 2026-05-20
+
+### Fixed
+- Chokidar file watchers deferred via `setTimeout` to unblock the event loop in the compiled sidecar binary — resolves white-screen on cold launch.
+
+---
+
+## [1.2.1] — 2026-05-19
+
+### Fixed
+- Sidecar now uses a `bun:sqlite` shim instead of `better-sqlite3` for compatibility with `bun build --compile` binaries.
+- `import type` used for better-sqlite3 type cast to avoid runtime import in compiled binary.
+- Express server correctly serves `dist/` from the Tauri resource directory in production builds.
+
+---
+
 ## [1.2.0] — 2026-05-19
 
 ### Added
