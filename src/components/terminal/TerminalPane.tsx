@@ -26,10 +26,12 @@ import { useAppearance, type Appearance } from '../../hooks/useAppearance'
 import { createPtyWriteBatcher } from './ptyWriteBatcher'
 import type { PtyWriteBatcher } from './ptyWriteBatcher'
 import { PasteConfirmBanner } from './PasteConfirmBanner'
-import { FONT_SIZE_DEFAULT, clampFontSize, readFontSize, writeFontSize } from './terminalFontSize'
+import { FONT_SIZE_DEFAULT, readFontSize, writeFontSize } from './terminalFontSize'
 
 // ── Public handle type ─────────────────────────────────────────────────────────
 export interface TerminalPaneHandle {
+  focus: () => void
+  injectText: (text: string) => void
   search: (query: string, opts?: { findNext?: boolean; caseSensitive?: boolean }) => void
   clearSearch: () => void
   clear: () => void
@@ -85,6 +87,7 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
   const searchAddonRef = useRef<SearchAddon | null>(null)
+  const fitAddonRef = useRef<FitAddon | null>(null)
   const fontSizeRef = useRef<number>(FONT_SIZE_DEFAULT)
   // ptyIdRef lets the clipboard handler (registered synchronously at mount)
   // reference the ptyId that is resolved asynchronously after terminal.create().
@@ -93,6 +96,7 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
   // the user confirms or cancels via PasteConfirmBanner.
   const pendingPasteRef = useRef<string | null>(null)
   const isMountedRef = useRef(true)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [showPasteBanner, setShowPasteBanner] = useState(false)
   const [pendingLineCount, setPendingLineCount] = useState(0)
   const { appearance } = useAppearance()
@@ -132,6 +136,7 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
     xtermRef.current = xterm
 
     const fitAddon = new FitAddon()
+    fitAddonRef.current = fitAddon
     const searchAddon = new SearchAddon()
     searchAddonRef.current = searchAddon
     const webLinksAddon = new WebLinksAddon((_event, uri) => {
@@ -182,6 +187,14 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
     // The parent stores this in a Map keyed by tabId so it can forward
     // search/clear/font-size commands to the currently active pane.
     const handle: TerminalPaneHandle = {
+      focus: () => {
+        try { fitAddonRef.current?.fit() } catch { /* disposed */ }
+        xtermRef.current?.focus()
+      },
+      injectText: (text: string) => {
+        const currentPtyId = ptyIdRef.current
+        if (currentPtyId) void terminal.write(currentPtyId, text)
+      },
       search: (query, opts) => {
         if (!searchAddonRef.current) return
         if (opts?.findNext === false) {
@@ -220,7 +233,7 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
     let unlistenFn: (() => void) | null = null
     let resizeObserver: ResizeObserver | null = null
     isMountedRef.current = true
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    let ptyResizeTimer: ReturnType<typeof setTimeout> | null = null
     let batcher: PtyWriteBatcher | null = null
 
     const container = containerRef.current
@@ -288,49 +301,53 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
       })
     })
 
-    // ResizeObserver with 150ms debounce (LeftRail toggle animates over 220ms)
+    // ResizeObserver — immediate visual fit + debounced PTY IPC
+    // fitAddon.fit() fires immediately on every frame so text stays aligned
+    // with the container during live window drag. The PTY WINCH signal is
+    // debounced at 100ms to avoid flooding Rust with resize events.
     resizeObserver = new ResizeObserver(() => {
       if (!isMountedRef.current) return
-      if (debounceTimer !== null) clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(() => {
-        if (!isMountedRef.current) return
-        if (
-          !containerRef.current ||
-          containerRef.current.offsetWidth === 0 ||
-          containerRef.current.offsetHeight === 0
-        ) return
-        try {
-          fitAddon.fit()
-          // Invalidate renderer glyph cache after every fit — the canvas renderer
-          // caches glyphs keyed on cell dimensions; a resize changes those dimensions,
-          // so stale atlas entries cause garbled glyphs until the cache naturally
-          // evicts. clearTextureAtlas() forces immediate eviction.
-          // Guard: DOM renderer doesn't expose this method; canvas/WebGL addons do.
-          if (typeof xterm.clearTextureAtlas === 'function') {
-            xterm.clearTextureAtlas()
-            xterm.refresh(0, xterm.rows - 1)
-          }
-          const { cols, rows } = xterm
-          const currentPtyId = useTerminalStore.getState().tabs.find((t) => t.id === tabId)?.ptyId
-          if (currentPtyId) {
-            void terminal.resize(currentPtyId, cols, rows)
-          }
-        } catch {
-          // Terminal may be disposed during cleanup
+      if (
+        !containerRef.current ||
+        containerRef.current.offsetWidth === 0 ||
+        containerRef.current.offsetHeight === 0
+      ) return
+      // Immediate visual fit — keeps text aligned with the container during drag
+      try {
+        fitAddon.fit()
+        // Invalidate renderer glyph cache after every fit — the canvas renderer
+        // caches glyphs keyed on cell dimensions; a resize changes those dimensions,
+        // so stale atlas entries cause garbled glyphs until the cache naturally
+        // evicts. clearTextureAtlas() forces immediate eviction.
+        // Guard: DOM renderer doesn't expose this method; canvas/WebGL addons do.
+        if (typeof xterm.clearTextureAtlas === 'function') {
+          xterm.clearTextureAtlas()
+          xterm.refresh(0, xterm.rows - 1)
         }
-      }, 150)
+      } catch { /* terminal may be disposed */ }
+      // Debounced PTY IPC — avoids flooding Rust with WINCH signals
+      if (ptyResizeTimer !== null) clearTimeout(ptyResizeTimer)
+      ptyResizeTimer = setTimeout(() => {
+        if (!isMountedRef.current) return
+        const { cols, rows } = xterm
+        const currentPtyId = useTerminalStore.getState().tabs.find((t) => t.id === tabId)?.ptyId
+        if (currentPtyId) {
+          void terminal.resize(currentPtyId, cols, rows)
+        }
+      }, 100)
     })
     resizeObserver.observe(container)
 
     return () => {
       isMountedRef.current = false
-      if (debounceTimer !== null) clearTimeout(debounceTimer)
+      if (ptyResizeTimer !== null) clearTimeout(ptyResizeTimer)
       batcher?.dispose()
       if (unlistenFn) unlistenFn()
       resizeObserver?.disconnect()
       xterm.dispose()
       xtermRef.current = null
       searchAddonRef.current = null
+      fitAddonRef.current = null
       // Clear paste state on unmount — prevents stale pending paste from
       // being replayed if the component remounts for the same tabId.
       ptyIdRef.current = null
@@ -342,6 +359,43 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
     // Only re-mount when tabId changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabId])
+
+  // File drag-and-drop — Tauri window events give native OS file paths
+  useEffect(() => {
+    if (!terminal.supported) return
+    let unlistenEnter: (() => void) | null = null
+    let unlistenLeave: (() => void) | null = null
+    let unlistenDrop: (() => void) | null = null
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const { listen } = await import('@tauri-apps/api/event')
+        if (cancelled) return
+        unlistenEnter = await listen('tauri://drag-enter', () => {
+          if (!cancelled) setIsDragOver(true)
+        })
+        unlistenLeave = await listen('tauri://drag-leave', () => {
+          if (!cancelled) setIsDragOver(false)
+        })
+        unlistenDrop = await listen<{ paths: string[] }>('tauri://drag-drop', (event) => {
+          if (cancelled) return
+          setIsDragOver(false)
+          const paths = event.payload?.paths
+          if (!paths || paths.length === 0) return
+          const ptyId = ptyIdRef.current
+          if (ptyId) void terminal.write(ptyId, paths.join(' '))
+        })
+      } catch { /* non-Tauri context */ }
+    })()
+
+    return () => {
+      cancelled = true
+      unlistenEnter?.()
+      unlistenLeave?.()
+      unlistenDrop?.()
+    }
+  }, [terminal.supported]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const confirmPaste = () => {
     const text = pendingPasteRef.current
@@ -425,6 +479,28 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
           onConfirm={confirmPaste}
           onCancel={cancelPaste}
         />
+      )}
+      {isDragOver && (
+        <div
+          aria-live="polite"
+          aria-label="Drop file to insert path"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0,0,0,0.55)',
+            border: '2px dashed var(--cast-accent)',
+            borderRadius: 4,
+            zIndex: 20,
+            pointerEvents: 'none',
+          }}
+        >
+          <span style={{ color: 'var(--cast-accent)', fontSize: '0.875rem', fontWeight: 600 }}>
+            Drop to insert path
+          </span>
+        </div>
       )}
     </div>
   )

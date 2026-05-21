@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion, AnimatePresence } from 'framer-motion'
-import { FolderOpen, Pencil } from 'lucide-react'
+import { FolderOpen, Paperclip, Pencil } from 'lucide-react'
 import { useTerminalStore, Tab, TabColor } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
 import type { TerminalPaneHandle } from './TerminalPane'
@@ -568,6 +568,17 @@ export function TerminalTabs() {
     return activeTabId ? paneHandlesRef.current.get(activeTabId) : undefined
   }, [activeTabId])
 
+  const handleAttach = useCallback(async () => {
+    try {
+      const { open } = await import('@tauri-apps/plugin-dialog')
+      const result = await open({ multiple: true, directory: false })
+      if (!result) return
+      const paths = Array.isArray(result) ? result : [result]
+      const text = paths.join(' ')
+      getActiveHandle()?.injectText(text)
+    } catch { /* non-Tauri or cancelled */ }
+  }, [getActiveHandle])
+
   // Bootstrap: auto-create the first tab on initial mount only.
   // We use a ref so re-renders (e.g. after a user closes all tabs) don't
   // re-trigger the bootstrap and silently re-open a tab.
@@ -581,6 +592,17 @@ export function TerminalTabs() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Re-fit and focus xterm when switching to an already-mounted pane.
+  // visibility:hidden → visible doesn't trigger ResizeObserver, so we
+  // explicitly refit after the paint so the terminal fills the container.
+  useEffect(() => {
+    if (!activeTabId) return
+    const raf = requestAnimationFrame(() => {
+      paneHandlesRef.current.get(activeTabId)?.focus()
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [activeTabId])
 
   const handleAddTab = useCallback(() => {
     addTab('~')
@@ -913,6 +935,45 @@ export function TerminalTabs() {
         >
           <FolderOpen size={14} aria-hidden="true" />
         </button>
+
+        {/* ── Attach file button ─────────────────────────────────────────── */}
+        <button
+          onClick={handleAttach}
+          aria-label="Attach file — inserts path into terminal"
+          title="Attach file (inserts path)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 36,
+            height: 36,
+            minWidth: 36,
+            minHeight: 36,
+            border: 'none',
+            background: 'transparent',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            outline: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--text-primary)'
+            e.currentTarget.style.background = 'var(--bg-tertiary)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--text-muted)'
+            e.currentTarget.style.background = 'transparent'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.outline = '2px solid var(--cast-accent)'
+            e.currentTarget.style.outlineOffset = '-2px'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.outline = 'none'
+          }}
+        >
+          <Paperclip size={14} aria-hidden="true" />
+        </button>
       </div>
 
       {/* ── Folder picker modal ────────────────────────────────────────────── */}
@@ -925,25 +986,37 @@ export function TerminalTabs() {
         />
       )}
 
-      {/* ── Active terminal pane ───────────────────────────────────────── */}
+      {/* ── Terminal panes — all mounted; inactive ones are visibility:hidden ── */}
+      {/* visibility:hidden keeps layout dims → xterm gets correct cols/rows on open */}
       <div
-        role="tabpanel"
-        aria-label={`Terminal: ${tabs.find((t) => t.id === activeTabId)?.title ?? ''}`}
         className="flex-1 min-h-0"
         style={{ overflow: 'hidden', position: 'relative' }}
       >
-        {activeTabId && (
-          <TerminalPane
-            tabId={activeTabId}
-            onReady={(handle) => {
-              if (handle) {
-                paneHandlesRef.current.set(activeTabId, handle)
-              } else {
-                paneHandlesRef.current.delete(activeTabId)
-              }
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            role="tabpanel"
+            aria-label={`Terminal: ${tab.title}`}
+            aria-hidden={tab.id !== activeTabId}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              visibility: tab.id === activeTabId ? 'visible' : 'hidden',
+              pointerEvents: tab.id === activeTabId ? 'auto' : 'none',
             }}
-          />
-        )}
+          >
+            <TerminalPane
+              tabId={tab.id}
+              onReady={(handle) => {
+                if (handle) {
+                  paneHandlesRef.current.set(tab.id, handle)
+                } else {
+                  paneHandlesRef.current.delete(tab.id)
+                }
+              }}
+            />
+          </div>
+        ))}
 
         {/* ── Search overlay ────────────────────────────────────────────── */}
         <AnimatePresence>

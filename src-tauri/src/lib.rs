@@ -90,15 +90,6 @@ pub fn run() {
             Ok(())
         })
         .on_menu_event(menu::handle_menu_event)
-        .on_run_event(|app_handle, event| {
-            if let tauri::RunEvent::Exit = event {
-                #[cfg(not(debug_assertions))]
-                {
-                    use tauri_plugin_shell::process::CommandChild;
-                    let _ = app_handle.state::<CommandChild>().kill();
-                }
-            }
-        })
         .invoke_handler(tauri::generate_handler![
             pty::pty_create,
             pty::pty_write,
@@ -111,6 +102,15 @@ pub fn run() {
             lsp::start_lsp_server,
             lsp::stop_lsp_server,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                #[cfg(not(debug_assertions))]
+                {
+                    use tauri_plugin_shell::process::CommandChild;
+                    let _ = _app_handle.state::<CommandChild>().kill();
+                }
+            }
+        });
 }

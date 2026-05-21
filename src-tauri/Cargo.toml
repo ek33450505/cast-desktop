@@ -1,6 +1,6 @@
 [package]
 name = "cast-desktop"
-version = "1.2.10"
+version = "1.2.11"
 description = "Cast Desktop — CAST v8 desktop app"
 authors = ["Cast Desktop contributors"]
 license = "MIT"
