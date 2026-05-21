@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.4] — 2026-05-21
+
+### Fixed
+- Blank screen on launch fully resolved. Replaced stdout IPC (unreliable when compiled Bun binary stdout is piped) with Rust-assigned port: Tauri now binds `127.0.0.1:0` to get a free OS port, passes it to the sidecar via `CAST_SERVER_PORT_OVERRIDE` env var, then probes TCP readiness before navigating the WebView.
+- Sidecar no longer spawned in dev mode (`cargo tauri dev`) — eliminates port collision between the compiled sidecar binary and the tsx dev server.
+
+---
+
 ## [1.2.3] — 2026-05-21
 
 ### Fixed

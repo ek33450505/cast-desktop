@@ -136,7 +136,10 @@ async function startListening(): Promise<void> {
         }
       })
     }
-    tryPort(PREFERRED_PORT)
+    // In production Tauri passes CAST_SERVER_PORT_OVERRIDE — use it directly.
+    // In dev mode (tsx) the env var is unset and we fall back to PREFERRED_PORT.
+    const override = process.env.CAST_SERVER_PORT_OVERRIDE
+    tryPort(override ? parseInt(override, 10) : PREFERRED_PORT)
   })
 }
 
