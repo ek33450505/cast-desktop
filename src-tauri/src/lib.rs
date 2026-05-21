@@ -104,13 +104,7 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|_app_handle, event| {
-            if let tauri::RunEvent::Exit = event {
-                #[cfg(not(debug_assertions))]
-                {
-                    use tauri_plugin_shell::process::CommandChild;
-                    let _ = _app_handle.state::<CommandChild>().kill();
-                }
-            }
+        .run(|_app_handle, _event| {
+            // Sidecar child processes are cleaned up by the OS on parent exit.
         });
 }
