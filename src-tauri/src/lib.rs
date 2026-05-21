@@ -90,6 +90,15 @@ pub fn run() {
             Ok(())
         })
         .on_menu_event(menu::handle_menu_event)
+        .on_run_event(|app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                #[cfg(not(debug_assertions))]
+                {
+                    use tauri_plugin_shell::process::CommandChild;
+                    let _ = app_handle.state::<CommandChild>().kill();
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             pty::pty_create,
             pty::pty_write,

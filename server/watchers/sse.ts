@@ -192,7 +192,6 @@ export function attachSSE(app: Express) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
-      'Access-Control-Allow-Origin': 'http://localhost:5173',
     })
 
     res.write('\n')

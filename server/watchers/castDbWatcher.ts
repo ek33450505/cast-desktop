@@ -76,7 +76,7 @@ function pollOnce(broadcast: BroadcastFn) {
   try {
     const costRow = db.prepare(`
       SELECT
-        COALESCE(SUM(estimated_cost_usd), 0) AS totalUsd,
+        COALESCE(SUM(cost_usd), 0) AS totalUsd,
         COUNT(DISTINCT session_id) AS sessionCount
       FROM agent_runs
       WHERE ended_at IS NOT NULL
@@ -89,7 +89,7 @@ function pollOnce(broadcast: BroadcastFn) {
         sessionCount: costRow.sessionCount,
       })
     }
-  } catch { /* agent_runs may not have estimated_cost_usd column yet — skip */ }
+  } catch { /* agent_runs may not have cost data yet — skip */ }
 
   // pane_binding_updated — poll for new/changed rows in pane_bindings (if table exists)
   try {
