@@ -2,11 +2,26 @@ use tauri::{
     menu::{
         Menu, MenuBuilder, MenuEvent, MenuItem, PredefinedMenuItem, SubmenuBuilder,
     },
-    AppHandle, Emitter, Runtime,
+    AppHandle, Emitter, Manager, Runtime, WebviewWindow,
 };
-#[cfg(debug_assertions)]
-use tauri::Manager;
 use tauri_plugin_shell::ShellExt;
+
+/// Toggle devtools open/closed for a given window.
+fn do_toggle_devtools<R: Runtime>(window: &WebviewWindow<R>) {
+    if window.is_devtools_open() {
+        window.close_devtools();
+    } else {
+        window.open_devtools();
+    }
+}
+
+/// Tauri command — toggle DevTools for the calling window.
+/// Available in both debug and release builds because the `devtools`
+/// Cargo feature is unconditionally enabled in Cargo.toml.
+#[tauri::command]
+pub fn toggle_devtools(window: WebviewWindow) {
+    do_toggle_devtools(&window);
+}
 
 /// Build the full native macOS menu for Cast Desktop.
 ///
@@ -98,9 +113,11 @@ pub fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         true,
         Some("CmdOrCtrl+Shift+["),
     )?;
+    let duplicate_tab = MenuItem::with_id(app, "duplicate-tab", "Duplicate Tab", true, None::<&str>)?;
     let tabs_menu = SubmenuBuilder::new(app, "Tabs")
         .item(&next_tab)
         .item(&prev_tab)
+        .item(&duplicate_tab)
         .build()?;
 
     // ── Window ────────────────────────────────────────────────────────────────
@@ -144,11 +161,8 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
 
     match action {
         "toggle-devtools" => {
-            // open_devtools is only available in debug builds (Tauri gates it on
-            // cfg(any(debug_assertions, feature = "devtools"))). No-op in release.
-            #[cfg(debug_assertions)]
             if let Some(window) = app.get_webview_window("main") {
-                window.open_devtools();
+                do_toggle_devtools(&window);
             }
         }
         "open-github" => {

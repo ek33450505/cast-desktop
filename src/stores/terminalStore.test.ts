@@ -1,5 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useTerminalStore } from './terminalStore'
+
+// Mock @tauri-apps/api/core for closeTab PTY kill tests
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn().mockResolvedValue(undefined),
+}))
 
 // Reset store before each test
 beforeEach(() => {
@@ -83,6 +88,78 @@ describe('terminalStore', () => {
       // tab2 is active now; close tab1
       useTerminalStore.getState().closeTab(tab1.id)
       expect(useTerminalStore.getState().activeTabId).toBe(tab2.id)
+    })
+
+    it('invokes pty_kill with the correct sessionId when tab has a ptyId', async () => {
+      const coreMod = await import('@tauri-apps/api/core')
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setTabPtyId(tab.id, 'pty-abc-123')
+      vi.mocked(coreMod.invoke).mockClear()
+      useTerminalStore.getState().closeTab(tab.id)
+      // flush dynamic import promise chain (two microtask ticks covers .then + .catch)
+      await new Promise((r) => setTimeout(r, 0))
+      expect(coreMod.invoke).toHaveBeenCalledWith('pty_kill', { sessionId: 'pty-abc-123' })
+    })
+
+    it('does NOT invoke pty_kill when ptyId is null', async () => {
+      const coreMod = await import('@tauri-apps/api/core')
+      vi.mocked(coreMod.invoke).mockClear()
+      const tab = useTerminalStore.getState().addTab('~')
+      expect(tab.ptyId).toBeNull()
+      useTerminalStore.getState().closeTab(tab.id)
+      await new Promise((r) => setTimeout(r, 0))
+      expect(coreMod.invoke).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('duplicateTab', () => {
+    it('creates a new tab copying cwd, color, title, userRenamed from source', () => {
+      const source = useTerminalStore.getState().addTab('/projects/cast')
+      useTerminalStore.getState().setTabColor(source.id, 'chart-3')
+      useTerminalStore.getState().updateTabTitle(source.id, 'my-tab')
+
+      const duped = useTerminalStore.getState().duplicateTab(source.id)
+      expect(duped).toBeDefined()
+      expect(duped!.cwd).toBe('/projects/cast')
+      expect(duped!.color).toBe('chart-3')
+      expect(duped!.title).toBe('my-tab')
+      expect(duped!.userRenamed).toBe(true)
+    })
+
+    it('assigns fresh id and paneId, sets ptyId to null', () => {
+      const source = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setTabPtyId(source.id, 'pty-999')
+      const duped = useTerminalStore.getState().duplicateTab(source.id)
+      expect(duped!.id).not.toBe(source.id)
+      expect(duped!.paneId).not.toBe(source.paneId)
+      expect(duped!.ptyId).toBeNull()
+    })
+
+    it('appends the new tab and sets it active', () => {
+      const source = useTerminalStore.getState().addTab('~')
+      const duped = useTerminalStore.getState().duplicateTab(source.id)
+      const state = useTerminalStore.getState()
+      expect(state.tabs).toHaveLength(2)
+      expect(state.activeTabId).toBe(duped!.id)
+    })
+
+    it('returns undefined for an unknown id', () => {
+      const result = useTerminalStore.getState().duplicateTab('does-not-exist')
+      expect(result).toBeUndefined()
+    })
+  })
+
+  describe('setTabColor — new tokens', () => {
+    it('accepts chart-1 (green)', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setTabColor(tab.id, 'chart-1')
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.color).toBe('chart-1')
+    })
+
+    it('accepts chart-5 (rose)', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      useTerminalStore.getState().setTabColor(tab.id, 'chart-5')
+      expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.color).toBe('chart-5')
     })
   })
 

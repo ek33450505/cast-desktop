@@ -79,6 +79,7 @@ export function EditorShellLayout() {
   const setWorkspaceRoot = useEditorStore((s) => s.setWorkspaceRoot)
   const activeTabId = useTerminalStore((s) => s.activeTabId)
   const tabs = useTerminalStore((s) => s.tabs)
+  const addTab = useTerminalStore((s) => s.addTab)
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const rootPath = workspaceRoot ?? activeTab?.cwd ?? '~'
 
@@ -88,11 +89,21 @@ export function EditorShellLayout() {
       const picked = await open({ directory: true, multiple: false })
       if (typeof picked === 'string' && picked) {
         setWorkspaceRoot(picked)
+        const basename = picked.split('/').filter(Boolean).pop() ?? picked
+        toast('Opened ' + basename, {
+          action: {
+            label: 'Open in Terminal',
+            onClick: () => {
+              addTab(picked)
+              navigate('/')
+            },
+          },
+        })
       }
     } catch (err) {
       toast.error(`Could not open folder: ${String(err)}`)
     }
-  }, [setWorkspaceRoot])
+  }, [setWorkspaceRoot, addTab, navigate])
 
   // ── IDE-3: External file watch ───────────────────────────────────────────────
   const handleExternalFileChange = useCallback(

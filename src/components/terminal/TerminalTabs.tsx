@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useReducedMotion, AnimatePresence } from 'framer-motion'
-import { FolderOpen, Paperclip, Pencil } from 'lucide-react'
+import { FolderOpen, Pencil } from 'lucide-react'
 import { useTerminalStore, Tab, TabColor } from '../../stores/terminalStore'
 import { TerminalPane } from './TerminalPane'
 import type { TerminalPaneHandle } from './TerminalPane'
@@ -69,6 +69,7 @@ interface TabItemProps {
   shouldReduceMotion: boolean | null
   onActivate: () => void
   onClose: () => void
+  onDuplicate: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
 }
 
@@ -82,12 +83,14 @@ interface ColorOption {
 
 const COLOR_OPTIONS: ColorOption[] = [
   { label: 'None', token: undefined, ariaLabel: 'Set tab color: None' },
+  { label: 'Green', token: 'chart-1', ariaLabel: 'Set tab color: Green' },
   { label: 'Blue', token: 'chart-2', ariaLabel: 'Set tab color: Blue' },
   { label: 'Purple', token: 'chart-3', ariaLabel: 'Set tab color: Purple' },
   { label: 'Amber', token: 'chart-4', ariaLabel: 'Set tab color: Amber' },
+  { label: 'Rose', token: 'chart-5', ariaLabel: 'Set tab color: Rose' },
 ]
 
-function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKeyDown }: TabItemProps) {
+function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onDuplicate, onKeyDown }: TabItemProps) {
   const updateTabTitle = useTerminalStore((s) => s.updateTabTitle)
   const setTabColor = useTerminalStore((s) => s.setTabColor)
   const resolvedTitle = useResolvedTitle(tab)
@@ -454,6 +457,33 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
             Rename
           </li>
 
+          {/* Duplicate action */}
+          <li
+            role="menuitem"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation()
+              closeContextMenu()
+              onDuplicate()
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                closeContextMenu()
+                onDuplicate()
+              }
+            }}
+            style={menuItemStyle}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'var(--bg-tertiary)'
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent'
+            }}
+          >
+            Duplicate
+          </li>
+
           {/* Separator */}
           <li
             role="separator"
@@ -540,6 +570,7 @@ export function TerminalTabs() {
   const tabs = useTerminalStore((s) => s.tabs)
   const activeTabId = useTerminalStore((s) => s.activeTabId)
   const addTab = useTerminalStore((s) => s.addTab)
+  const duplicateTab = useTerminalStore((s) => s.duplicateTab)
   const closeTab = useTerminalStore((s) => s.closeTab)
   const setActiveTab = useTerminalStore((s) => s.setActiveTab)
   const shouldReduceMotion = useReducedMotion()
@@ -568,17 +599,6 @@ export function TerminalTabs() {
   const getActiveHandle = useCallback((): TerminalPaneHandle | undefined => {
     return activeTabId ? paneHandlesRef.current.get(activeTabId) : undefined
   }, [activeTabId])
-
-  const handleAttach = useCallback(async () => {
-    try {
-      const { open } = await import('@tauri-apps/plugin-dialog')
-      const result = await open({ multiple: true, directory: false })
-      if (!result) return
-      const paths = Array.isArray(result) ? result : [result]
-      const text = paths.join(' ')
-      getActiveHandle()?.injectText(text)
-    } catch { /* non-Tauri or cancelled */ }
-  }, [getActiveHandle])
 
   // Bootstrap: auto-create the first tab on initial mount only.
   // We use a ref so re-renders (e.g. after a user closes all tabs) don't
@@ -712,16 +732,21 @@ export function TerminalTabs() {
       if (prev) setActiveTab(prev.id)
     }
     const onNewTab = () => handleAddTab()
+    const onDuplicateTab = () => {
+      if (activeTabId) duplicateTab(activeTabId)
+    }
 
     window.addEventListener('cast:next-tab', onNextTab)
     window.addEventListener('cast:prev-tab', onPrevTab)
     window.addEventListener('cast:new-tab', onNewTab)
+    window.addEventListener('cast:duplicate-tab', onDuplicateTab)
     return () => {
       window.removeEventListener('cast:next-tab', onNextTab)
       window.removeEventListener('cast:prev-tab', onPrevTab)
       window.removeEventListener('cast:new-tab', onNewTab)
+      window.removeEventListener('cast:duplicate-tab', onDuplicateTab)
     }
-  }, [tabs, activeTabId, setActiveTab, handleAddTab])
+  }, [tabs, activeTabId, setActiveTab, handleAddTab, duplicateTab])
 
   // ⌘⇧T — new tab with folder picker
   useHotkeys(
@@ -810,7 +835,7 @@ export function TerminalTabs() {
           onClick={handleAddTab}
           aria-label="New terminal tab"
           style={{
-            background: 'var(--accent)',
+            background: 'var(--cast-accent)',
             color: 'var(--bg-primary)',
             border: 'none',
             borderRadius: 6,
@@ -854,6 +879,7 @@ export function TerminalTabs() {
             shouldReduceMotion={shouldReduceMotion}
             onActivate={() => setActiveTab(tab.id)}
             onClose={() => handleCloseTab(tab.id)}
+            onDuplicate={() => duplicateTab(tab.id)}
             onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
           />
         ))}
@@ -937,44 +963,6 @@ export function TerminalTabs() {
           <FolderOpen size={14} aria-hidden="true" />
         </button>
 
-        {/* ── Attach file button ─────────────────────────────────────────── */}
-        <button
-          onClick={handleAttach}
-          aria-label="Attach file — inserts path into terminal"
-          title="Attach file (inserts path)"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 36,
-            height: 36,
-            minWidth: 36,
-            minHeight: 36,
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            flexShrink: 0,
-            outline: 'none',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = 'var(--text-primary)'
-            e.currentTarget.style.background = 'var(--bg-tertiary)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'var(--text-muted)'
-            e.currentTarget.style.background = 'transparent'
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.outline = '2px solid var(--cast-accent)'
-            e.currentTarget.style.outlineOffset = '-2px'
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.outline = 'none'
-          }}
-        >
-          <Paperclip size={14} aria-hidden="true" />
-        </button>
       </div>
 
       {/* ── Folder picker modal ────────────────────────────────────────────── */}

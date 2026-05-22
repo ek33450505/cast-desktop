@@ -2,12 +2,12 @@
  * Tests for StatusBar component.
  *
  * The StatusBar is the persistent bottom strip rendered inside ShellLayout
- * (not EditorShellLayout). It shows only the Cast brand cluster — app icon,
- * wordmark, and git user name. Branch / model / cost were removed.
+ * (not EditorShellLayout). It shows the Cast brand cluster — app icon,
+ * wordmark, and git user name — plus a DevTools toggle button.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { createElement } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StatusBar } from './StatusBar'
@@ -18,9 +18,15 @@ vi.mock('../api/useGitUser', () => ({
   useGitUser: vi.fn(),
 }))
 
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: vi.fn(() => Promise.resolve(undefined)),
+}))
+
 import { useGitUser } from '../api/useGitUser'
+import { invoke } from '@tauri-apps/api/core'
 
 const mockUseGitUser = useGitUser as ReturnType<typeof vi.fn>
+const mockInvoke = invoke as ReturnType<typeof vi.fn>
 
 // ── Wrapper ───────────────────────────────────────────────────────────────────
 
@@ -41,6 +47,7 @@ describe('StatusBar', () => {
 
   afterEach(() => {
     vi.resetAllMocks()
+    mockInvoke.mockReset()
   })
 
   it('renders without crashing', () => {
@@ -81,5 +88,33 @@ describe('StatusBar', () => {
     expect(screen.queryByText('main')).toBeNull()
     expect(screen.queryByText(/sonnet|opus|haiku/)).toBeNull()
     expect(screen.queryByText(/\$\d/)).toBeNull()
+  })
+
+  // ── DevTools toggle button ────────────────────────────────────────────────
+
+  it('renders the devtools toggle button with correct aria-label', () => {
+    render(<StatusBar />, { wrapper: makeWrapper() })
+    const btn = screen.getByRole('button', { name: 'Toggle developer tools' })
+    expect(btn).toBeTruthy()
+  })
+
+  it('clicking devtools button calls invoke with toggle_devtools', async () => {
+    mockInvoke.mockResolvedValue(undefined)
+    render(<StatusBar />, { wrapper: makeWrapper() })
+    const btn = screen.getByRole('button', { name: 'Toggle developer tools' })
+    fireEvent.click(btn)
+    expect(mockInvoke).toHaveBeenCalledWith('toggle_devtools')
+  })
+
+  it('devtools button has title attribute', () => {
+    render(<StatusBar />, { wrapper: makeWrapper() })
+    const btn = screen.getByRole('button', { name: 'Toggle developer tools' })
+    expect(btn.getAttribute('title')).toBe('Toggle developer tools')
+  })
+
+  it('devtools button renders unconditionally (not gated on dev env)', () => {
+    // Regardless of import.meta.env.DEV, the button must always appear
+    render(<StatusBar />, { wrapper: makeWrapper() })
+    expect(screen.getByRole('button', { name: 'Toggle developer tools' })).toBeTruthy()
   })
 })

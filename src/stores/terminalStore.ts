@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type TabColor = 'chart-2' | 'chart-3' | 'chart-4'
+export type TabColor = 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'
 
 export interface Tab {
   id: string
@@ -20,6 +20,7 @@ interface TerminalState {
   tabs: Tab[]
   activeTabId: string | null
   addTab: (cwd: string, paneId?: string) => Tab
+  duplicateTab: (id: string) => Tab | undefined
   closeTab: (id: string) => void
   setActiveTab: (id: string) => void
   setTabPtyId: (id: string, ptyId: string) => void
@@ -52,7 +53,31 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     return tab
   },
 
+  duplicateTab: (id: string) => {
+    const source = get().tabs.find((t) => t.id === id)
+    if (!source) return undefined
+    const tab: Tab = {
+      id: crypto.randomUUID(),
+      ptyId: null,
+      paneId: crypto.randomUUID(),
+      cwd: source.cwd,
+      title: source.title,
+      userRenamed: source.userRenamed,
+      color: source.color,
+    }
+    set((state) => ({
+      tabs: [...state.tabs, tab],
+      activeTabId: tab.id,
+    }))
+    return tab
+  },
+
   closeTab: (id: string) => {
+    const closingTab = get().tabs.find((t) => t.id === id)
+    if (closingTab?.ptyId) {
+      const ptyId = closingTab.ptyId
+      import('@tauri-apps/api/core').then(({ invoke }) => invoke('pty_kill', { sessionId: ptyId })).catch(() => {})
+    }
     set((state) => {
       const remaining = state.tabs.filter((t) => t.id !== id)
       let nextActiveId = state.activeTabId

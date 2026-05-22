@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TerminalTabs } from './TerminalTabs'
 import { useTerminalStore } from '../../stores/terminalStore'
+import type { PaneBinding } from '../../hooks/usePaneBinding'
 
 // Mock TerminalPane — jsdom can't run xterm
 vi.mock('./TerminalPane', () => ({
@@ -24,7 +25,7 @@ vi.mock('framer-motion', () => ({
 }))
 
 // Default mock: unbound (no session)
-const mockUsePaneBinding = vi.fn(() => ({
+const mockUsePaneBinding = vi.fn((_paneId: string): PaneBinding => ({
   bound: false,
   sessionId: null,
   projectPath: null,
@@ -111,7 +112,7 @@ describe('TerminalTabs', () => {
   })
 
   it('each tab has role=tab with aria-selected', () => {
-    const tab1 = useTerminalStore.getState().addTab('~')
+    useTerminalStore.getState().addTab('~')
     useTerminalStore.getState().addTab('/tmp')
     // tab1 is active (addTab sets activeTabId to newly added tab; last added is active)
     // Actually addTab always sets activeTabId to the new tab — so /tmp is active
@@ -322,6 +323,31 @@ describe('TerminalTabs', () => {
     })
   })
 
+  describe('duplicate — context menu', () => {
+    it('context menu shows Duplicate item', () => {
+      useTerminalStore.getState().addTab('~')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>('[role="tab"]')
+      fireEvent.contextMenu(tabEl!)
+      expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toBeTruthy()
+    })
+
+    it('clicking Duplicate creates a new tab with same cwd and sets it active', async () => {
+      useTerminalStore.getState().addTab('/projects/cast')
+      render(<TerminalTabs />)
+      const tabEl = document.querySelector<HTMLElement>('[role="tab"]')
+      fireEvent.contextMenu(tabEl!)
+
+      const duplicateItem = screen.getByRole('menuitem', { name: 'Duplicate' })
+      fireEvent.click(duplicateItem)
+
+      const state = useTerminalStore.getState()
+      expect(state.tabs).toHaveLength(2)
+      expect(state.tabs[1].cwd).toBe('/projects/cast')
+      expect(state.activeTabId).toBe(state.tabs[1].id)
+    })
+  })
+
   describe('rename UX — context menu', () => {
     it('right-click shows context menu with Rename item', () => {
       const tab = useTerminalStore.getState().addTab('~')
@@ -421,16 +447,21 @@ describe('TerminalTabs', () => {
       expect(screen.getByRole('menu')).toBeTruthy()
     })
 
-    it('context menu shows color swatches with correct aria-labels', () => {
+    it('context menu shows 6 color swatches with correct aria-labels', () => {
       const tab = useTerminalStore.getState().addTab('~')
       render(<TerminalTabs />)
       const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
       fireEvent.contextMenu(tabEl!)
 
       expect(screen.getByRole('menuitemradio', { name: 'Set tab color: None' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Green' })).toBeTruthy()
       expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Blue' })).toBeTruthy()
       expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Purple' })).toBeTruthy()
       expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Amber' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Rose' })).toBeTruthy()
+      // verify total count
+      const swatches = screen.getAllByRole('menuitemradio')
+      expect(swatches.length).toBe(6)
     })
 
     it('clicking Blue swatch calls setTabColor with "chart-2"', () => {

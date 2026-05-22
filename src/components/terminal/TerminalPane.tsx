@@ -31,7 +31,6 @@ import { FONT_SIZE_DEFAULT, readFontSize, writeFontSize } from './terminalFontSi
 // ── Public handle type ─────────────────────────────────────────────────────────
 export interface TerminalPaneHandle {
   focus: () => void
-  injectText: (text: string) => void
   search: (query: string, opts?: { findNext?: boolean; caseSensitive?: boolean }) => void
   clearSearch: () => void
   clear: () => void
@@ -190,10 +189,6 @@ export function TerminalPane({ tabId, onReady }: TerminalPaneProps) {
       focus: () => {
         try { fitAddonRef.current?.fit() } catch { /* disposed */ }
         xtermRef.current?.focus()
-      },
-      injectText: (text: string) => {
-        const currentPtyId = ptyIdRef.current
-        if (currentPtyId) void terminal.write(currentPtyId, text)
       },
       search: (query, opts) => {
         if (!searchAddonRef.current) return
