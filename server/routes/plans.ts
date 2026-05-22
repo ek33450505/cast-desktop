@@ -53,6 +53,15 @@ export function parsePlanTasks(content: string): PlanTask[] {
     })
   }
 
+  // Fallback: ### N. <text> headers (numbered subsections — common planner format)
+  const numberedHeaderLines = lines.filter(l => /^###\s+\d+\.\s+/.test(l))
+  if (numberedHeaderLines.length > 0) {
+    return numberedHeaderLines.map((line, idx) => {
+      const text = line.replace(/^###\s+\d+\.\s+/, '').trim()
+      return { id: `task-${idx}`, text, done: false }
+    })
+  }
+
   return []
 }
 
