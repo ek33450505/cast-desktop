@@ -128,6 +128,14 @@ async function main() {
   process.on('SIGTERM', () => shutdown('SIGTERM'))
   process.on('SIGINT', () => shutdown('SIGINT'))
 
+  // Self-exit when Tauri parent closes the pipe (normal quit, SIGKILL, or crash).
+  // Tauri spawns this sidecar with piped stdin; when the parent dies the OS closes
+  // the write-end of the pipe and stdin emits 'end'/'close'. Route through the
+  // existing shutdown() so the WS server and tsls child are cleaned up properly.
+  process.stdin.resume()
+  process.stdin.on('end', () => shutdown('stdin-EOF'))
+  process.stdin.on('close', () => shutdown('stdin-EOF'))
+
   child.on('exit', (code) => {
     console.error(`[cast-lsp-ts] tsls exited with code ${code}`)
     wss.close()

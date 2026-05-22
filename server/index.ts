@@ -162,3 +162,18 @@ async function startListening(): Promise<void> {
 }
 
 await startListening()
+
+// Self-exit when Tauri parent closes the pipe (normal quit, SIGKILL, or crash).
+// Tauri spawns this sidecar with piped stdin; when the parent process dies the OS
+// closes the write-end of the pipe and we receive EOF here. process.exit() is
+// called directly because `server` is scoped inside tryPort() and inaccessible
+// at module scope — Express drains in-flight requests automatically on exit.
+process.stdin.resume()
+process.stdin.on('end', () => {
+  console.log('[cast-server] stdin EOF — parent exited, shutting down')
+  process.exit(0)
+})
+process.stdin.on('close', () => {
+  console.log('[cast-server] stdin closed — parent exited, shutting down')
+  process.exit(0)
+})
