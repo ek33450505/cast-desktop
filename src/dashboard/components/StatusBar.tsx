@@ -1,22 +1,9 @@
-import { GitBranch } from 'lucide-react'
-import { useSystemHealth } from '../api/useSystem'
-import { useCostSummary } from '../api/useCostSummary'
-import { useGitBranch } from '../api/useGitBranch'
-
-function formatCost(costUsd: number | undefined, loading: boolean): string {
-  if (loading) return '—'
-  if (costUsd == null) return '—'
-  return `$${costUsd.toFixed(2)}`
-}
+import { useGitUser } from '../api/useGitUser'
+import { AppIconSVG } from './AppIcon'
 
 export function StatusBar() {
-  const { data: health, isLoading: healthLoading } = useSystemHealth()
-  const { data: cost, isLoading: costLoading } = useCostSummary(30)
-  const { data: gitData } = useGitBranch()
-
-  const model = healthLoading ? '—' : (health?.model ?? '—')
-  const sessionCost = formatCost(cost?.totals.costUsd, costLoading)
-  const branch = gitData?.branch ?? '—'
+  const { data: gitUser } = useGitUser()
+  const userName = gitUser?.name ?? null
 
   return (
     <div
@@ -29,21 +16,20 @@ export function StatusBar() {
         color: 'var(--content-muted)',
       }}
     >
-      {/* Git branch */}
+      {/* Spacer pushes the brand cluster to the right edge */}
+      <span className="flex-1" />
+
+      {/* Cast brand cluster — app icon + wordmark + git user name */}
       <span className="flex items-center gap-1.5">
-        <GitBranch className="w-3 h-3" aria-hidden="true" />
-        <span>{branch}</span>
+        <AppIconSVG size={16} aria-hidden="true" />
+        <span style={{ color: 'var(--content-secondary)' }}>Cast</span>
+        {userName && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>{userName}</span>
+          </>
+        )}
       </span>
-
-      <span aria-hidden="true">·</span>
-
-      {/* Model */}
-      <span>{model}</span>
-
-      <span aria-hidden="true">·</span>
-
-      {/* Session cost (30-day rolling) */}
-      <span>{sessionCost}</span>
     </div>
   )
 }

@@ -146,6 +146,15 @@ router.get('/settings-local', (_req, res) => {
   }
 })
 
+function modelTier(raw: string | undefined): string {
+  if (!raw) return '—'
+  const m = raw.toLowerCase()
+  if (m.includes('opus')) return 'opus'
+  if (m.includes('sonnet')) return 'sonnet'
+  if (m.includes('haiku')) return 'haiku'
+  return raw
+}
+
 router.get('/health', (_req, res) => {
   let settings: Record<string, unknown> = {}
   if (fs.existsSync(SETTINGS_GLOBAL_FILE)) {
@@ -176,7 +185,7 @@ router.get('/health', (_req, res) => {
       nodeVersion: process.version,
       homeConfigured: !!(process.env.HOME),
     },
-    model: (settings.model as string) || 'sonnet',
+    model: modelTier(sessions[0]?.model),
   }
 
   res.json(overview)

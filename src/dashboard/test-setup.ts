@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 
 // jsdom does not implement ResizeObserver — stub it for cmdk and other components
 if (typeof ResizeObserver === 'undefined') {

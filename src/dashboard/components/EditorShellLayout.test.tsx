@@ -12,9 +12,10 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   readTextFile: vi.fn().mockResolvedValue('// file content'),
 }))
 
-// Stub TerminalTabs — heavy xterm dependency, not needed for smoke tests
-vi.mock('../../components/terminal/TerminalTabs', () => ({
-  TerminalTabs: () => <div data-testid="terminal-tabs-stub">TerminalTabs</div>,
+// Stub TerminalHost — avoids xterm and portal complexity in jsdom
+vi.mock('./TerminalHost', () => ({
+  TerminalSlot: () => <div data-testid="terminal-slot-stub">TerminalSlot</div>,
+  TerminalHostProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
 // Stub react-hotkeys-hook
@@ -47,12 +48,12 @@ describe('EditorShellLayout smoke tests', () => {
     expect(screen.getByText('Terminal')).toBeInTheDocument()
   })
 
-  it('terminal dock is collapsed by default', () => {
+  it('terminal dock is collapsed by default (height 0)', () => {
     renderInRouter(<EditorShellLayout />)
     const region = document.getElementById('editor-terminal-dock')
     expect(region?.style.height).toBe('0px')
-    // TerminalTabs stub not mounted when collapsed
-    expect(screen.queryByTestId('terminal-tabs-stub')).not.toBeInTheDocument()
+    // TerminalSlot is always rendered — only height collapses it visually
+    expect(screen.getByTestId('terminal-slot-stub')).toBeInTheDocument()
   })
 
   it('expand button expands terminal dock', () => {
@@ -60,7 +61,8 @@ describe('EditorShellLayout smoke tests', () => {
     const expandBtn = screen.getByRole('button', { name: /expand terminal/i })
     fireEvent.click(expandBtn)
     expect(useEditorStore.getState().bottomDockExpanded).toBe(true)
-    expect(screen.getByTestId('terminal-tabs-stub')).toBeInTheDocument()
+    const region = document.getElementById('editor-terminal-dock')
+    expect(region?.style.height).toBe('30vh')
   })
 
   it('collapse button collapses terminal dock', () => {

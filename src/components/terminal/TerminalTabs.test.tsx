@@ -53,10 +53,8 @@ describe('TerminalTabs', () => {
   it('renders the active tab title in the tab strip', () => {
     useTerminalStore.getState().addTab('~')
     render(<TerminalTabs />)
-    // title derived from cwd '~' → last segment of '~'.split('/').filter(Boolean) → '~'
-    // Actually in the store: cwd='~', title = '~'.split('/').filter(Boolean).pop() ?? 'Terminal 1'
-    // '~'.split('/') = ['~'], filter(Boolean) = ['~'], pop() = '~'
-    expect(screen.getByText('~')).toBeTruthy()
+    // cwd='~' is unresolved → ordinal title "Terminal 1"
+    expect(screen.getByText('Terminal 1')).toBeTruthy()
   })
 
   it('renders a TerminalPane for the active tab', () => {
@@ -179,7 +177,7 @@ describe('TerminalTabs', () => {
       useTerminalStore.getState().addTab('~')
       mockUsePaneBinding.mockReturnValue({ bound: false, sessionId: null, projectPath: null, endedAt: null })
       render(<TerminalTabs />)
-      expect(screen.getByText('~')).toBeTruthy()
+      expect(screen.getByText('Terminal 1')).toBeTruthy()
     })
 
     it('shows projectPath basename and short sessionId when bound', () => {
@@ -203,7 +201,7 @@ describe('TerminalTabs', () => {
         endedAt: null,
       })
       render(<TerminalTabs />)
-      expect(screen.getByText('~')).toBeTruthy()
+      expect(screen.getByText('Terminal 1')).toBeTruthy()
     })
 
     it('falls back to tab title when bound but projectPath is null', () => {
@@ -215,7 +213,7 @@ describe('TerminalTabs', () => {
         endedAt: null,
       })
       render(<TerminalTabs />)
-      expect(screen.getByText('~')).toBeTruthy()
+      expect(screen.getByText('Terminal 1')).toBeTruthy()
     })
 
     it('shows user-renamed title even when bound to a session', () => {
@@ -245,7 +243,7 @@ describe('TerminalTabs', () => {
 
       const input = screen.getByRole('textbox', { name: 'Rename tab' })
       expect(input).toBeTruthy()
-      expect((input as HTMLInputElement).value).toBe('~')
+      expect((input as HTMLInputElement).value).toBe('Terminal 1')
     })
 
     it('Enter commits the rename and updates the store', async () => {
@@ -283,7 +281,7 @@ describe('TerminalTabs', () => {
         expect(screen.queryByRole('textbox', { name: 'Rename tab' })).toBeNull()
       })
       const notUpdated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
-      expect(notUpdated?.title).toBe('~')
+      expect(notUpdated?.title).toBe('Terminal 1')
       expect(notUpdated?.userRenamed).toBe(false)
     })
 
@@ -320,7 +318,7 @@ describe('TerminalTabs', () => {
         expect(screen.queryByRole('textbox', { name: 'Rename tab' })).toBeNull()
       })
       const notUpdated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
-      expect(notUpdated?.title).toBe('~')
+      expect(notUpdated?.title).toBe('Terminal 1')
     })
   })
 
@@ -430,41 +428,41 @@ describe('TerminalTabs', () => {
       fireEvent.contextMenu(tabEl!)
 
       expect(screen.getByRole('menuitemradio', { name: 'Set tab color: None' })).toBeTruthy()
-      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Steel' })).toBeTruthy()
-      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Teal' })).toBeTruthy()
-      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Violet' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Blue' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Purple' })).toBeTruthy()
+      expect(screen.getByRole('menuitemradio', { name: 'Set tab color: Amber' })).toBeTruthy()
     })
 
-    it('clicking Steel swatch calls setTabColor with "chart-2"', () => {
+    it('clicking Blue swatch calls setTabColor with "chart-2"', () => {
       const tab = useTerminalStore.getState().addTab('~')
       render(<TerminalTabs />)
       const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
       fireEvent.contextMenu(tabEl!)
 
-      const steelSwatch = screen.getByRole('menuitemradio', { name: 'Set tab color: Steel' })
-      fireEvent.click(steelSwatch)
+      const blueSwatch = screen.getByRole('menuitemradio', { name: 'Set tab color: Blue' })
+      fireEvent.click(blueSwatch)
 
       const updated = useTerminalStore.getState().tabs.find((t) => t.id === tab.id)
       expect(updated?.color).toBe('chart-2')
     })
 
-    it('clicking Teal swatch sets color to "chart-3"', () => {
+    it('clicking Purple swatch sets color to "chart-3"', () => {
       const tab = useTerminalStore.getState().addTab('~')
       render(<TerminalTabs />)
       const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
       fireEvent.contextMenu(tabEl!)
 
-      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Teal' }))
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Purple' }))
       expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.color).toBe('chart-3')
     })
 
-    it('clicking Violet swatch sets color to "chart-4"', () => {
+    it('clicking Amber swatch sets color to "chart-4"', () => {
       const tab = useTerminalStore.getState().addTab('~')
       render(<TerminalTabs />)
       const tabEl = document.querySelector<HTMLElement>(`[data-tab-id="${tab.id}"]`)
       fireEvent.contextMenu(tabEl!)
 
-      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Violet' }))
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Amber' }))
       expect(useTerminalStore.getState().tabs.find((t) => t.id === tab.id)?.color).toBe('chart-4')
     })
 
@@ -512,7 +510,7 @@ describe('TerminalTabs', () => {
       fireEvent.contextMenu(tabEl!)
       expect(screen.getByRole('menu')).toBeTruthy()
 
-      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Steel' }))
+      fireEvent.click(screen.getByRole('menuitemradio', { name: 'Set tab color: Blue' }))
       expect(screen.queryByRole('menu')).toBeNull()
     })
   })

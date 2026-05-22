@@ -4,13 +4,12 @@
  * Zone layout (horizontal): left file tree | center editor | (no right rail)
  * Bottom dock: terminal panel, collapsed by default, click to expand.
  *
- * Terminal session persistence note:
- * The bottom dock mounts a fresh <TerminalTabs /> instance. This means xterm
- * screen buffers are NOT preserved when navigating / ↔ /editor. The PTY
- * processes survive in cast-server (TerminalPane never kills on unmount), and
- * the tab list + cwds persist in terminalStore. Full xterm session persistence
- * would require a React portal approach (lift TerminalTabs to app root and
- * teleport into target DOM node) — deferred to IDE-2.
+ * Terminal session persistence: the bottom dock hosts a <TerminalSlot/> that
+ * physically re-parents the shared terminal container (owned by
+ * <TerminalHostProvider> in App.tsx) via appendChild. This means xterm
+ * instances, PTY connections, and scroll buffers survive / ↔ /editor
+ * navigation. The dock div is always rendered; only its height toggles so
+ * collapsing it does NOT unmount the terminal.
  *
  * react-resizable-panels is already in package.json per stack-context.md.
  */
@@ -20,7 +19,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { ChevronDown, ChevronUp, Home, Menu, PanelLeftClose, PanelLeft, Search, FolderOpen } from 'lucide-react'
 import { useReducedMotion } from 'framer-motion'
 import { toast } from 'sonner'
-import { TerminalTabs } from '../../components/terminal/TerminalTabs'
+import { TerminalSlot } from './TerminalHost'
 import CommandPalette from '../../components/CommandPalette'
 import { ProjectFileTree } from './ProjectFileTree'
 import { EditorTabs } from './EditorTabs'
@@ -567,7 +566,7 @@ export function EditorShellLayout() {
             </button>
           </div>
 
-          {/* Terminal panel — shown when expanded */}
+          {/* Terminal panel — always rendered; height toggles to show/hide */}
           <div
             id="editor-terminal-dock"
             role="region"
@@ -578,7 +577,7 @@ export function EditorShellLayout() {
               transition: shouldReduceMotion ? 'none' : 'height 0.2s ease',
             }}
           >
-            {bottomDockExpanded && <TerminalTabs />}
+            <TerminalSlot />
           </div>
         </div>
       </div>

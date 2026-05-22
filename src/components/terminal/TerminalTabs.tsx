@@ -82,9 +82,9 @@ interface ColorOption {
 
 const COLOR_OPTIONS: ColorOption[] = [
   { label: 'None', token: undefined, ariaLabel: 'Set tab color: None' },
-  { label: 'Steel', token: 'chart-2', ariaLabel: 'Set tab color: Steel' },
-  { label: 'Teal', token: 'chart-3', ariaLabel: 'Set tab color: Teal' },
-  { label: 'Violet', token: 'chart-4', ariaLabel: 'Set tab color: Violet' },
+  { label: 'Blue', token: 'chart-2', ariaLabel: 'Set tab color: Blue' },
+  { label: 'Purple', token: 'chart-3', ariaLabel: 'Set tab color: Purple' },
+  { label: 'Amber', token: 'chart-4', ariaLabel: 'Set tab color: Amber' },
 ]
 
 function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKeyDown }: TabItemProps) {
@@ -405,6 +405,7 @@ function TabItem({ tab, isActive, shouldReduceMotion, onActivate, onClose, onKey
         <ul
           role="menu"
           aria-label="Tab options"
+          onMouseDown={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',
             top: contextMenu.y,

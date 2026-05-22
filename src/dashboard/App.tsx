@@ -13,7 +13,7 @@ import TopBar from './components/TopBar'
 import LeftRail from './components/LeftRail'
 import RightRail from './components/RightRail'
 import { useRailState, LEFT_RAIL_DEFAULT_PX, RIGHT_RAIL_DEFAULT_PX } from './hooks/useRailState'
-import { TerminalTabs } from '../components/terminal/TerminalTabs'
+import { TerminalHostProvider, TerminalSlot } from './components/TerminalHost'
 import CommandPalette from '../components/CommandPalette'
 import { EditorShellLayout } from './components/EditorShellLayout'
 import { StatusBar } from './components/StatusBar'
@@ -160,7 +160,7 @@ function ShellLayout() {
         {/* ── Center ────────────────────────────────────────────────── */}
         <main id="main-content" className="flex-1 min-w-0 overflow-hidden"
               style={{ background: 'var(--system-canvas)', position: 'relative' }}>
-          {/* Terminal — always mounted so PTY sessions survive navigation */}
+          {/* Terminal slot — show/hide via CSS; TerminalTabs lives in TerminalHostProvider */}
           <div
             style={{
               display: isTerminalPage ? 'flex' : 'none',
@@ -168,9 +168,7 @@ function ShellLayout() {
               height: '100%',
             }}
           >
-            <ErrorBoundary>
-              <TerminalTabs />
-            </ErrorBoundary>
+            <TerminalSlot />
           </div>
 
           {/* All other routes */}
@@ -270,6 +268,7 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
+      <TerminalHostProvider>
       <OnboardingScreen />
       {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
       {whatsNewOpen && <WhatsNewDialog onClose={() => setWhatsNewOpen(false)} />}
@@ -337,6 +336,7 @@ export default function App() {
           } />
         </Route>
       </Routes>
+      </TerminalHostProvider>
     </MotionConfig>
   )
 }

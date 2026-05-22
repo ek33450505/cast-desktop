@@ -40,7 +40,10 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   addTab: (cwd: string, paneId?: string) => {
     const id = crypto.randomUUID()
     const tabCount = get().tabs.length + 1
-    const title = cwd ? cwd.split('/').filter(Boolean).pop() ?? 'Terminal' : `Terminal ${tabCount}`
+    const isUnresolvedCwd = !cwd || cwd === '~'
+    const title = isUnresolvedCwd
+      ? `Terminal ${tabCount}`
+      : (cwd.split('/').filter(Boolean).pop() ?? `Terminal ${tabCount}`)
     const tab: Tab = { id, ptyId: null, paneId: paneId ?? crypto.randomUUID(), cwd, title, userRenamed: false }
     set((state) => ({
       tabs: [...state.tabs, tab],

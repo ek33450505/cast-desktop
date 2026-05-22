@@ -16,6 +16,21 @@ describe('terminalStore', () => {
       expect(tab.ptyId).toBeNull()
     })
 
+    it('addTab("~") uses ordinal title (not "~")', () => {
+      const tab = useTerminalStore.getState().addTab('~')
+      expect(tab.title).toBe('Terminal 1')
+    })
+
+    it('addTab("") uses ordinal title', () => {
+      const tab = useTerminalStore.getState().addTab('')
+      expect(tab.title).toBe('Terminal 1')
+    })
+
+    it('addTab("/Users/x/proj") uses basename "proj"', () => {
+      const tab = useTerminalStore.getState().addTab('/Users/x/proj')
+      expect(tab.title).toBe('proj')
+    })
+
     it('creates a tab with a UUID paneId when none is provided', () => {
       const tab = useTerminalStore.getState().addTab('~')
       expect(tab.paneId).toMatch(
