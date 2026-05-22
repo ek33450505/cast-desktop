@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { getCastDb, getCastDbWritable } from './castDb.js'
+import { broadcast } from '../watchers/sse.js'
 
 
 export const paneBindingsRouter = Router()
@@ -85,4 +86,18 @@ paneBindingsRouter.get('/:paneId', (req: Request, res: Response) => {
     console.error('[pane-bindings] lookup error:', err)
     res.status(500).json({ error: 'failed to query pane binding' })
   }
+})
+
+// ── POST /notify — SSE invalidation trigger for hook scripts ──────────────────
+
+paneBindingsRouter.post('/notify', (req: Request, res: Response) => {
+  const { paneId } = req.body as { paneId?: string }
+  if (!paneId || !/^[a-zA-Z0-9_-]{1,128}$/.test(paneId)) {
+    res.status(400).json({ error: 'paneId required' })
+    return
+  }
+  try {
+    broadcast({ type: 'pane_binding_updated', paneId, timestamp: new Date().toISOString() })
+  } catch { /* non-fatal */ }
+  res.json({ ok: true })
 })

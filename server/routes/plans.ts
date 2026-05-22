@@ -75,20 +75,23 @@ function findActivePlanPath(sessionId?: string | null): string | null {
   try {
     const db = getCastDb()
     if (db) {
-      // Check if plan_path column exists
-      const cols = db.prepare("PRAGMA table_info(agent_runs)").all() as { name: string }[]
-      const hasPlanPath = cols.some(c => c.name === 'plan_path')
-      if (hasPlanPath) {
-        const row = db.prepare(
-          'SELECT plan_path FROM agent_runs WHERE session_id = ? AND plan_path IS NOT NULL ORDER BY started_at DESC LIMIT 1'
-        ).get(sessionId) as { plan_path: string } | undefined
-        if (row?.plan_path && fs.existsSync(row.plan_path)) {
-          return row.plan_path
-        }
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS plan_sessions (
+          id         INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id TEXT NOT NULL,
+          plan_file  TEXT NOT NULL,
+          started_at TEXT NOT NULL
+        )
+      `)
+      const row = db.prepare(
+        'SELECT plan_file FROM plan_sessions WHERE session_id = ? AND plan_file IS NOT NULL ORDER BY id DESC LIMIT 1'
+      ).get(sessionId) as { plan_file: string } | undefined
+      if (row?.plan_file && fs.existsSync(row.plan_file)) {
+        return row.plan_file
       }
     }
   } catch {
-    // DB lookup failed — return null (no fallback)
+    // DB lookup failed — return null
   }
 
   return null

@@ -82,6 +82,9 @@ app.use('/api/dispatch', destructiveLimiter)
 app.use('/api/routines', controlLimiter)
 app.use('/api/agent-hallucinations', controlLimiter)
 app.use('/api/cast-fs', destructiveLimiter)
+// Limit the write-only /notify endpoint; the GET /:paneId sibling is polled every 5s
+// and must NOT be throttled, so scope this to /notify only.
+app.use('/api/pane-bindings/notify', controlLimiter)
 
 app.use('/api', router)
 attachSSE(app)
