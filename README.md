@@ -1,6 +1,6 @@
 # Cast Desktop
 
-[![Version](https://img.shields.io/github/v/release/ek33450505/cast-desktop?color=blue&label=version)](https://github.com/ek33450505/cast-desktop/releases/latest) [![CI](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml/badge.svg)](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1251%20passing-brightgreen)
+[![Version](https://img.shields.io/github/v/release/ek33450505/cast-desktop?color=blue&label=version)](https://github.com/ek33450505/cast-desktop/releases/latest) [![CI](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml/badge.svg)](https://github.com/ek33450505/cast-desktop/actions/workflows/release.yml) ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey) ![License](https://img.shields.io/badge/license-MIT-lightgrey) ![Tests](https://img.shields.io/badge/vitest%20%2F%20rtl-1222%20passing-brightgreen)
 
 **Your agents, in the room.**
 
@@ -14,7 +14,7 @@ Cast Desktop is a Tauri 2 desktop app that brings real-time observability for th
 - **Real PTY-Backed Terminal** — xterm with tabs, Cmd+F search, font hotkeys, folder picker, theme-aware rendering, full ANSI support
 - **In-App Markdown Editor** — CodeMirror 6 editor for `~/.claude/**` files. Cmd+S to save agent definitions, plans, and rules without leaving the app
 - **Two Themes** — forest-at-dusk (dark) and sunrise (light), designed for 8-hour daily use with eye comfort as the north star
-- **1222 Tests** — Full Vitest + React Testing Library coverage across 101 test files on frontend and backend, verified on every commit
+- **1222 Tests across 107 test files on frontend and backend, verified on every commit
 - **Native macOS Menu Bar** — File / Edit / View / Tabs / Window / Help menus wired to in-app actions. Cmd+T, Cmd+Shift+]/ [ and the full keybind set backed by native OS accelerators
 - **Keyboard-First** — Command palette (Cmd+K), global shortcuts, no mouse required for power users
 - **Local-First** — All data lives in `~/.claude/cast.db` (SQLite). No accounts, no cloud, no data collection
@@ -195,7 +195,7 @@ npm test:watch          # Watch mode
 
 ## Testing
 
-**1222 passing tests** across 101 test files — frontend dashboards, terminal components, server routes, utilities.
+**1222 passing tests** across 107 test files — frontend dashboards, terminal components, server routes, utilities.
 
 ```bash
 npm test          # Run all tests
