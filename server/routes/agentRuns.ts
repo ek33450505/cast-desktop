@@ -29,6 +29,9 @@ interface AgentRunRow {
   status: string
   input_tokens: number | null
   output_tokens: number | null
+  cache_read_input_tokens: number | null
+  cache_creation_input_tokens: number | null
+  tool_uses: number | null
   cost_usd: number | null
   task_summary: string | null
 }

@@ -1,5 +1,81 @@
 # Changelog
 
+## [1.2.12] — 2026-06-05
+
+### Changed
+- AgentRunRow interface now includes `tool_uses`, `cache_read_input_tokens`, and `cache_creation_input_tokens` columns added in flagship v7.4.0 cast-db-init.sh — SELECT types align with live schema.
+- Removed phantom `/api/constellation` rate-limit middleware mount (route handler never existed).
+- Hardcoded `Projects/personal/` absolute paths replaced with env-var-based fallbacks (`CAST_MEMORY_BACKUP_SCRIPT`, `CAST_REPO_PATH`).
+- README: removed false Constellation 3D graph claim, corrected Activity/Token-Spend view descriptions (both redirect), removed FTS5 memory search claim (plain SELECT), fixed unclosed bold span, updated test file count to 106.
+- Stale `TODO(v1.0.1): delete` comment removed from CastFsTree.tsx.
+
+---
+
+## [1.2.11] — 2026-05-21
+
+### Fixed
+- Terminal PTY `on_run_event` replaced with `build().run` pattern — removes deprecated Tauri API usage.
+
+---
+
+## [1.2.10] — 2026-05-21
+
+### Fixed
+- SSE CORS origin echoing for WKWebView compatibility.
+- `cost_usd` column reference corrected in agent run queries.
+- Sidecar process leak eliminated on window close.
+- DevTools toggle wired correctly.
+
+---
+
+## [1.2.9] — 2026-05-21
+
+### Fixed
+- TerminalTabs kept always-mounted so PTY session survives page navigation.
+
+---
+
+## [1.2.8] — 2026-05-21
+
+### Added
+- React Query DevTools panel available in all builds.
+- DevTools enabled in production window for inspection.
+
+---
+
+## [1.2.7] — 2026-05-21
+
+### Fixed
+- CORS: echo request Origin header so WKWebView fetches pass CORS check.
+
+---
+
+## [1.2.6] — 2026-05-21
+
+### Fixed
+- Window visibility: `visible:false` restored in `tauri.conf.json`; `show()` called in dev mode; unreliable `hide()` workaround removed.
+- Dev mode: fails fast on port conflict instead of silently using a random port; window no longer hidden in dev.
+- Sidecar IPC replaced: stdout port IPC swapped for TCP probe + `CAST_SERVER_PORT_OVERRIDE` env var handoff, gated to production builds only.
+- Unused-import compiler warnings suppressed for `cfg`-gated debug builds.
+
+---
+
+## [1.2.5] — 2026-05-22
+
+### Added
+- Plan task parser now recognises `### N. text` header format alongside existing formats.
+- `GET /api/health` endpoint returns server timestamp for readiness probing.
+- Right-rail live data: `plan_sessions` query wired; `pane-bindings` notify endpoint connected.
+- Terminal: duplicate tab action, two additional theme colors, DevTools toggle; PTY leak on tab close fixed.
+
+### Fixed
+- Sidecar orphaned `cast-server` and `cast-lsp-ts` processes cleaned up on exit.
+- Terminal persistence: tab state survives dashboard navigation.
+- Status bar redesigned; DevTools removed from release UI.
+- Tauri: uncompilable `CommandChild::kill()` call removed from run handler.
+
+---
+
 ## [1.2.4] — 2026-05-21
 
 ### Fixed

@@ -14,7 +14,7 @@ Cast Desktop is a Tauri 2 desktop app that brings real-time observability for th
 - **Real PTY-Backed Terminal** — xterm with tabs, Cmd+F search, font hotkeys, folder picker, theme-aware rendering, full ANSI support
 - **In-App Markdown Editor** — CodeMirror 6 editor for `~/.claude/**` files. Cmd+S to save agent definitions, plans, and rules without leaving the app
 - **Two Themes** — forest-at-dusk (dark) and sunrise (light), designed for 8-hour daily use with eye comfort as the north star
-- **1222 Tests across 107 test files on frontend and backend, verified on every commit
+- **1222 Tests** across 106 test files on frontend and backend, verified on every commit
 - **Native macOS Menu Bar** — File / Edit / View / Tabs / Window / Help menus wired to in-app actions. Cmd+T, Cmd+Shift+]/ [ and the full keybind set backed by native OS accelerators
 - **Keyboard-First** — Command palette (Cmd+K), global shortcuts, no mouse required for power users
 - **Local-First** — All data lives in `~/.claude/cast.db` (SQLite). No accounts, no cloud, no data collection
@@ -70,15 +70,15 @@ Then open http://localhost:5173 in your browser or run `cargo tauri dev` for the
 
 | View | What it Does |
 |------|--------------|
-| **Activity** | Real-time log of agent dispatches, tool calls, token spend, routing decisions. Streams via SSE. |
+| **Activity** | Redirects to Sessions — real-time session list with agent dispatches and token spend. |
 | **Sessions** | Full session list with status, agent count, and token spend. Drill into session details. |
-| **Analytics** | Agent run history, model distribution, cost breakdown, thinking token allocation, success rates. |
+| **Analytics** | Agent run history, model distribution, cost breakdown, thinking token allocation, success rates. Includes daily token spend chart. |
 | **Agents** | Agent roster with model tier, status, memory pool, and per-agent performance metrics. |
 | **Hooks** | Hook event audit trail (SessionStart, PreToolUse, PostToolUse, PostCompact) with latency histograms. |
 | **Plans** | Agent Dispatch Manifests and orchestration history. View planned runs and outcomes. |
-| **Memory** | Agent memory browser with FTS5 search. Filter by agent, type, or keyword. |
+| **Memory** | Agent memory browser. Filter by agent, type, or keyword. |
 | **System** | CAST health dashboard. Database size, hook health, cost trends. |
-| **Token Spend** | Daily/weekly cost trends by agent and model. Cost optimization recommendations. |
+| **Token Spend** | Redirects to Analytics — daily/weekly cost trends by agent and model. |
 | **Database** | SQLite browser for cast.db. Inspect rows, view schema, debug queries. |
 
 ### Terminal Keyboard Shortcuts
@@ -231,7 +231,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 | [cast-dash](https://github.com/ek33450505/cast-dash) | Terminal UI dashboard for live swarm monitoring. 4-panel real-time display (Textual framework). | ![](https://img.shields.io/github/v/release/ek33450505/cast-dash?style=flat-square) | `brew tap ek33450505/cast-dash && brew install cast-dash` |
 | [cast-claudes_journal](https://github.com/ek33450505/cast-claudes_journal) | Session continuity — Claude's Journal auto-injects prior-day context via SessionStart hook. Obsidian vault sync. | ![](https://img.shields.io/github/v/release/ek33450505/cast-claudes_journal?style=flat-square) | `brew tap ek33450505/homebrew-claudes-journal && brew install claudes-journal` |
 | [cast-website](https://github.com/ek33450505/cast-website) | castframework.dev — marketing site and docs portal for the CAST ecosystem. | ![](https://img.shields.io/github/v/release/ek33450505/cast-website?style=flat-square) | — |
-| [cast-desktop](https://github.com/ek33450505/cast-desktop) | Tauri 2 native app — embedded PTY terminal, command palette, 11 dashboard views, Constellation 3D graph. NEW. | ![](https://img.shields.io/github/v/release/ek33450505/cast-desktop?style=flat-square) | `brew tap ek33450505/homebrew-cast-desktop && brew install cast-desktop` |
+| [cast-desktop](https://github.com/ek33450505/cast-desktop) | Tauri 2 native app — embedded PTY terminal, command palette, 11 dashboard views, local-first observability. | ![](https://img.shields.io/github/v/release/ek33450505/cast-desktop?style=flat-square) | `brew tap ek33450505/homebrew-cast-desktop && brew install cast-desktop` |
 <!-- ECOSYSTEM_END -->
 
 **New to CAST?** Start with [claude-agent-team](https://github.com/ek33450505/claude-agent-team) — the core framework. Cast Desktop is the visual companion once you're running CAST workflows.

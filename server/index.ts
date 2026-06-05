@@ -76,7 +76,6 @@ app.use('/api/seed', controlLimiter)
 app.use('/api/control', destructiveLimiter)
 app.use('/api/castd', controlLimiter)
 app.use('/api/swarm', controlLimiter)
-app.use('/api/constellation', controlLimiter)
 // IDE-5: agent dispatch is user-initiated but spawns real processes — moderate limit
 app.use('/api/dispatch', destructiveLimiter)
 app.use('/api/routines', controlLimiter)

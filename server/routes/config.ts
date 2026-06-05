@@ -196,7 +196,7 @@ router.get('/health', (_req, res) => {
 function readConfigJson(filename: string): Record<string, unknown> | null {
   const paths = [
     `${CLAUDE_DIR}/config/${filename}`,
-    `${process.env.HOME}/Projects/personal/claude-agent-team/config/${filename}`,
+    `${process.env.CAST_REPO_PATH ?? `${process.env.HOME}/Projects/personal/claude-agent-team`}/config/${filename}`,
   ]
   for (const p of paths) {
     if (fs.existsSync(p)) {
