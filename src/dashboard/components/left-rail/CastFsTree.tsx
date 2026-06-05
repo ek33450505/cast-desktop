@@ -1,4 +1,3 @@
-// TODO(v1.0.1): delete this file — replaced by NavList in D.8
 import { useState, useLayoutEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEvent } from '../../../lib/SseManager'

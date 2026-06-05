@@ -92,7 +92,8 @@ router.get('/backup-status', (_req, res) => {
 // POST /api/memory/backup-trigger — runs cast-memory-backup.sh --dry-run
 router.post('/backup-trigger', (_req, res) => {
   try {
-    const scriptPath = path.join(os.homedir(), 'Projects/personal/claude-agent-team/scripts/cast-memory-backup.sh')
+    const scriptPath = process.env.CAST_MEMORY_BACKUP_SCRIPT
+      ?? path.join(os.homedir(), '.claude/scripts/cast-memory-backup.sh')
     const out = execSync(`bash "${scriptPath}" --dry-run`, { timeout: 15000 }).toString()
     res.json({ ok: true, output: out })
   } catch (err) {
