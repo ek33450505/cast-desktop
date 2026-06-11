@@ -198,7 +198,6 @@ export interface LiveEvent {
   dbChangeAgentName?: string
   dbChangeStatus?: string
   dbChangeSessionId?: string
-  dbChangeBatchId?: number | null
   // cast_fs_change / project_fs_change fields
   fsPath?: string             // full path to changed file
   fsEvent?: 'add' | 'change' | 'unlink'
@@ -260,7 +259,6 @@ export interface DispatchEvent {
   started_at: string
   completed_at?: string
   duration_ms?: number
-  prompt_preview?: string
   cost_usd?: number
 }
 
@@ -357,11 +355,9 @@ export interface SessionAgentRun {
   input_tokens: number
   output_tokens: number
   cost_usd: number
-  task_summary: string | null
   agent_id?: string
   worktree_branch?: string | null
   project?: string | null
-  batch_id?: number | null
 }
 
 /** Worktree info from `git worktree list --porcelain` */

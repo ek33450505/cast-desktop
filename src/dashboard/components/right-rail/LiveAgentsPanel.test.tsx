@@ -83,13 +83,12 @@ function renderPanel() {
 
 function makeAgent(overrides: Partial<{
   agentRunId: string; name: string; model: string;
-  prompt: string; startedAt: string; tokenCount: number
+  startedAt: string; tokenCount: number
 }> = {}) {
   return {
     agentRunId: 'run-1',
     name: 'code-writer',
     model: 'claude-sonnet-4-6',
-    prompt: 'Implement the thing',
     startedAt: new Date(Date.now() - 45_000).toISOString(),
     tokenCount: 2000,
     ...overrides,
@@ -259,7 +258,7 @@ describe('LiveAgentsPanel', () => {
       expect(timerEls.length).toBeGreaterThan(0)
     })
 
-    it('truncated prompt shows in title attribute for hover', async () => {
+    it('renders agent name cell without prompt title attribute', async () => {
       mockUsePaneBinding.mockReturnValue({
         sessionId: 'sess-abc',
         projectPath: '/tmp',
@@ -270,18 +269,17 @@ describe('LiveAgentsPanel', () => {
       mockActiveTabId.mockReturnValue(tabId)
       mockTabs.mockReturnValue([{ id: tabId, paneId: 'pane-1', ptyId: null, cwd: '~', title: '~' }])
 
-      const longPrompt = 'A'.repeat(60)
-
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ agents: [makeAgent({ prompt: longPrompt })] }),
+        json: async () => ({ agents: [makeAgent()] }),
       })
 
       renderPanel()
 
       await screen.findByText('code-writer')
-      const promptEl = document.querySelector(`[title="${longPrompt}"]`)
-      expect(promptEl).toBeTruthy()
+      // prompt field no longer exists; no prompt-bearing title attribute should be present
+      const promptTitleEl = document.querySelector('[title="Implement the thing"]')
+      expect(promptTitleEl).toBeNull()
     })
   })
 

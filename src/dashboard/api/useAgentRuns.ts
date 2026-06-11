@@ -13,7 +13,6 @@ export interface AgentRun {
   input_tokens: number
   output_tokens: number
   cost_usd: number
-  task_summary: string | null
   project: string | null
 }
 

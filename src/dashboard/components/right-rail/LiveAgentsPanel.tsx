@@ -15,7 +15,6 @@ export interface RunningAgent {
   agentRunId: string
   name: string
   model: string
-  prompt: string
   startedAt: string
   tokenCount: number
 }
@@ -120,7 +119,6 @@ function AgentRow({ agent, nowMs, onClick }: AgentRowProps) {
           items={[
             { label: 'Model', value: tier },
             { label: 'Elapsed', value: formatElapsed(agent.startedAt, nowMs) },
-            { label: 'Prompt', value: agent.prompt?.slice(0, 80) || '—' },
           ]}
         />
       </td>
@@ -151,16 +149,6 @@ function AgentRow({ agent, nowMs, onClick }: AgentRowProps) {
         </span>
       </td>
 
-      {/* Prompt snippet */}
-      <td className="py-1.5 align-top">
-        <span
-          className="text-[10px] truncate block max-w-[90px]"
-          style={{ color: 'var(--content-secondary)' }}
-          title={agent.prompt}
-        >
-          {agent.prompt || '—'}
-        </span>
-      </td>
     </tr>
   )
 }

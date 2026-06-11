@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Bot, AlertTriangle } from 'lucide-react'
 import { useAgentProfile } from '../api/useAgentProfile'
@@ -25,58 +24,37 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function RunRow({ run }: { run: AgentRunRow }) {
-  const [expanded, setExpanded] = useState(false)
-  const hasSummary = !!run.task_summary?.trim()
-
   return (
-    <>
-      <tr
-        className={`border-b border-[var(--stroke-regular)] transition-colors ${hasSummary ? 'cursor-pointer hover:bg-[var(--system-elevated)]' : ''}`}
-        onClick={() => hasSummary && setExpanded(prev => !prev)}
-        aria-expanded={hasSummary ? expanded : undefined}
-      >
-        <td className="px-4 py-3 text-xs text-[var(--content-muted)] tabular-nums whitespace-nowrap">
-          {formatShortDateTime(run.started_at)}
-        </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <StatusBadge status={run.status} />
-            {run.is_truncated === 1 && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgb(245 158 11 / 0.15)', color: 'rgb(251 191 36)' }}>
-                TRUNCATED
-              </span>
-            )}
-          </div>
-        </td>
-        <td className="px-4 py-3 text-xs text-[var(--content-secondary)] tabular-nums text-right">
-          {formatDuration(run.duration_ms)}
-        </td>
-        <td className="px-4 py-3 text-xs text-[var(--content-muted)] tabular-nums text-right hidden md:table-cell">
-          {run.input_tokens != null ? formatTokens(run.input_tokens) : '—'}
-        </td>
-        <td className="px-4 py-3 text-xs text-[var(--content-muted)] tabular-nums text-right hidden md:table-cell">
-          {run.output_tokens != null ? formatTokens(run.output_tokens) : '—'}
-        </td>
-        <td className="px-4 py-3 text-xs font-mono text-right tabular-nums text-[var(--content-secondary)]">
-          {formatCost(run.cost_usd)}
-        </td>
-        <td className="px-4 py-3 text-xs text-[var(--content-muted)] hidden lg:table-cell truncate max-w-[160px]">
-          {run.model ? run.model.replace('claude-', '').replace(/-\d{8}$/, '') : '—'}
-        </td>
-        <td className="px-4 py-3 text-xs text-[var(--content-muted)] text-center w-6">
-          {hasSummary && (
-            <span className="text-[var(--accent)] text-xs">{expanded ? '▲' : '▼'}</span>
+    <tr className="border-b border-[var(--stroke-regular)] transition-colors">
+      <td className="px-4 py-3 text-xs text-[var(--content-muted)] tabular-nums whitespace-nowrap">
+        {formatShortDateTime(run.started_at)}
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <StatusBadge status={run.status} />
+          {run.is_truncated === 1 && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'rgb(245 158 11 / 0.15)', color: 'rgb(251 191 36)' }}>
+              TRUNCATED
+            </span>
           )}
-        </td>
-      </tr>
-      {expanded && hasSummary && (
-        <tr className="border-b border-[var(--stroke-regular)] bg-[var(--system-elevated)]">
-          <td colSpan={8} className="px-6 py-3 text-xs text-[var(--content-secondary)] leading-relaxed whitespace-pre-wrap">
-            {run.task_summary}
-          </td>
-        </tr>
-      )}
-    </>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-xs text-[var(--content-secondary)] tabular-nums text-right">
+        {formatDuration(run.duration_ms)}
+      </td>
+      <td className="px-4 py-3 text-xs text-[var(--content-muted)] tabular-nums text-right hidden md:table-cell">
+        {run.input_tokens != null ? formatTokens(run.input_tokens) : '—'}
+      </td>
+      <td className="px-4 py-3 text-xs text-[var(--content-muted)] tabular-nums text-right hidden md:table-cell">
+        {run.output_tokens != null ? formatTokens(run.output_tokens) : '—'}
+      </td>
+      <td className="px-4 py-3 text-xs font-mono text-right tabular-nums text-[var(--content-secondary)]">
+        {formatCost(run.cost_usd)}
+      </td>
+      <td className="px-4 py-3 text-xs text-[var(--content-muted)] hidden lg:table-cell truncate max-w-[160px]">
+        {run.model ? run.model.replace('claude-', '').replace(/-\d{8}$/, '') : '—'}
+      </td>
+    </tr>
   )
 }
 
@@ -189,7 +167,6 @@ export default function AnalyticsAgentDetailView() {
           <h2 className="text-sm font-semibold text-[var(--content-secondary)] uppercase tracking-wider">
             Recent Runs ({data.last_runs?.length ?? 0})
           </h2>
-          <p className="text-xs text-[var(--content-muted)] mt-1">Click a row with a summary to expand task details</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[560px]">
@@ -202,13 +179,12 @@ export default function AnalyticsAgentDetailView() {
                 <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--content-muted)] hidden md:table-cell">Out Tokens</th>
                 <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--content-muted)]">Cost</th>
                 <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--content-muted)] hidden lg:table-cell">Model</th>
-                <th scope="col" className="w-6" />
               </tr>
             </thead>
             <tbody>
               {!data.last_runs || data.last_runs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-[var(--content-muted)] text-xs">
+                  <td colSpan={7} className="px-6 py-8 text-center text-[var(--content-muted)] text-xs">
                     No runs recorded yet.
                   </td>
                 </tr>

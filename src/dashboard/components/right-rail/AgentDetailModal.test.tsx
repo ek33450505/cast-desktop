@@ -34,7 +34,7 @@ function renderModal({ open = true, agentRunId = 'run-1', onClose = vi.fn() }: R
 }
 
 function makeDetail(overrides: Partial<{
-  agentRunId: string; name: string; model: string; prompt: string | null;
+  agentRunId: string; name: string; model: string;
   startedAt: string; endedAt: string | null; status: string;
   inputTokens: number; outputTokens: number; costUsd: number
 }> = {}) {
@@ -42,7 +42,6 @@ function makeDetail(overrides: Partial<{
     agentRunId: 'run-1',
     name: 'code-writer',
     model: 'claude-sonnet-4-6',
-    prompt: 'Implement LiveAgentsPanel for Wave 2.6 right rail',
     startedAt: '2026-05-12T10:00:00.000Z',
     endedAt: null,
     status: 'running',
@@ -108,11 +107,6 @@ describe('AgentDetailModal', () => {
       expect(badge).toBeInTheDocument()
     })
 
-    it('shows full prompt text', async () => {
-      renderModal()
-      expect(await screen.findByText('Implement LiveAgentsPanel for Wave 2.6 right rail')).toBeInTheDocument()
-    })
-
     it('shows status', async () => {
       renderModal()
       await screen.findByText('code-writer')
@@ -142,12 +136,6 @@ describe('AgentDetailModal', () => {
       expect(screen.queryByText('Cost')).not.toBeInTheDocument()
     })
 
-    it('shows prompt as selectable text (not in input)', async () => {
-      renderModal()
-      const promptEl = await screen.findByText('Implement LiveAgentsPanel for Wave 2.6 right rail')
-      expect(promptEl.tagName).not.toBe('INPUT')
-      expect(promptEl.tagName).not.toBe('TEXTAREA')
-    })
   })
 
   describe('Close behavior', () => {

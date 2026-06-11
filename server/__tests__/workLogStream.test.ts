@@ -17,8 +17,7 @@ function createTestDb(options: { hasResponseCol?: boolean; hasTruncTable?: boole
       agent        TEXT NOT NULL,
       model        TEXT,
       started_at   TEXT,
-      status       TEXT,
-      task_summary TEXT
+      status       TEXT
   `
 
   if (options.hasResponseCol !== false) {
@@ -47,7 +46,7 @@ function createTestDb(options: { hasResponseCol?: boolean; hasTruncTable?: boole
 
   // Seed test data
   let insertSql = `
-    INSERT INTO agent_runs (id, session_id, agent, model, started_at, status, task_summary`
+    INSERT INTO agent_runs (id, session_id, agent, model, started_at, status`
   if (options.hasResponseCol !== false) {
     insertSql += `, response`
   }
@@ -55,16 +54,16 @@ function createTestDb(options: { hasResponseCol?: boolean; hasTruncTable?: boole
 
   if (options.hasResponseCol !== false) {
     insertSql += `
-      (1, 'sess-1', 'code-writer', 'sonnet', '2026-04-04T10:00:00Z', 'DONE', 'input prompt 1', 'Status: DONE\n\n## Work Log\n- Read: foo.ts\n- Wrote: bar.ts'),
-      (2, 'sess-1', 'test-writer', 'haiku', '2026-04-04T10:05:00Z', 'DONE', 'input prompt 2', 'Status: DONE\n\n## Work Log\n- Read: src/app.test.ts'),
-      (3, 'sess-2', 'code-reviewer', 'haiku', '2026-04-04T10:10:00Z', 'DONE', 'review prompt for truncation test', NULL),
-      (4, 'sess-2', 'debugger', 'sonnet', '2026-04-04T10:15:00Z', 'DONE_WITH_CONCERNS', 'debug prompt', 'Status: DONE_WITH_CONCERNS\n\n## Work Log\n- Decision: found the bug\n- Wrote: fix.ts')`
+      (1, 'sess-1', 'code-writer', 'sonnet', '2026-04-04T10:00:00Z', 'DONE', 'Status: DONE\n\n## Work Log\n- Read: foo.ts\n- Wrote: bar.ts'),
+      (2, 'sess-1', 'test-writer', 'haiku', '2026-04-04T10:05:00Z', 'DONE', 'Status: DONE\n\n## Work Log\n- Read: src/app.test.ts'),
+      (3, 'sess-2', 'code-reviewer', 'haiku', '2026-04-04T10:10:00Z', 'DONE', NULL),
+      (4, 'sess-2', 'debugger', 'sonnet', '2026-04-04T10:15:00Z', 'DONE_WITH_CONCERNS', 'Status: DONE_WITH_CONCERNS\n\n## Work Log\n- Decision: found the bug\n- Wrote: fix.ts')`
   } else {
     insertSql += `
-      (1, 'sess-1', 'code-writer', 'sonnet', '2026-04-04T10:00:00Z', 'DONE', 'input prompt 1'),
-      (2, 'sess-1', 'test-writer', 'haiku', '2026-04-04T10:05:00Z', 'DONE', 'input prompt 2'),
-      (3, 'sess-2', 'code-reviewer', 'haiku', '2026-04-04T10:10:00Z', 'DONE', 'review prompt for truncation test'),
-      (4, 'sess-2', 'debugger', 'sonnet', '2026-04-04T10:15:00Z', 'DONE_WITH_CONCERNS', 'debug prompt')`
+      (1, 'sess-1', 'code-writer', 'sonnet', '2026-04-04T10:00:00Z', 'DONE'),
+      (2, 'sess-1', 'test-writer', 'haiku', '2026-04-04T10:05:00Z', 'DONE'),
+      (3, 'sess-2', 'code-reviewer', 'haiku', '2026-04-04T10:10:00Z', 'DONE'),
+      (4, 'sess-2', 'debugger', 'sonnet', '2026-04-04T10:15:00Z', 'DONE_WITH_CONCERNS')`
   }
 
   db.prepare(insertSql).run()
@@ -151,14 +150,14 @@ describe('GET /api/work-log-stream', () => {
     expect(entry1.workLog.filesChanged).toContain('bar.ts')
   })
 
-  it('falls back to task_summary when response is null', async () => {
+  it('produces null workLog when response is null (no task_summary fallback)', async () => {
     const res = await request(app).get('/')
     expect(res.status).toBe(200)
-    // Entry with id=3 has response=NULL, should fall back to task_summary
+    // Entry with id=3 has response=NULL — no fallback; workLog should be null
     const entry3 = res.body.entries.find((e: any) => e.agentRunId === '3')
     expect(entry3).toBeDefined()
-    // task_summary is "review prompt for truncation test" — workLog may be null if no ## Work Log section
     expect(entry3.startedAt).toBe('2026-04-04T10:10:00Z')
+    expect(entry3.workLog).toBeNull()
   })
 
   it('marks entries with partial_work_log as isTruncated: true', async () => {
@@ -259,7 +258,7 @@ describe('Schema resilience: agent_runs.response column optional', () => {
     const res = await request(app).get('/')
     expect(res.status).toBe(200)
     expect(Array.isArray(res.body.entries)).toBe(true)
-    // Entries should fall back to task_summary when response is missing
+    // Entries returned with null workLog when neither response nor task_summary present
     expect(res.body.entries.length).toBeGreaterThan(0)
   })
 
