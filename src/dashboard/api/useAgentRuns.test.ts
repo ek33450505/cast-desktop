@@ -44,7 +44,6 @@ const MOCK_RUN = {
   input_tokens: 2000,
   output_tokens: 800,
   cost_usd: 0.018,
-  task_summary: 'Write auth middleware',
   project: 'my-project',
 }
 

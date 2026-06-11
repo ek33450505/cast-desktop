@@ -9,7 +9,6 @@ export interface AgentRunDetail {
   agentRunId: string
   name: string
   model: string
-  prompt: string | null
   startedAt: string
   endedAt: string | null
   status: string
@@ -229,24 +228,6 @@ export default function AgentDetailModal({ open, agentRunId, onClose }: AgentDet
 
           {data && (
             <>
-              {/* Prompt */}
-              {data.prompt && (
-                <div>
-                  <p
-                    className="text-[10px] uppercase tracking-wider font-medium mb-1"
-                    style={{ color: 'var(--content-muted)' }}
-                  >
-                    Prompt
-                  </p>
-                  <p
-                    className="text-xs leading-relaxed select-text break-words whitespace-pre-wrap"
-                    style={{ color: 'var(--content-secondary)' }}
-                  >
-                    {data.prompt}
-                  </p>
-                </div>
-              )}
-
               {/* Metadata grid */}
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                 <div>

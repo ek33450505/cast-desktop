@@ -501,11 +501,6 @@ export default function AgentsView() {
               <span className="text-[var(--content-secondary)] tabular-nums shrink-0 w-16 text-right">
                 {formatCost(run.cost_usd ?? 0)}
               </span>
-              {run.task_summary && (
-                <span className="text-[var(--content-muted)] truncate flex-1" title={run.task_summary}>
-                  {run.task_summary}
-                </span>
-              )}
             </div>
           ))}
           {filteredRuns.length === 0 && (

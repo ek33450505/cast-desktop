@@ -77,7 +77,7 @@ analyticsRouter.get('/profile/:agent', (req, res) => {
     const last50 = db.prepare(`
       SELECT ar.started_at, ar.ended_at,
              CAST((julianday(ar.ended_at) - julianday(ar.started_at)) * 86400000 AS INTEGER) AS duration_ms,
-             ar.status, ar.input_tokens, ar.output_tokens, ar.cost_usd, ar.task_summary, ar.model,
+             ar.status, ar.input_tokens, ar.output_tokens, ar.cost_usd, ar.model,
              ${truncatedExpr} AS is_truncated
       FROM agent_runs ar
       WHERE ar.agent = ?
@@ -91,7 +91,6 @@ analyticsRouter.get('/profile/:agent', (req, res) => {
       input_tokens: number | null
       output_tokens: number | null
       cost_usd: number
-      task_summary: string | null
       model: string | null
       is_truncated: number
     }[]

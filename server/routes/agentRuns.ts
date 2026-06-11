@@ -33,7 +33,6 @@ interface AgentRunRow {
   cache_creation_input_tokens: number | null
   tool_uses: number | null
   cost_usd: number | null
-  task_summary: string | null
 }
 
 function toRunningAgent(row: AgentRunRow) {
@@ -41,7 +40,6 @@ function toRunningAgent(row: AgentRunRow) {
     agentRunId: row.id,
     name: row.agent,
     model: row.model ?? 'unknown',
-    prompt: row.task_summary?.slice(0, 60) ?? '',
     startedAt: row.started_at,
     tokenCount: (row.input_tokens ?? 0) + (row.output_tokens ?? 0),
   }
@@ -52,7 +50,7 @@ function queryRunningAgents(sessionId: string): ReturnType<typeof toRunningAgent
   if (!db) return []
   const rows = db.prepare(`
     SELECT id, session_id, agent, model, started_at, ended_at,
-           status, input_tokens, output_tokens, cost_usd, task_summary
+           status, input_tokens, output_tokens, cost_usd
     FROM agent_runs
     WHERE session_id = ?
       AND status = 'running'
@@ -92,7 +90,7 @@ liveAgentsRouter.get('/runs/:agentRunId', (req: Request, res: Response) => {
     }
     const row = db.prepare(`
       SELECT id, session_id, agent, model, started_at, ended_at,
-             status, input_tokens, output_tokens, cost_usd, task_summary
+             status, input_tokens, output_tokens, cost_usd
       FROM agent_runs
       WHERE id = ?
       LIMIT 1
@@ -107,7 +105,6 @@ liveAgentsRouter.get('/runs/:agentRunId', (req: Request, res: Response) => {
       agentRunId: row.id,
       name: row.agent,
       model: row.model ?? 'unknown',
-      prompt: row.task_summary,
       startedAt: row.started_at,
       endedAt: row.ended_at,
       status: row.status,
@@ -145,7 +142,6 @@ activeAgentsRouter.get('/', (req, res) => {
           ar.input_tokens,
           ar.output_tokens,
           ar.cost_usd,
-          ar.task_summary,
           s.project,
           ROW_NUMBER() OVER (
             PARTITION BY ar.agent, (CAST(strftime('%s', ar.started_at) AS INTEGER) / 300)
@@ -165,7 +161,7 @@ activeAgentsRouter.get('/', (req, res) => {
       SELECT
         id, session_id, agent, model, started_at, ended_at,
         status, input_tokens, output_tokens, cost_usd,
-        task_summary, project
+        project
       FROM ranked
       WHERE rn = 1
         AND status = 'running'
@@ -175,7 +171,7 @@ activeAgentsRouter.get('/', (req, res) => {
       id: string; session_id: string; agent: string; model: string;
       started_at: string; ended_at: string | null; status: string;
       input_tokens: number; output_tokens: number; cost_usd: number;
-      task_summary: string | null; project: string | null
+      project: string | null
     }>
 
     res.json({ runs })
@@ -221,10 +217,7 @@ agentRunsRouter.get('/', (req, res) => {
         ar.input_tokens,
         ar.output_tokens,
         ar.cost_usd,
-        ar.task_summary,
         ar.agent_id,
-        ar.batch_id,
-        ar.task_summary AS prompt,
         s.project
       FROM agent_runs ar
       LEFT JOIN sessions s ON s.id = ar.session_id
@@ -235,8 +228,7 @@ agentRunsRouter.get('/', (req, res) => {
       id: string; session_id: string; agent: string; model: string;
       started_at: string; ended_at: string | null; status: string;
       input_tokens: number; output_tokens: number; cost_usd: number;
-      task_summary: string | null; project: string | null;
-      agent_id: string | null; batch_id: number | null; prompt: string | null
+      project: string | null; agent_id: string | null
     }>
 
     // Aggregate stats — apply the same filters as the list query so stat cards match
@@ -300,10 +292,7 @@ sessionAgentsRouter.get('/:sessionId', (req, res) => {
         ar.input_tokens,
         ar.output_tokens,
         ar.cost_usd,
-        ar.task_summary,
         ar.agent_id,
-        ar.batch_id,
-        ar.task_summary AS prompt,
         s.project,
         CASE
           WHEN ar.ended_at IS NOT NULL
@@ -318,8 +307,7 @@ sessionAgentsRouter.get('/:sessionId', (req, res) => {
       id: string; session_id: string; agent: string; model: string;
       started_at: string; ended_at: string | null; status: string;
       input_tokens: number; output_tokens: number; cost_usd: number;
-      task_summary: string | null; project: string | null; duration_ms: number | null;
-      agent_id: string | null; batch_id: number | null; prompt: string | null
+      project: string | null; duration_ms: number | null; agent_id: string | null
     }>
 
     res.json({ runs })
@@ -372,7 +360,7 @@ sessionAgentsRouter.get('/', (req, res) => {
       const agents = db!.prepare(`
         SELECT
           ar.id, ar.session_id, ar.agent, ar.model, ar.started_at, ar.ended_at,
-          ar.status, ar.input_tokens, ar.output_tokens, ar.cost_usd, ar.task_summary,
+          ar.status, ar.input_tokens, ar.output_tokens, ar.cost_usd,
           CASE
             WHEN ar.ended_at IS NOT NULL
             THEN CAST((julianday(ar.ended_at) - julianday(ar.started_at)) * 86400000 AS INTEGER)
@@ -385,7 +373,7 @@ sessionAgentsRouter.get('/', (req, res) => {
         id: string; session_id: string; agent: string; model: string;
         started_at: string; ended_at: string | null; status: string;
         input_tokens: number; output_tokens: number; cost_usd: number;
-        task_summary: string | null; duration_ms: number | null
+        duration_ms: number | null
       }>
 
       return {
