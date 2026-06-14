@@ -72,7 +72,6 @@ const destructiveLimiter = rateLimit({
 // Serve built frontend assets (Option C: Express serves dist/ directly)
 app.use(express.static(distPath))
 
-app.use('/api/seed', controlLimiter)
 app.use('/api/control', destructiveLimiter)
 app.use('/api/castd', controlLimiter)
 app.use('/api/swarm', controlLimiter)
@@ -123,14 +122,6 @@ async function startListening(): Promise<void> {
         const actualPort = addr.port
         process.stdout.write(`CAST_SERVER_PORT=${actualPort}\n`)
         console.log(`Cast Desktop server on :${actualPort}`)
-        setImmediate(() => {
-          fetch(`http://localhost:${actualPort}/api/cast/seed`, { method: 'POST' })
-            .then(r => r.json())
-            .then(body => {
-              if (process.env.DEBUG) console.debug('[auto-seed]', JSON.stringify(body))
-            })
-            .catch(err => console.error('[auto-seed] failed:', err))
-        })
         resolve()
       })
       server.on('error', (err: NodeJS.ErrnoException) => {
