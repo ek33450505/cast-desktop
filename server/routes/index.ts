@@ -25,7 +25,6 @@ import { taskQueueRouter } from './taskQueue.js'
 import { agentMemoriesDbRouter } from './agentMemoriesDb.js'
 import { castdControlRouter } from './castdControl.js'
 import { sqliteExplorerRouter } from './sqliteExplorer.js'
-import { seedRouter } from './seed.js'
 import { budgetStatusRouter } from './budgetStatus.js'
 import { castExecRouter } from './castExec.js'
 import { qualityGatesRouter, dispatchDecisionsRouter } from './qualityGates.js'
@@ -97,11 +96,6 @@ router.use('/cast/task-queue', taskQueueRouter)
 router.use('/cast/memories', agentMemoriesDbRouter)
 router.use('/castd', castdControlRouter)
 router.use('/cast/explore', sqliteExplorerRouter)
-// USED BY: src/api/useSeed.ts (seed panel in frontend)
-if (process.env.NODE_ENV === 'development') {
-  router.use('/cast/seed', seedRouter)
-}
-
 if (process.env.NODE_ENV === 'development') {
   router.use('/budget', budgetStatusRouter)
 }

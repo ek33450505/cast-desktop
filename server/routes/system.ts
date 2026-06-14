@@ -1,13 +1,12 @@
 import { Router } from 'express'
 import fs from 'fs'
-import path from 'path'
-import os from 'os'
 import Database from '../utils/sqlite-shim.js'
+import { CAST_DB } from '../constants.js'
 
 const router = Router()
 
 router.get('/cast-status', (_req, res) => {
-  const dbPath = path.join(os.homedir(), '.claude', 'cast.db')
+  const dbPath = CAST_DB
   const dbExists = fs.existsSync(dbPath)
   let dbHasData = false
   if (dbExists) {

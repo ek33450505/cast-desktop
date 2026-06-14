@@ -4,12 +4,11 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { Activity, Coins, TrendingUp, Clock, Zap, AlertTriangle, RefreshCw, Database } from 'lucide-react'
+import { Activity, Coins, TrendingUp, Clock, Zap, AlertTriangle, Database } from 'lucide-react'
 import { PageSkeleton } from '../components/ui/PageSkeleton'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useAnalytics } from '../api/useAnalytics'
 import type { DelegationSavings } from '../api/useAnalytics'
-import { useSeed } from '../api/useSeed'
 import { formatTokens, formatCost } from '../utils/costEstimate'
 import { formatDuration } from '../utils/time'
 import { useRoutingEventsByType } from '../api/useRoutingEventsByType'
@@ -433,7 +432,6 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: React.ComponentType
 export default function AnalyticsView() {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>('agents')
   const { data, isLoading, error } = useAnalytics()
-  const { loading: seedLoading, result: seedResult, error: seedError, trigger: runSeed } = useSeed()
   const [sortKey, setSortKey] = useState<SortKey>('cost')
   const { data: promptEvents } = useRoutingEventsByType('user_prompt_submit', 200)
   const colors = useChartColors()
@@ -565,32 +563,6 @@ export default function AnalyticsView() {
 
       {/* Agents & Usage tab */}
       {activeTab === 'agents' && <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div />
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          {import.meta.env.DEV && (
-          <button
-            onClick={runSeed}
-            disabled={seedLoading}
-            aria-busy={seedLoading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--system-panel)] border border-[var(--stroke-regular)] text-[var(--content-secondary)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)] transition-all disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
-          >
-            <RefreshCw className={`w-4 h-4 ${seedLoading ? 'animate-spin' : ''}`} />
-            {seedLoading ? 'Seeding…' : 'Refresh Data'}
-          </button>
-          )}
-          <div aria-live="polite" aria-atomic="true" className="text-xs">
-            {seedResult && (
-              <span className="text-[var(--status-success)]">
-                +{seedResult.seeded.sessions} sessions, +{seedResult.seeded.agentRuns} runs
-              </span>
-            )}
-            {seedError && (
-              <span className="text-[var(--status-error)]">{seedError}</span>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
