@@ -24,7 +24,8 @@ export const DEBUG_DIR = path.join(CLAUDE_DIR, 'debug')
 export const EMAIL_SUMMARIES_DIR = path.join(CLAUDE_DIR, 'email-summaries')
 export const DASHBOARD_COMMANDS_DIR = path.join(CLAUDE_DIR, 'dashboard-commands')
 
-export const CAST_DB = path.join(CLAUDE_DIR, 'cast.db')
+// CAST_DB_PATH env var lets tests/CI point at a temp DB without touching ~/.claude/cast.db
+export const CAST_DB = process.env.CAST_DB_PATH || path.join(CLAUDE_DIR, 'cast.db')
 export const CAST_SCRIPTS_DIR = path.join(CLAUDE_DIR, 'scripts')
 
 export const PREFERRED_PORT = 49301
