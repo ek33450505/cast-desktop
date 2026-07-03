@@ -96,21 +96,25 @@ function RoutingIntelSection() {
                 <thead className="sticky top-0 bg-[var(--system-panel)] z-10">
                   <tr className="border-b border-[var(--border)]">
                     <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Time</th>
-                    <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Backend</th>
-                    <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Plan File</th>
+                    <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Agent</th>
+                    <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Model</th>
+                    <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Prompt</th>
+                    <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Outcome</th>
                     <th className="text-left px-3 py-2 font-medium text-[var(--content-muted)]">Session</th>
                   </tr>
                 </thead>
                 <tbody>
                   {decisions.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-3 py-4 text-center text-[var(--content-muted)]">No dispatch decisions</td>
+                      <td colSpan={6} className="px-3 py-4 text-center text-[var(--content-muted)]">No dispatch decisions</td>
                     </tr>
                   ) : decisions.map(d => (
                     <tr key={d.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--system-elevated)] transition-colors">
-                      <td className="px-3 py-2 tabular-nums text-[var(--content-muted)]">{fmtTime(d.timestamp)}</td>
-                      <td className="px-3 py-2 font-medium text-[var(--accent)]">{d.dispatch_backend ?? '—'}</td>
-                      <td className="px-3 py-2 text-[var(--content-secondary)] truncate max-w-[180px]" title={d.plan_file ?? undefined}>{d.plan_file ?? '—'}</td>
+                      <td className="px-3 py-2 tabular-nums text-[var(--content-muted)]">{fmtTime(d.created_at)}</td>
+                      <td className="px-3 py-2 font-medium text-[var(--accent)]">{d.chosen_agent ?? '—'}</td>
+                      <td className="px-3 py-2 text-[var(--content-secondary)]">{d.model ?? '—'}</td>
+                      <td className="px-3 py-2 text-[var(--content-secondary)] truncate max-w-[180px]" title={d.prompt_snippet ?? undefined}>{d.prompt_snippet ?? '—'}</td>
+                      <td className="px-3 py-2 text-[var(--content-secondary)]">{d.outcome ?? '—'}</td>
                       <td className="px-3 py-2 text-[var(--content-muted)] font-mono">{d.session_id ? d.session_id.slice(0, 8) : '—'}</td>
                     </tr>
                   ))}

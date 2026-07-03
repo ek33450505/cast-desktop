@@ -2,11 +2,16 @@ import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from './apiFetch'
 
 export interface DispatchDecision {
-  id: string
+  id: number
   session_id: string | null
-  timestamp: string
-  dispatch_backend: string | null
-  plan_file: string | null
+  prompt_snippet: string | null
+  chosen_agent: string | null
+  model: string | null
+  effort: string | null
+  wave_id: string | null
+  parallel: number
+  created_at: string
+  outcome: string | null
 }
 
 export function useDispatchDecisions() {

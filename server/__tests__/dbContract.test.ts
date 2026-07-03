@@ -123,6 +123,7 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
         { path: '/api/cast/memories', expected: 200 },
         { path: '/api/analytics', expected: 200 },
         { path: '/api/hook-events/recent', expected: 200 }, // Real endpoint (hookEventsRouter only has /recent GET)
+        { path: '/api/dispatch-decisions', expected: 200 },
       ]
 
       // LOOKUP endpoints: assert !== 500 (200 or 404 both valid due to fake ids)
@@ -139,7 +140,6 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
       // signaling us to delete the KNOWN_BROKEN entry. Until then, we assert the actual
       // current (broken-but-masked) status to prevent silent masking regression.
       const knownBrokenPhase4 = [
-        { path: '/api/dispatch-decisions', expectedStatus: 200, reason: 'dispatch_decisions query hits missing columns (timestamp, dispatch_backend, plan_file); caught by try/catch, returns 200 with empty array. Schema fix in Phase 4 will unmask this.' },
         { path: '/api/cast/task-queue', expectedStatus: 500, reason: 'task_queue query hits missing column (result_summary); caught by try/catch, returns 500. Schema fix in Phase 4 will resolve.' },
       ]
 
@@ -187,7 +187,7 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
       }
 
       expect(errors).toEqual([])
-    })
+    }, 15000)
   })
 
   describe('Test 2: Column Contract (lighter validation)', () => {
@@ -238,23 +238,54 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
       db.close()
     })
 
-    it('dispatch_decisions table: known Phase-4 drift documented', () => {
-      const db = new Database(tempDbPath, { readonly: true })
+    it('dispatch_decisions table: all ten canonical columns exist and endpoint returns data', async () => {
+      // Open DB writable to assert schema and insert a fixture row
+      const db = new Database(tempDbPath)
       const cols = getTableColumns(db, 'dispatch_decisions')
 
-      // Columns that SHOULD exist (and do)
-      expect(cols.has('id')).toBe(true)
-      expect(cols.has('session_id')).toBe(true)
-      expect(cols.has('chosen_agent')).toBe(true)
-      expect(cols.has('created_at')).toBe(true)
-      expect(cols.has('outcome')).toBe(true)
+      // Assert ALL ten canonical columns exist (hard — must fail on any future drift)
+      const canonicalCols = [
+        'id', 'session_id', 'prompt_snippet', 'chosen_agent', 'model',
+        'effort', 'wave_id', 'parallel', 'created_at', 'outcome',
+      ]
+      for (const col of canonicalCols) {
+        expect(cols.has(col), `dispatch_decisions.${col} must exist in canonical v9 schema`).toBe(true)
+      }
 
-      // Phase-4 Defect: qualityGates.ts lines 118-119 query these but they DON'T exist
-      // This causes GET /api/dispatch-decisions to return 500 with withTable fallback
-      expect(cols.has('dispatch_backend')).toBe(false) // Known missing
-      expect(cols.has('plan_file')).toBe(false) // Known missing
+      // Assert v7 ghost columns do NOT exist
+      expect(cols.has('timestamp'), 'dispatch_decisions.timestamp must NOT exist (v7 ghost)').toBe(false)
+      expect(cols.has('dispatch_backend'), 'dispatch_decisions.dispatch_backend must NOT exist (v7 ghost)').toBe(false)
+      expect(cols.has('plan_file'), 'dispatch_decisions.plan_file must NOT exist (v7 ghost)').toBe(false)
 
+      // Insert one canonical fixture row
+      db.prepare(`
+        INSERT INTO dispatch_decisions
+          (session_id, prompt_snippet, chosen_agent, model, effort, wave_id, parallel, created_at, outcome)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'fixture-session-id',
+        'test prompt snippet for schema guard',
+        'code-writer',
+        'claude-sonnet-4-5',
+        'high',
+        'wave-1',
+        0,
+        new Date().toISOString(),
+        'pending',
+      )
       db.close()
+
+      // Assert the endpoint returns the inserted row (hard — must fail if query is broken)
+      const res = await request(app).get('/api/dispatch-decisions')
+      expect(res.status).toBe(200)
+      expect(res.body.decisions).toBeDefined()
+      expect(res.body.decisions.length).toBeGreaterThan(0)
+
+      // Verify canonical column shape in the response
+      const decision = res.body.decisions[0]
+      expect(decision.chosen_agent).toBe('code-writer')
+      expect(decision.prompt_snippet).toBe('test prompt snippet for schema guard')
+      expect(decision.outcome).toBe('pending')
     })
 
     it('task_queue table has required columns', () => {
