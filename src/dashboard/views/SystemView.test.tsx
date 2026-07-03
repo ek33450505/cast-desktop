@@ -55,10 +55,6 @@ vi.mock('../api/useCostSummary', () => ({
   useCostSummary: vi.fn(() => ({ data: null, isLoading: false, isError: false })),
 }))
 
-vi.mock('../api/useParryGuard', () => ({
-  useParryGuard: vi.fn(() => ({ data: { events: [] } })),
-}))
-
 vi.mock('../api/useAgentTruncations', () => ({
   useAgentTruncations: vi.fn(() => ({ data: { truncations: [] } })),
 }))

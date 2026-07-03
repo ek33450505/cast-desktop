@@ -103,7 +103,6 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
         { path: '/api/plans/active', expected: 200 },
         { path: '/api/quality-gates', expected: 200 },
         { path: '/api/quality-gates/stats', expected: 200 },
-        { path: '/api/parry-guard', expected: 200 },
         { path: '/api/agent-truncations', expected: 200 },
         { path: '/api/injection-log', expected: 200 },
         { path: '/api/unstaged-warnings', expected: 200 },

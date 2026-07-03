@@ -51,6 +51,7 @@ describe('GET /api/injection-log', () => {
         prompt_hash TEXT NOT NULL,
         fact_id INTEGER NOT NULL,
         score REAL,
+        score_breakdown TEXT,
         injected_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `)
@@ -69,15 +70,16 @@ describe('GET /api/injection-log', () => {
         prompt_hash TEXT NOT NULL,
         fact_id INTEGER NOT NULL,
         score REAL,
+        score_breakdown TEXT,
         injected_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `)
 
     const insert = testDb!.prepare(
-      'INSERT INTO injection_log (session_id, prompt_hash, fact_id, score, injected_at) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO injection_log (session_id, prompt_hash, fact_id, score, score_breakdown, injected_at) VALUES (?, ?, ?, ?, ?, ?)'
     )
-    insert.run('sess-1', 'abc123', 1, 0.85, '2026-05-01T10:00:00Z')
-    insert.run('sess-2', 'def456', 2, 0.92, '2026-05-01T11:00:00Z')
+    insert.run('sess-1', 'abc123', 1, 0.85, '{"fts_rank":0,"cosine_sim":0.85}', '2026-05-01T10:00:00Z')
+    insert.run('sess-2', 'def456', 2, 0.92, '{"fts_rank":0,"cosine_sim":0.92}', '2026-05-01T11:00:00Z')
 
     const res = await request(app).get('/')
 
@@ -87,6 +89,31 @@ describe('GET /api/injection-log', () => {
     expect(res.body.entries[1].injected_at).toBe('2026-05-01T10:00:00Z')
     expect(res.body.entries[0].fact_id).toBe(2)
     expect(res.body.entries[0].score).toBeCloseTo(0.92)
+    expect(res.body.entries[0].score_breakdown).toBe('{"fts_rank":0,"cosine_sim":0.92}')
+    expect(res.body.entries[1].score_breakdown).toBe('{"fts_rank":0,"cosine_sim":0.85}')
+  })
+
+  it('returns null score_breakdown when column is null', async () => {
+    testDb!.exec(`
+      CREATE TABLE injection_log (
+        id INTEGER PRIMARY KEY,
+        session_id TEXT,
+        prompt_hash TEXT NOT NULL,
+        fact_id INTEGER NOT NULL,
+        score REAL,
+        score_breakdown TEXT,
+        injected_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `)
+
+    testDb!.prepare(
+      'INSERT INTO injection_log (session_id, prompt_hash, fact_id, score, score_breakdown, injected_at) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run('sess-3', 'ghi789', 3, 0.5, null, '2026-05-01T12:00:00Z')
+
+    const res = await request(app).get('/')
+
+    expect(res.status).toBe(200)
+    expect(res.body.entries[0].score_breakdown).toBeNull()
   })
 
   it('handles getCastDb returning null', async () => {

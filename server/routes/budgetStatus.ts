@@ -3,31 +3,6 @@ import { getCastDb, getCastDbWritable } from './castDb.js'
 
 export const budgetStatusRouter = Router()
 
-const CREATE_BUDGETS_TABLE = `
-  CREATE TABLE IF NOT EXISTS budgets (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    scope        TEXT,
-    scope_key    TEXT,
-    period       TEXT,
-    limit_usd    REAL,
-    alert_at_pct REAL,
-    created_at   TEXT
-  )
-`
-
-function ensureBudgetsTable(): void {
-  const db = getCastDbWritable()
-  if (!db) return
-  try {
-    db.exec(CREATE_BUDGETS_TABLE)
-  } finally {
-    db.close()
-  }
-}
-
-// Ensure the table exists at module load time so reads never fail
-ensureBudgetsTable()
-
 // GET /api/budget/status
 budgetStatusRouter.get('/status', (_req, res) => {
   try {
@@ -41,11 +16,18 @@ budgetStatusRouter.get('/status', (_req, res) => {
     `).get(today) as { spend: number }
     const today_spend = spendRow?.spend ?? 0
 
-    const budgetRow = db.prepare(`
-      SELECT limit_usd, alert_at_pct FROM budgets
-      WHERE scope = 'global' AND scope_key = 'global' AND period = 'daily'
-      ORDER BY id DESC LIMIT 1
-    `).get() as { limit_usd: number; alert_at_pct: number } | undefined
+    // Guard against missing budgets table: return null limits rather than 500
+    let budgetRow: { limit_usd: number; alert_at_pct: number } | undefined
+    try {
+      budgetRow = db.prepare(`
+        SELECT limit_usd, alert_at_pct FROM budgets
+        WHERE scope = 'global' AND scope_key = 'global' AND period = 'daily'
+        ORDER BY id DESC LIMIT 1
+      `).get() as { limit_usd: number; alert_at_pct: number } | undefined
+    } catch {
+      // budgets table does not exist yet — no budget configured
+      budgetRow = undefined
+    }
 
     if (!budgetRow) {
       return res.json({ today_spend, daily_limit: null, pct_used: null, over_budget: false })
@@ -65,19 +47,19 @@ budgetStatusRouter.get('/status', (_req, res) => {
 
 // POST /api/budget/config
 budgetStatusRouter.post('/config', (req, res) => {
+  const { daily_limit_usd, alert_at_pct } = req.body as { daily_limit_usd?: unknown; alert_at_pct?: unknown }
+
+  if (typeof daily_limit_usd !== 'number' || daily_limit_usd < 0) {
+    return res.status(400).json({ error: 'daily_limit_usd must be a non-negative number' })
+  }
+  const alertPct = typeof alert_at_pct === 'number' && alert_at_pct >= 0 && alert_at_pct <= 1
+    ? alert_at_pct
+    : 0.80  // default
+
+  const db = getCastDbWritable()
+  if (!db) return res.status(503).json({ error: 'Database unavailable' })
+
   try {
-    const { daily_limit_usd, alert_at_pct } = req.body as { daily_limit_usd?: unknown; alert_at_pct?: unknown }
-
-    if (typeof daily_limit_usd !== 'number' || daily_limit_usd < 0) {
-      return res.status(400).json({ error: 'daily_limit_usd must be a non-negative number' })
-    }
-    const alertPct = typeof alert_at_pct === 'number' && alert_at_pct >= 0 && alert_at_pct <= 1
-      ? alert_at_pct
-      : 0.80  // default
-
-    const db = getCastDb()
-    if (!db) return res.status(503).json({ error: 'Database unavailable' })
-
     const now = new Date().toISOString()
     // Upsert: delete existing global daily budget then insert fresh row
     db.prepare(`DELETE FROM budgets WHERE scope = 'global' AND scope_key = 'global' AND period = 'daily'`).run()
@@ -90,5 +72,7 @@ budgetStatusRouter.post('/config', (req, res) => {
   } catch (err) {
     console.error('Budget config write error:', err)
     res.status(500).json({ error: 'Failed to save budget config' })
+  } finally {
+    db.close()
   }
 })

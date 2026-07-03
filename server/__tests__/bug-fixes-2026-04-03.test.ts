@@ -134,28 +134,24 @@ describe('Bug 1: agent-runs query must not reference commit_sha', () => {
 })
 
 // ---------------------------------------------------------------------------
-// Bug 3 — budgets table missing
+// Bug 3 — budgets table missing / POST /config uses wrong connection
 // ---------------------------------------------------------------------------
 
-describe('Bug 3: budget/status must not 500 when budgets table exists', () => {
+describe('Bug 3: budget/status must not 500 when budgets table is absent', () => {
+  // DB without a budgets table — simulates a cast.db that predates the budget feature
   let testDb: ReturnType<typeof Database>
 
   beforeEach(() => {
-    testDb = makeBudgetsDb()
+    testDb = new Database(':memory:')
+    testDb.exec(`
+      CREATE TABLE agent_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT, agent TEXT, started_at TEXT, status TEXT, cost_usd REAL
+      );
+    `)
     vi.doMock('../routes/castDb.js', () => ({
       getCastDb: () => testDb,
-      getCastDbWritable: () => {
-        // Return a writable in-memory db with the budgets table already created
-        const writable = new Database(':memory:')
-        writable.exec(`
-          CREATE TABLE IF NOT EXISTS budgets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            scope TEXT, scope_key TEXT, period TEXT,
-            limit_usd REAL, alert_at_pct REAL, created_at TEXT
-          )
-        `)
-        return writable
-      },
+      getCastDbWritable: () => null,  // readonly-only scenario
     }))
   })
 
@@ -164,7 +160,7 @@ describe('Bug 3: budget/status must not 500 when budgets table exists', () => {
     vi.restoreAllMocks()
   })
 
-  it('GET /api/budget/status returns 200 with today_spend (no 500 on missing budgets table)', async () => {
+  it('GET /api/budget/status returns 200 with today_spend even when budgets table is absent', async () => {
     const { budgetStatusRouter } = await import('../routes/budgetStatus.js')
     const app = express()
     app.use('/api/budget', budgetStatusRouter)
@@ -173,9 +169,18 @@ describe('Bug 3: budget/status must not 500 when budgets table exists', () => {
     expect(res.status).toBe(200)
     expect(typeof res.body.today_spend).toBe('number')
     expect(res.body.over_budget).toBe(false)
+    expect(res.body.daily_limit).toBeNull()
   })
 
   it('GET /api/budget/status returns daily_limit null when no budget row exists', async () => {
+    // Add budgets table but leave it empty
+    testDb.exec(`
+      CREATE TABLE budgets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        scope TEXT, scope_key TEXT, period TEXT,
+        limit_usd REAL, alert_at_pct REAL, created_at TEXT
+      );
+    `)
     const { budgetStatusRouter } = await import('../routes/budgetStatus.js')
     const app = express()
     app.use('/api/budget', budgetStatusRouter)
@@ -183,6 +188,59 @@ describe('Bug 3: budget/status must not 500 when budgets table exists', () => {
     const res = await request(app).get('/api/budget/status')
     expect(res.status).toBe(200)
     expect(res.body.daily_limit).toBeNull()
+  })
+})
+
+describe('Bug 3 (write path): POST /api/budget/config returns 503 when no writable db', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.doMock('../routes/castDb.js', () => ({
+      getCastDb: () => null,
+      getCastDbWritable: () => null,
+    }))
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('POST /api/budget/config returns 503 when getCastDbWritable returns null (no readonly fallback)', async () => {
+    const { budgetStatusRouter } = await import('../routes/budgetStatus.js')
+    const app = express()
+    app.use(express.json())
+    app.use('/api/budget', budgetStatusRouter)
+
+    const res = await request(app).post('/api/budget/config').send({ daily_limit_usd: 10 })
+    expect(res.status).toBe(503)
+  })
+})
+
+describe('Bug 3 (write path): POST /api/budget/config succeeds with writable db', () => {
+  let writableDb: ReturnType<typeof Database>
+
+  beforeEach(() => {
+    writableDb = makeBudgetsDb()
+    vi.resetModules()
+    vi.doMock('../routes/castDb.js', () => ({
+      getCastDb: () => null,
+      getCastDbWritable: () => writableDb,
+    }))
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('POST /api/budget/config returns 200 when getCastDbWritable returns a writable db', async () => {
+    const { budgetStatusRouter } = await import('../routes/budgetStatus.js')
+    const app = express()
+    app.use(express.json())
+    app.use('/api/budget', budgetStatusRouter)
+
+    const res = await request(app).post('/api/budget/config').send({ daily_limit_usd: 5.0, alert_at_pct: 0.75 })
+    expect(res.status).toBe(200)
+    expect(res.body.ok).toBe(true)
+    expect(res.body.daily_limit_usd).toBe(5.0)
   })
 })
 

@@ -144,7 +144,9 @@ function RoutingIntelSection() {
                       <td className="px-3 py-2 tabular-nums text-[var(--content-muted)]">{fmtTime(e.injected_at)}</td>
                       <td className="px-3 py-2 text-[var(--accent)]">{e.fact_id}</td>
                       <td className="px-3 py-2 text-[var(--content-secondary)] truncate max-w-[300px]" title={e.prompt_hash}>
-                        {e.score != null ? `${e.score.toFixed(2)} · ` : ''}{e.prompt_hash.slice(0, 12)}…
+                        <span title={e.score_breakdown ?? undefined}>
+                          {e.score != null ? `${e.score.toFixed(2)} · ` : ''}{e.prompt_hash.slice(0, 12)}…
+                        </span>
                       </td>
                     </tr>
                   ))}

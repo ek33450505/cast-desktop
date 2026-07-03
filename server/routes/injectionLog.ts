@@ -17,7 +17,7 @@ injectionLogRouter.get('/', (_req, res) => {
   try {
     const entries = withTable('injection_log', [], (db) =>
       db.prepare(
-        'SELECT id, session_id, prompt_hash, fact_id, score, injected_at FROM injection_log ORDER BY injected_at DESC LIMIT 100'
+        'SELECT id, session_id, prompt_hash, fact_id, score, score_breakdown, injected_at FROM injection_log ORDER BY injected_at DESC LIMIT 100'
       ).all()
     )
     return res.json({ entries })

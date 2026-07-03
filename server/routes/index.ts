@@ -28,7 +28,6 @@ import { sqliteExplorerRouter } from './sqliteExplorer.js'
 import { budgetStatusRouter } from './budgetStatus.js'
 import { castExecRouter } from './castExec.js'
 import { qualityGatesRouter, dispatchDecisionsRouter } from './qualityGates.js'
-import { parryGuardRouter } from './parryGuard.js'
 import { agentTruncationsRouter } from './agentTruncations.js'
 import { injectionLogRouter } from './injectionLog.js'
 import { unstagedWarningsRouter } from './unstagedWarnings.js'
@@ -103,7 +102,6 @@ router.use('/cast', castExecRouter)
 
 router.use('/quality-gates', qualityGatesRouter)
 router.use('/dispatch-decisions', dispatchDecisionsRouter)
-router.use('/parry-guard', parryGuardRouter)
 router.use('/agent-truncations', agentTruncationsRouter)
 router.use('/injection-log', injectionLogRouter)
 router.use('/unstaged-warnings', unstagedWarningsRouter)

@@ -7,6 +7,7 @@ export interface InjectionLogEntry {
   prompt_hash: string
   fact_id: number
   score: number | null
+  score_breakdown: string | null
   injected_at: string
 }
 
