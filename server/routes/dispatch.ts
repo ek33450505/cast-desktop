@@ -9,7 +9,9 @@
  *
  * GET /api/dispatch/:run_id
  *   Returns { run_id, status: 'running' | 'done' | 'failed', files_modified?: string[], error?: string }
- *   Queries cast.db agent_runs (status) + file_writes (files touched on done).
+ *   In-memory registry only; run_ids are never persisted to agent_runs.
+ *   Post-server-restart lookups intentionally return 404 (no DB fallback).
+ *   On done, queries cast.db file_writes for files touched by the run.
  *
  * DELETE /api/dispatch/:run_id
  *   Best-effort cancel — kills the spawned child process if it's still alive.
@@ -184,39 +186,6 @@ router.get('/:run_id', (req: Request, res: Response) => {
 
   const entry = _runRegistry.get(run_id)
   if (!entry) {
-    // Not in memory — check cast.db agent_runs table
-    const db = getCastDb()
-    if (db) {
-      try {
-        const row = db.prepare(
-          'SELECT status FROM agent_runs WHERE run_id = ? LIMIT 1'
-        ).get(run_id) as { status: string } | undefined
-
-        if (row) {
-          // Fetch files modified by this run from file_writes table
-          let filesModified: string[] | undefined
-          try {
-            const writes = db.prepare(
-              'SELECT DISTINCT file_path FROM file_writes WHERE run_id = ?'
-            ).all(run_id) as { file_path: string }[]
-            filesModified = writes.map((w) => w.file_path)
-          } catch {
-            // file_writes table may not exist yet
-          }
-
-          const status: RunStatus =
-            row.status === 'done' ? 'done'
-            : row.status === 'failed' ? 'failed'
-            : 'running'
-
-          res.json({ run_id, status, files_modified: filesModified })
-          return
-        }
-      } catch (err) {
-        console.error('[dispatch/:run_id] DB error', err)
-      }
-    }
-
     res.status(404).json({ error: `Run ${run_id} not found` })
     return
   }

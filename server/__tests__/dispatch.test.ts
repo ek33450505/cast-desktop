@@ -17,8 +17,8 @@
  * 5. GET /api/dispatch/:run_id — running status (seeded registry)
  * 6. GET /api/dispatch/:run_id — done + files_modified (seeded registry + DB mock)
  * 7. GET /api/dispatch/:run_id — failed status (seeded registry)
- * 8. GET /api/dispatch/:run_id — 404 for unknown run_id (no DB match)
- * 9. GET /api/dispatch/:run_id — status from DB (no registry entry)
+ * 8. GET /api/dispatch/:run_id — 404 for unknown run_id (no DB interaction)
+ * 9. GET /api/dispatch/:run_id — 404 for unknown run_id regardless of DB state (no DB fallback)
  * 10. DELETE /api/dispatch/:run_id — cancels (seeded registry with process)
  * 11. DELETE /api/dispatch/:run_id — 404 for unknown run_id
  */
@@ -220,23 +220,19 @@ describe('GET /api/dispatch/:run_id', () => {
     expect(res.body.error).toMatch(/exit/)
   })
 
-  it('returns 404 for unknown run_id when DB has no record', async () => {
-    vi.mocked(getCastDb).mockReturnValue(makeMockDb(undefined) as ReturnType<typeof getCastDb>)
-
+  it('returns 404 for unknown run_id (no DB interaction)', async () => {
+    // DB is not queried — dispatch run_ids are never written to agent_runs
     const res = await request(app).get('/api/dispatch/nonexistent-run-id')
     expect(res.status).toBe(404)
     expect(res.body.error).toMatch(/not found/)
   })
 
-  it('returns status from DB when run is not in registry', async () => {
-    vi.mocked(getCastDb).mockReturnValue(
-      makeMockDb({ status: 'done' }, [{ file_path: '/Users/ed/foo.ts' }]) as ReturnType<typeof getCastDb>
-    )
-
+  it('returns 404 for unknown run_id regardless of DB state (no DB fallback)', async () => {
+    // Even if a DB row existed for this run_id in agent_runs, the code no longer
+    // falls back to the DB — dispatch-generated run_ids are session-local only.
     const res = await request(app).get('/api/dispatch/db-backed-run-id')
-    expect(res.status).toBe(200)
-    expect(res.body.status).toBe('done')
-    expect(res.body.files_modified).toContain('/Users/ed/foo.ts')
+    expect(res.status).toBe(404)
+    expect(res.body.error).toMatch(/not found/)
   })
 })
 
