@@ -373,12 +373,12 @@ describe('GET /api/routing/events (without event_type, queries agent_runs)', () 
     expect(res.body[1].started_at).toBe('2026-03-31T10:00:00Z')
   })
 
-  it('includes computed fields: id, session_id, agent, status, started_at, completed_at, duration_ms, prompt_preview, cost_usd', async () => {
+  it('includes computed fields: id, session_id, agent, status, started_at, completed_at, duration_ms, cost_usd', async () => {
     const db = testDb!
     db.prepare(`
-      INSERT INTO agent_runs (session_id, agent, status, started_at, ended_at, task_summary, cost_usd)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run('sess-1', 'planner', 'DONE', '2026-03-31T10:00:00Z', '2026-03-31T10:02:00Z', 'Plan feature', 0.005)
+      INSERT INTO agent_runs (session_id, agent, status, started_at, ended_at, cost_usd)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('sess-1', 'planner', 'DONE', '2026-03-31T10:00:00Z', '2026-03-31T10:02:00Z', 0.005)
 
     const res = await request(app).get('/api/routing/events')
     expect(res.status).toBe(200)
@@ -392,7 +392,6 @@ describe('GET /api/routing/events (without event_type, queries agent_runs)', () 
     expect(run).toHaveProperty('started_at', '2026-03-31T10:00:00Z')
     expect(run).toHaveProperty('completed_at', '2026-03-31T10:02:00Z')
     expect(run).toHaveProperty('duration_ms') // computed
-    expect(run).toHaveProperty('prompt_preview', 'Plan feature')
     expect(run).toHaveProperty('cost_usd', 0.005)
   })
 
