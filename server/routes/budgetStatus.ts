@@ -49,7 +49,7 @@ budgetStatusRouter.get('/status', (_req, res) => {
 budgetStatusRouter.post('/config', (req, res) => {
   const { daily_limit_usd, alert_at_pct } = req.body as { daily_limit_usd?: unknown; alert_at_pct?: unknown }
 
-  if (typeof daily_limit_usd !== 'number' || daily_limit_usd < 0) {
+  if (typeof daily_limit_usd !== 'number' || !Number.isFinite(daily_limit_usd) || daily_limit_usd < 0) {
     return res.status(400).json({ error: 'daily_limit_usd must be a non-negative number' })
   }
   const alertPct = typeof alert_at_pct === 'number' && alert_at_pct >= 0 && alert_at_pct <= 1

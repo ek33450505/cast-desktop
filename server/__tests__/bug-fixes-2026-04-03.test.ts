@@ -215,6 +215,55 @@ describe('Bug 3 (write path): POST /api/budget/config returns 503 when no writab
   })
 })
 
+describe('Bug 3 (write path): POST /api/budget/config rejects non-finite daily_limit_usd', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.doMock('../routes/castDb.js', () => ({
+      getCastDb: () => null,
+      getCastDbWritable: () => null, // validation fires before db access — null db is fine
+    }))
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('POST /api/budget/config returns 400 when daily_limit_usd is NaN', async () => {
+    const { budgetStatusRouter } = await import('../routes/budgetStatus.js')
+    const app = express()
+    app.use(express.json())
+    app.use('/api/budget', budgetStatusRouter)
+
+    // JSON.parse("NaN") is not valid JSON, so we send the body manually via raw string
+    // Express json() parses it; we pass NaN by using a number-typed key that evaluates to NaN.
+    // The cleanest approach: override the body after parsing via a middleware.
+    const appWithNaN = express()
+    appWithNaN.use(express.json())
+    appWithNaN.use((req, _res, next) => {
+      if (req.method === 'POST') req.body = { daily_limit_usd: NaN }
+      next()
+    })
+    appWithNaN.use('/api/budget', budgetStatusRouter)
+
+    const res = await request(appWithNaN).post('/api/budget/config').send({})
+    expect(res.status).toBe(400)
+  })
+
+  it('POST /api/budget/config returns 400 when daily_limit_usd is Infinity', async () => {
+    const { budgetStatusRouter } = await import('../routes/budgetStatus.js')
+    const appWithInfinity = express()
+    appWithInfinity.use(express.json())
+    appWithInfinity.use((req, _res, next) => {
+      if (req.method === 'POST') req.body = { daily_limit_usd: Infinity }
+      next()
+    })
+    appWithInfinity.use('/api/budget', budgetStatusRouter)
+
+    const res = await request(appWithInfinity).post('/api/budget/config').send({})
+    expect(res.status).toBe(400)
+  })
+})
+
 describe('Bug 3 (write path): POST /api/budget/config succeeds with writable db', () => {
   let writableDb: ReturnType<typeof Database>
 
