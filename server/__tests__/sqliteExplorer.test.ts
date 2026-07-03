@@ -344,6 +344,75 @@ describe('GET /cast/explore/:table', () => {
     expect(capturedSql).toContain('ORDER BY "id" DESC')
   })
 
+  it('serializes embedding BLOB column as float32 preview string', async () => {
+    // Build a 3072-byte buffer (768 float32 values)
+    const floats = new Float32Array(768)
+    floats[0] = 0.0461
+    floats[1] = 0.0123
+    floats[2] = -0.1810
+    const embeddingBuf = Buffer.from(floats.buffer)
+
+    const columns = [{ name: 'id', pk: 1 }, { name: 'embedding', pk: 0 }]
+    const rows = [{ id: 'mem-1', embedding: embeddingBuf }]
+
+    mockPrepare.mockImplementation((sql: string) => {
+      if (sql.includes('sqlite_master')) {
+        return { pluck: () => ({ all: () => ['agent_memories'] }) }
+      }
+      if (sql.includes('PRAGMA table_info')) {
+        return { all: () => columns }
+      }
+      if (sql.includes('COUNT(*)')) {
+        return { get: () => ({ total: 1 }) }
+      }
+      if (sql.includes('SELECT * FROM')) {
+        return { all: () => rows }
+      }
+      return { all: () => [], get: () => undefined, pluck: () => ({ all: () => [] }) }
+    })
+
+    const res = await request(buildApp()).get('/cast/explore/agent_memories')
+
+    expect(res.status).toBe(200)
+    expect(res.body.rows).toHaveLength(1)
+    const embeddingCell: string = res.body.rows[0].embedding
+    expect(embeddingCell).toMatch(/^float32\[768\]/)
+    // First three values should appear at 4 decimal places
+    expect(embeddingCell).toContain('0.0461')
+    expect(embeddingCell).toContain('0.0123')
+    expect(embeddingCell).toContain('-0.1810')
+    expect(embeddingCell).toContain('…')
+  })
+
+  it('serializes non-embedding BLOB column as "BLOB · N bytes"', async () => {
+    const blobBuf = Buffer.from([0xde, 0xad, 0xbe, 0xef, 0x00])
+
+    const columns = [{ name: 'id', pk: 1 }, { name: 'raw_data', pk: 0 }]
+    const rows = [{ id: 'item-1', raw_data: blobBuf }]
+
+    mockPrepare.mockImplementation((sql: string) => {
+      if (sql.includes('sqlite_master')) {
+        return { pluck: () => ({ all: () => ['items'] }) }
+      }
+      if (sql.includes('PRAGMA table_info')) {
+        return { all: () => columns }
+      }
+      if (sql.includes('COUNT(*)')) {
+        return { get: () => ({ total: 1 }) }
+      }
+      if (sql.includes('SELECT * FROM')) {
+        return { all: () => rows }
+      }
+      return { all: () => [], get: () => undefined, pluck: () => ({ all: () => [] }) }
+    })
+
+    const res = await request(buildApp()).get('/cast/explore/items')
+
+    expect(res.status).toBe(200)
+    expect(res.body.rows).toHaveLength(1)
+    expect(res.body.rows[0].raw_data).toBe('BLOB · 5 bytes')
+  })
+
   it('includes columns, rows, total, and nullColumns in response', async () => {
     const columns = [{ name: 'id', pk: 1 }, { name: 'optional_col', pk: 0 }]
     const rows = [{ id: 'x', optional_col: null }]
