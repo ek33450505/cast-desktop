@@ -33,9 +33,7 @@ _testDb.exec(`
     priority              INTEGER DEFAULT 5,
     status                TEXT DEFAULT 'pending',
     claimed_at            TEXT,
-    claimed_by_session    TEXT,
     completed_at          TEXT,
-    result_summary        TEXT,
     retry_count           INTEGER DEFAULT 0,
     max_retries           INTEGER DEFAULT 3,
     scheduled_for         TEXT
@@ -140,16 +138,16 @@ describe('GET /api/cast/task-queue — agent_runs fallback', () => {
       priority: 0,
       retry_count: 0,
       scheduled_for: null,
-      result_summary: 'running',
     })
+    expect(tasks[0]).not.toHaveProperty('result_summary')
     expect(tasks[0]).toHaveProperty('task', 'Agent run: test-writer')
 
     // Second task should be code-reviewer with status DONE→done
     expect(tasks[1]).toMatchObject({
       agent: 'code-reviewer',
       status: 'done',
-      result_summary: 'DONE',
     })
+    expect(tasks[1]).not.toHaveProperty('result_summary')
   })
 
   it('maps agent_runs statuses correctly to task_queue statuses', async () => {
@@ -189,8 +187,8 @@ describe('GET /api/cast/task-queue — agent_runs fallback', () => {
       expect(tasks[i]).toMatchObject({
         agent: `agent-${original}`,
         status: expected,
-        result_summary: original,
       })
+      expect(tasks[i]).not.toHaveProperty('result_summary')
     }
   })
 

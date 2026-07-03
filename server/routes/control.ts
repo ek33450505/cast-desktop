@@ -121,8 +121,8 @@ controlRouter.post('/dispatch', (req, res) => {
       try {
         const writeDb = getCastDbWritable()
         if (writeDb) {
-          writeDb.prepare(`UPDATE task_queue SET status = ?, result_summary = ? WHERE rowid = ?`)
-            .run(exitStatus, `exit ${code ?? 'null'}`, rowId)
+          writeDb.prepare(`UPDATE task_queue SET status = ? WHERE rowid = ?`)
+            .run(exitStatus, rowId)
           writeDb.close()
         }
       } catch (updateErr) {

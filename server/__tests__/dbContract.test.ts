@@ -6,10 +6,11 @@
  *
  * Phase-4 Defects Tracked:
  * 1. dispatch_decisions: columns dispatch_backend, plan_file don't exist in v8
- *    Reference: server/routes/qualityGates.ts:118-119
+ *    Reference: server/routes/qualityGates.ts:118-119 (FIXED)
  * 2. stream_events: writer has wrong columns (POST, not in GET sweep, documented)
  *    Reference: server/routes/hookEvents.ts:73
- * 3. task_queue.result_summary: phantom column in some queries
+ * 3. task_queue.result_summary: phantom column in queries (FIXED — column removed from SELECT
+ *    in taskQueue.ts and UPDATE in control.ts; now asserted absent in column contract test)
  * 4. budget/config: readonly-write defect (POST, not in GET sweep)
  * 5. [Phase-4 ledger] — TODO: wire framework's cast-db-contract.py extractor for
  *    fully-automated column coverage after Phase 4 fixes land
@@ -124,6 +125,7 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
         { path: '/api/analytics', expected: 200 },
         { path: '/api/hook-events/recent', expected: 200 }, // Real endpoint (hookEventsRouter only has /recent GET)
         { path: '/api/dispatch-decisions', expected: 200 },
+        { path: '/api/cast/task-queue', expected: 200 },
       ]
 
       // LOOKUP endpoints: assert !== 500 (200 or 404 both valid due to fake ids)
@@ -133,14 +135,6 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
         { path: '/api/cast/session-agents/test-session', notStatus: 500 },
         { path: '/api/pane-bindings/test-pane', notStatus: 500 },
         { path: '/api/files', notStatus: 500 },
-      ]
-
-      // KNOWN_BROKEN_PHASE4: These endpoints hit real schema drift but mask it.
-      // When Phase 4 fixes land, the status will flip and this assertion will turn RED,
-      // signaling us to delete the KNOWN_BROKEN entry. Until then, we assert the actual
-      // current (broken-but-masked) status to prevent silent masking regression.
-      const knownBrokenPhase4 = [
-        { path: '/api/cast/task-queue', expectedStatus: 500, reason: 'task_queue query hits missing column (result_summary); caught by try/catch, returns 500. Schema fix in Phase 4 will resolve.' },
       ]
 
       const errors: Array<{ path: string; status: number; reason: string }> = []
@@ -165,18 +159,6 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
             path: ep.path,
             status: res.status,
             reason: `should not be ${ep.notStatus} (likely SQL error on fake id, not 404)`,
-          })
-        }
-      }
-
-      // Check KNOWN_BROKEN_PHASE4 endpoints
-      for (const ep of knownBrokenPhase4) {
-        const res = await request(app).get(ep.path)
-        if (res.status !== ep.expectedStatus) {
-          errors.push({
-            path: ep.path,
-            status: res.status,
-            reason: `Phase 4 fix detected? Expected ${ep.expectedStatus}, got ${res.status}. Original reason: ${ep.reason}`,
           })
         }
       }
@@ -294,7 +276,7 @@ describe.skipIf(!v8InitAvailable())('dbContract — Schema Drift Guard (v8)', ()
       expect(cols.has('id')).toBe(true)
       expect(cols.has('task')).toBe(true) // Note: 'task', not 'task_id'
       expect(cols.has('status')).toBe(true)
-      // Note: result_summary column presence varies by phase; Phase-4 ledger documents mismatches
+      expect(cols.has('result_summary'), 'task_queue.result_summary must NOT exist in canonical schema').toBe(false)
       db.close()
     })
 

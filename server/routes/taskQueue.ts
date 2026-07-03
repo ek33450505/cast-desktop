@@ -19,13 +19,13 @@ taskQueueRouter.get('/', (_req, res) => {
     const tasks = db.prepare(`
       SELECT
         id, agent, priority, status, created_at, retry_count,
-        scheduled_for, result_summary, task
+        scheduled_for, task
       FROM task_queue
       ORDER BY priority ASC, created_at DESC
     `).all() as Array<{
       id: string; agent: string; priority: number; status: string;
       created_at: string; retry_count: number; scheduled_for: string | null;
-      result_summary: string | null; task: string | null
+      task: string | null
     }>
 
     const countsRows = db.prepare(`
@@ -65,7 +65,6 @@ taskQueueRouter.get('/', (_req, res) => {
           created_at: r.started_at,
           retry_count: 0,
           scheduled_for: null,
-          result_summary: r.status,
           task: `Agent run: ${r.agent}`,
         }))
 
